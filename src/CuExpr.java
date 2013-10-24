@@ -9,6 +9,10 @@ import java.util.Map;
 public abstract class CuExpr {
 	protected String text = "";
 	protected String methodId = null;
+	protected String cText = "";
+	public String toC() {
+		return cText;
+	}
 	private CuType type = null;
 	public void add(List<CuType> pt, List<CuExpr> es) {}
 	public final CuType getType(CuContext context) throws NoSuchTypeException {
@@ -144,6 +148,10 @@ class CBoolean extends CuExpr{
 	public CBoolean(Boolean b){
 		val=b;
 		super.text=b.toString();
+		if (val)
+			super.cText = "1";
+		else
+			super.cText = "0";
 	}
 	@Override protected CuType calculateType(CuContext context) {
 		if (val == null) { throw new NoSuchTypeException();}
