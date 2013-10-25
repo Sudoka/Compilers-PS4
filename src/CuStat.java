@@ -6,8 +6,12 @@ import java.util.Map;
 
 public abstract class CuStat {
 	protected String text = "";
+	protected String ctext = "";
 	@Override public String toString() {
 		return text;
+	}
+	public String toC() {
+		return ctext;
 	}
 	public void add (CuStat st){}
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
@@ -24,6 +28,7 @@ class AssignStat extends CuStat{
 		var = t;
 		ee = e;
 		super.text = var.toString() + " := " + ee.toString() + " ;";
+		super.ctext = "char * " + var.toString() + " = " ee.toC() + ";\n";
 	}
 	
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
