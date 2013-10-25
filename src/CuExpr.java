@@ -92,6 +92,8 @@ class AndExpr extends CuExpr{
 //		super.desiredType = CuType.bool;
 		super.methodId = "add";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
+		super.cText = String.format("%s && %s", left.toC(), right.toC());
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		//right should pass in a type
@@ -152,6 +154,7 @@ class CBoolean extends CuExpr{
 			super.cText = "1";
 		else
 			super.cText = "0";
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) {
 		if (val == null) { throw new NoSuchTypeException();}
@@ -164,6 +167,8 @@ class CInteger extends CuExpr {
 	public CInteger(Integer i){
 		val=i;
 		super.text=i.toString();
+		super.cText = i.toString();
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) {
 		if (val == null) { throw new NoSuchTypeException();}
@@ -176,6 +181,8 @@ class CString extends CuExpr {
 	public CString(String s){
 		val=s;
 		super.text=s;
+		super.cText = s;
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) {
 		if (val == null) { throw new NoSuchTypeException();}
@@ -190,6 +197,8 @@ class DivideExpr extends CuExpr{
 		right = e2;
 		super.methodId = "divide";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
+		super.cText = String.format("%s / %s", left.toC(), right.toC());
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
@@ -212,11 +221,14 @@ class EqualExpr extends CuExpr{
 		super.methodId = "equals";
 		if (eq) {
 			super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
+			super.cText = String.format("%s == %s", left.toC(), right.toC());
 		}
 		else {
 			method2 = "negate";
 			super.text = String.format("%s . %s < > ( %s ) . negate ( )", left.toString(), super.methodId, right.toString());
+			super.cText = String.format("%s != %s", left.toC(), right.toC());
 		}
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		CuType t = binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
@@ -242,6 +254,11 @@ class GreaterThanExpr extends CuExpr{
 		super.methodId = "greaterThan";
 		Helper.ToDo("strict boolean??");
 		super.text = String.format("%s . %s < > ( %s , %s )", left.toString(), super.methodId, right.toString(), strict);
+		if(strict)
+			super.cText = String.format("%s > %s", left.toC(), right.toC());
+		else
+			super.cText = String.format("%s >= %s", left.toC(), right.toC());
+		System.out.println(super.cText);
 	}
 
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
@@ -260,6 +277,11 @@ class LessThanExpr extends CuExpr{
 		right = e2;
 		super.methodId = "lessThan";
 		super.text = String.format("%s . %s < > ( %s, %s )", left.toString(), super.methodId, right.toString(), strict);
+		if(strict)
+			super.cText = String.format("%s < %s", left.toC(), right.toC());
+		else
+			super.cText = String.format("%s <= %s", left.toC(), right.toC());
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
@@ -277,6 +299,9 @@ class MinusExpr extends CuExpr{
 		right = e2;
 		super.methodId = "minus";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
+		super.cText = String.format("%s - %s", left.toC(), right.toC());
+		System.out.println(super.cText);
+		
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
@@ -296,6 +321,8 @@ class ModuloExpr extends CuExpr{
 		right = e2;
 		super.methodId = "modulo";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
+		super.cText = String.format("%s % %s", left.toC(), right.toC());
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
@@ -314,6 +341,8 @@ class NegateExpr extends CuExpr{
 		val = e;
 		super.methodId = "negate";
 		super.text = String.format("%s . %s < > ( )", val.toString(), super.methodId);
+		super.cText = String.format("!%s", val.toC());
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return unaryExprType(context, val.getType(context).id, super.methodId);
@@ -332,6 +361,8 @@ class NegativeExpr extends CuExpr{
 		val = e;
 		super.methodId = "negative";
 		super.text = String.format("%s . %s < > ( )", val.toString(), super.methodId);
+		super.cText = String.format("-%s", e.toC());
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return unaryExprType(context, val.getType(context).id, super.methodId);
@@ -363,6 +394,8 @@ class OrExpr extends CuExpr{
 		right = e2;
 		super.methodId = "or";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
+		super.cText = String.format("%s || %s", left.toC(), right.toC());
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
