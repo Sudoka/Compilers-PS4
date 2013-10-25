@@ -1,0 +1,27 @@
+# inheritance: method name conflict in supertypes
+
+interface List<T>
+{
+	fun getFirst() : Iterable<T>;
+	fun getRest() : List<T>;
+	fun getIterable() : Iterable<T>;
+	fun append(l:List<T>) : List<T>;
+	fun reverse() : List<T>;
+}
+
+interface Array<T>
+{
+	fun getFirst() : Iterable<T>;
+}
+
+class Nil<T>() extends List<T> & Array<T>
+{
+	super();
+	fun getFirst() : Iterable<T> = [];
+	fun getRest() : List<T> = Nil<T>();
+	fun getIterable() : Iterable<T> = [];
+	fun append(l:List<T>) : List<T> = l;
+	fun reverse() : List<T> = Nil<T>();
+}
+
+return ["Hello World!"];

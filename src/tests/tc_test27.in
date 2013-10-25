@@ -1,0 +1,5 @@
+# divide/modulo returns Interable<Integer>
+
+s := 3*(6/2);
+
+return ["Hello world"];

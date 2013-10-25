@@ -483,6 +483,8 @@ Helper.P(String.format("kc=%s. types=%s. eMap=%s",ts.data_kc, types,val.calculat
         	mapping.put(ts.data_kc.get(i), types.get(i));
         }
         mapping.putAll(val.getType(context).map); // add mapping from the expression that owns this method
+        //added by Yinglei
+        if (ts.data_tc.size() != es.size()) throw new NoSuchTypeException();
         List<CuType> tList = new ArrayList<CuType>();
         for (CuType ct : ts.data_tc.values()) {
         	tList.add(ct);
@@ -534,6 +536,8 @@ Helper.P("VcExp= "+text);
         	mapping.put(cur_ts.data_kc.get(i), types.get(i));
         }
   Helper.P(String.format("mapping=%s. types=%s. data_kc=%s ", mapping, types, cur_ts.data_kc));
+  		//added by Yinglei
+        if (es.size() != cur_ts.data_tc.size()) throw new NoSuchTypeException();
         for (int i = 0; i < es.size(); i++) {
             if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
             	//System.out.println(es.get(i).toString() + " doesnt match " + tList.get(i).toString() );
@@ -588,6 +592,8 @@ class VvExp extends CuExpr{
         	mapping.put(cur_ts.data_kc.get(i), types.get(i));
         }
 Helper.P("VvExp MAPPING "+mapping);
+		//added by Yinglei
+		if (cur_ts.data_tc.size() != es.size()) throw new NoSuchTypeException();
         for (int i = 0; i < es.size(); i++) {
         	//System.out.println(es.get(i).toString());
             if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
