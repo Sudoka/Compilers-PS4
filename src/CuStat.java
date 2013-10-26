@@ -28,7 +28,7 @@ class AssignStat extends CuStat{
 		var = t;
 		ee = e;
 		super.text = var.toString() + " := " + ee.toString() + " ;";
-		super.ctext = "char * " + var.toString() + " = " + ee.toC() + ";\n";
+		super.ctext = ee.construct() + "char * " + var.toString() + " = " + ee.toC() + ";\n";
 	}
 	
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
