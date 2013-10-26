@@ -214,7 +214,7 @@ class Cls extends CuClass {
 					throw new NoSuchTypeException();
 				}
 			}
-			temp.mMutVariables = ts.data_tc;
+			temp.mMutVariables = new HashMap<String,CuType>(ts.data_tc);
 			//System.out.println("fun body is" + iter.funBody.toString());
 			HReturn re = iter.funBody.calculateType(temp);
 			//System.out.println("b is " + re.b + re.tau.toString() + "data_t is " + ts.data_t.toString());
