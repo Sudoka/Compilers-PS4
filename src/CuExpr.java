@@ -10,9 +10,7 @@ public abstract class CuExpr {
 	protected String text = "";
 	protected String methodId = null;
 	protected String cText = "";
-	public String toC() {
-		return cText;
-	}
+	protected String name = null;
 	private CuType type = null;
 	public void add(List<CuType> pt, List<CuExpr> es) {}
 	public final CuType getType(CuContext context) throws NoSuchTypeException {
@@ -23,6 +21,13 @@ Helper.P("return expression type " + type);
 	protected CuType calculateType(CuContext context) throws NoSuchTypeException { return null;};
 	@Override public String toString() {return text;}
 	
+	public String toC() {
+		return cText;
+	}
+	
+	public String getName(){
+		return name;
+	}
 	protected CuType binaryExprType(CuContext context, String leftId, String methodId, CuType rightType) throws NoSuchTypeException {
 		//System.out.println("in binaryExprType, begin");
 		//System.out.println("leftid is " + leftId + ", methodid is " + methodId + ",right type is " + rightType.id);
@@ -129,6 +134,18 @@ class BrkExpr extends CuExpr {
 	public BrkExpr(List<CuExpr> es){
 		this.val = es;
 		super.text=Helper.printList("[", val, "]", ",");
+		//super.name = Helper.getVarName();
+		String temp = "";
+		for (CuExpr e : val)
+		{
+			temp += "*%s.value[j++] = " + e.toString() + ";\n";
+		}
+		super.cText = String.format(
+				"int j=0;\nIter %s;\n"
+				+ "%s.size = %d\n",				
+				"array", "array", val.size());
+		super.cText += temp;
+	
 	}
 	@Override protected CuType calculateType(CuContext context) {
 		//System.out.println("in bracket expression, start");
@@ -255,9 +272,9 @@ class GreaterThanExpr extends CuExpr{
 		Helper.ToDo("strict boolean??");
 		super.text = String.format("%s . %s < > ( %s , %s )", left.toString(), super.methodId, right.toString(), strict);
 		if(strict)
-			super.cText = String.format("%s > %s", left.toC(), right.toC());
+			super.cText = String.format("%s > %s", left.toString(), right.toString());
 		else
-			super.cText = String.format("%s >= %s", left.toC(), right.toC());
+			super.cText = String.format("%s >= %s", left.toString(), right.toString());
 		System.out.println(super.cText);
 	}
 
@@ -278,9 +295,9 @@ class LessThanExpr extends CuExpr{
 		super.methodId = "lessThan";
 		super.text = String.format("%s . %s < > ( %s, %s )", left.toString(), super.methodId, right.toString(), strict);
 		if(strict)
-			super.cText = String.format("%s < %s", left.toC(), right.toC());
+			super.cText = String.format("%s < %s", left.toString(), right.toString());
 		else
-			super.cText = String.format("%s <= %s", left.toC(), right.toC());
+			super.cText = String.format("%s <= %s", left.toString(), right.toString());
 		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
@@ -409,6 +426,8 @@ class PlusExpr extends CuExpr{
 		right = e2;
 		super.methodId = "plus";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
+		super.cText = String.format("%s + %s", left.toC(), right.toC());
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		//System.out.println("in plus expr begin");
@@ -422,7 +441,36 @@ class ThroughExpr extends CuExpr{
 		left = e1;
 		right = e2;
 		super.methodId = "through";
-		super.text = String.format("%s . %s < > ( %s , %s , %s )", left.toString(), methodId, right.toString(), low, up);	}
+		super.text = String.format("%s . %s < > ( %s , %s , %s )", left.toString(), methodId, right.toString(), low, up);
+		if (low && up)
+			super.cText = String.format(
+				"int i, j=0;\nIter %s/*iterable name*/;\n"
+				+ "%s/*iterable name*/.size = %d"
+				+ "for(i=%s/*start val*/; i<=%s/*end val*/; i++)\n"
+				+ "*%s.value[j++] = i"
+				,"array", "array", Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())+1, e1.toString(), e2.toString(), "array");
+		else if (low)
+			super.cText = String.format(
+					"int i, j=0;\nIter %s/*iterable name*/;\n"
+					+ "%s/*iterable name*/.size = %d"
+					+ "for(i=%s/*start val*/; i<%s/*end val*/; i++)\n"
+					+ "*%s.value[j++] = i"
+					,"array", "array", Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toString(), e2.toString(), "array");
+		else if (up)
+			super.cText = String.format(
+					"int i, j=0;\nIter %s/*iterable name*/;\n"
+					+ "%s/*iterable name*/.size = %d"
+					+ "for(i=%s+1/*start val*/; i<=%s/*end val*/; i++)\n"
+					+ "*%s.value[j++] = i"
+					,"array", "array", Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toString(), e2.toString(), "array");
+		else
+			super.cText = String.format(
+					"int i, j=0;\nIter %s/*iterable name*/;\n"
+					+ "%s/*iterable name*/.size = %d"
+					+ "for(i=%s+1/*start val*/; i<%s/*end val*/; i++)\n"
+					+ "*%s.value[j++] = i"
+					,"array", "array", Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())-1, e1.toString(), e2.toString(), "array");
+		}
 
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
@@ -443,6 +491,8 @@ class TimesExpr extends CuExpr{
 		this.right = e2;
 		super.methodId = "times";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
+		super.cText = String.format("%s * %s", left.toC(), right.toC());
+		System.out.println(super.cText);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
@@ -508,7 +558,6 @@ class VcExp extends CuExpr {
 	private List<CuExpr> es;
 	public VcExp(String v, List<CuType> pt, List<CuExpr> e){
 		//System.out.println("in VcExp constructor, begin");
-		
 		this.val=v;
 		this.types=pt;
 		this.es=e;
@@ -516,6 +565,10 @@ class VcExp extends CuExpr {
 		super.text=val.toString()+Helper.printList("<", types, ">", ",")+Helper.printList("(", es, ")", ",");
 Helper.P("VcExp= "+text);
 		//System.out.println("in VcExp constructor, end");
+		
+		super.cText=val.toString()+Helper.printList("(", es, ")", ",");
+		
+		
 	}
 	@Override protected CuType calculateType(CuContext context)  throws NoSuchTypeException{
 		//System.out.println("in VcExp, begin val is " + val);
@@ -559,6 +612,7 @@ class VvExp extends CuExpr{
 	public VvExp(String str){
 		val = str;
 		super.text=str;
+		super.cText =str;
 	}
 	
 	@Override public void add(List<CuType> pt, List<CuExpr> e){

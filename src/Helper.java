@@ -31,13 +31,13 @@ public class Helper {
     }
 	protected static <T> String printList(String l, List<T> es, String r, String i) {
 		if (es == null) return " "+l + " " + r+" ";
-		String s = " "+l + " ";
+		String s = " "+l ;
 		for (T e : es) {
-			s += e.toString() + " "+i + " ";
+			s += e.toString() + i + " ";
 		}
 		int j = s.lastIndexOf(i+" ");
 		if (j > 1) s = s.substring(0, j);
-		s +=( r+" " );
+		s +=r;
 		return s;
 	}
 	
