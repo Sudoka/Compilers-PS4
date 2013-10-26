@@ -8,6 +8,27 @@ import java.util.regex.*;
 
 
 public class Helper {
+	static int one = 97;
+	static int two = 97;
+	static int three = 97;
+    protected static String getVarName() {
+    	String first = Character.toString((char)one);
+    	String second = Character.toString((char)two);
+    	String third = Character.toString((char)three);
+    	String out = first+second+third;
+    	three = three + 1;
+    	if (three==123) {
+    		three = 97;
+    		two = two + 1;
+    		if (two==123) {
+    			two = 97;
+    			one = one + 1;
+    			if (one==123) 
+    				System.out.println("run out of names");
+    		}
+    	}
+    	return out;
+    }
 	protected static <T> String printList(String l, List<T> es, String r, String i) {
 		if (es == null) return " "+l + " " + r+" ";
 		String s = " "+l + " ";
