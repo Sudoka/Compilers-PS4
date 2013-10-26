@@ -42,7 +42,7 @@ public abstract class CuType {
 	public boolean equals(Object that) { return equals((CuType)that); }
 	abstract public boolean equals(CuType that);
 	public boolean isSubtypeOf(CuType that) {
-		if (this.equals(that) || this.isBottom()) return true;
+		if (this.equals(that) || this.isBottom() || that.isTop()) return true;
 		for (CuType p : this.parentType) {
 			if (p.isSubtypeOf(that)) return true;
 		}
@@ -203,6 +203,7 @@ Helper.P(String.format("VClass %s<%s>", s, args.toString()));
 		// TODO: make sure calculateType is called already
 		//System.out.println("in vclass is subtype of " + this.toString() + " that is " + that.toString() + " that type is " + that.type.toString());
 		//System.out.println("map is " + this.map.toString());
+		if (that.isTop()) return true;
 		if (this.equals(that)) return true;
 		if (this.isBottom()) return true;
 		for (CuType p : this.parentType) {
