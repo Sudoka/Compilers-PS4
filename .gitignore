@@ -1,0 +1,27 @@
+#java specific
+02.
+#java specific
+*.class
+#netbeans ignore personal stuff
+#nbproject/private/
+
+## generic files to ignore
+*~
+*.lock
+*.DS_Store
+*.swp
+*.out
+.classpath
+.project
+.class
+Makefile
+src/CubexLexer2.java
+src/CubexLexer2.tokens
+src/CubexParser2.java
+src/CubexParser2.tokens
+CubexLexer2.class  
+CubexLexer2.java 
+CubexLexer2.tokens 
+CubexParser2.class  
+CubexParser2.java 
+CubexParser2.tokens   
