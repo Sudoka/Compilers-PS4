@@ -103,8 +103,8 @@ class AndExpr extends CuExpr{
 		super.methodId = "add";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
-		name += left.construct();
-		name += right.construct();
+		name += left.construct() + ";\n";
+		name += right.construct() + ";\n";
 		
 		super.cText = String.format("(%s*)%s->value && (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());		
 	}
@@ -195,7 +195,7 @@ class CInteger extends CuExpr {
 		super.text=i.toString();
 		
 		String temp = Helper.getVarName();
-		super.name = String.format("Integer %s; %s.value = %d", temp, temp, i);		
+		super.name = String.format("Integer %s;\n%s.value = %d;\n", temp, temp, i);		
 		super.cText = temp;
 		super.castType = "Integer";
 	}
@@ -212,7 +212,7 @@ class CString extends CuExpr {
 		super.text=s;
 		
 		String temp = Helper.getVarName();
-		super.name = String.format("String %s; %s.value = %s", temp, temp, "\"" + s + "\"");
+		super.name = String.format("String %s;\n%s.value = %s;\n", temp, temp, "\"" + s + "\"");
 		
 		super.cText = temp;
 		super.castType = "String";
@@ -231,8 +231,8 @@ class DivideExpr extends CuExpr{
 		super.methodId = "divide";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
-		super.name += left.construct();
-		super.name += right.construct();
+		super.name += left.construct() + ";\n";
+		super.name += right.construct() + ";\n";
 		
 		super.cText = String.format("(%s*)%s->value / (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
 	}
@@ -256,8 +256,8 @@ class EqualExpr extends CuExpr{
 		right = e2;
 		super.methodId = "equals";
 		
-		super.name += left.construct();
-		super.name += right.construct();
+		super.name += left.construct() + ";\n";
+		super.name += right.construct() + ";\n";
 		
 		if (eq) {
 			super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
@@ -295,8 +295,8 @@ class GreaterThanExpr extends CuExpr{
 		Helper.ToDo("strict boolean??");
 		super.text = String.format("%s . %s < > ( %s , %s )", left.toString(), super.methodId, right.toString(), strict);
 		
-		super.name += left.construct();
-		super.name += right.construct();
+		super.name += left.construct() + ";\n";
+		super.name += right.construct() + ";\n";
 		if(strict)
 			super.cText = String.format("(%s*)%s->value > (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
 		else
@@ -320,8 +320,8 @@ class LessThanExpr extends CuExpr{
 		super.methodId = "lessThan";
 		super.text = String.format("%s . %s < > ( %s, %s )", left.toString(), super.methodId, right.toString(), strict);
 		
-		super.name += left.construct();
-		super.name += right.construct();
+		super.name += left.construct() + ";\n";
+		super.name += right.construct() + ";\n";
 		if(strict)
 			super.cText = String.format("(%s*)%s->value < (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
 		else
@@ -344,8 +344,8 @@ class MinusExpr extends CuExpr{
 		super.methodId = "minus";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
-		super.name += left.construct();
-		super.name += right.construct();
+		super.name += left.construct() + ";\n";
+		super.name += right.construct() + ";\n";
 
 		super.cText = String.format("(%s*)%s->value - (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
 		
@@ -369,8 +369,8 @@ class ModuloExpr extends CuExpr{
 		super.methodId = "modulo";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
-		super.name += left.construct();
-		super.name += right.construct();
+		super.name += left.construct() + ";\n";
+		super.name += right.construct() + ";\n";
 
 		super.cText = String.format("(%s*)%s->value % (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
 	}
@@ -392,7 +392,7 @@ class NegateExpr extends CuExpr{
 		super.methodId = "negate";
 		super.text = String.format("%s . %s < > ( )", val.toString(), super.methodId);
 
-		super.name += e.construct();
+		super.name += e.construct() + ";\n";
 
 		super.cText = String.format("!((%s*)%s->value)", e.getCastType(), e.toC());
 	}
@@ -414,7 +414,7 @@ class NegativeExpr extends CuExpr{
 		super.methodId = "negative";
 		super.text = String.format("%s . %s < > ( )", val.toString(), super.methodId);
 
-		super.name += e.construct();
+		super.name += e.construct() + ";\n";
 
 		super.cText = String.format("-((%s*)%s->value)", e.getCastType(), e.toC());
 	}
@@ -449,8 +449,8 @@ class OrExpr extends CuExpr{
 		super.methodId = "or";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 
-		super.name += left.construct();
-		super.name += right.construct();
+		super.name += left.construct() + ";\n";
+		super.name += right.construct() + ";\n";
 
 		super.cText = String.format("(%s*)%s->value || (%s*)%s->value", left.getCastType(), left.toString(), right.getCastType(), right.toString());
 	}
@@ -467,8 +467,8 @@ class PlusExpr extends CuExpr{
 		super.methodId = "plus";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 
-		super.name += left.construct();
-		super.name += right.construct();
+		super.name += left.construct() + ";\n";
+		super.name += right.construct() + ";\n";
 
 		super.cText = String.format("(%s*)%s->value + (%s*)%s->value", left.getCastType(), left.toString(), right.getCastType(), right.toString());
 	}
@@ -540,8 +540,8 @@ class TimesExpr extends CuExpr{
 		super.methodId = "times";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 	
-		super.name += left.construct();
-		super.name += right.construct();
+		super.name += left.construct() + ";\n";
+		super.name += right.construct() + ";\n";
 
 		super.cText = String.format("(%s*)%s->value * (%s*)%s->value", left.getCastType(), left.toString(), right.getCastType(), right.toString());
 	}
@@ -570,7 +570,7 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 			temp = "(&this)";
 		temp += "(&this, ";
 		for (CuExpr exp : es) {
-			super.name += exp.construct();
+			super.name += exp.construct() + ";\n";
 			temp += "&" + exp.toC() + ", ";
 		}
 		int j = temp.lastIndexOf(", ");
@@ -639,7 +639,7 @@ Helper.P("VcExp= "+text);
 			temp = "()";
 		temp += "(";
 		for (CuExpr exp : es) {
-			super.name += exp.construct();
+			super.name += exp.construct() + ";\n";
 			temp += "&" + exp.toC() + ", ";
 		}
 		int j = temp.lastIndexOf(", ");
