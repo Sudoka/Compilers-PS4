@@ -1,5 +1,5 @@
 typedef struct iter {
-	void* value = NULL;
+	void** value = NULL;
 	int size;
 } Iterable;
 
