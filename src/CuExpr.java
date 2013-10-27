@@ -106,7 +106,7 @@ class AndExpr extends CuExpr{
 		name += left.construct() + ";\n";
 		name += right.construct() + ";\n";
 		
-		super.cText = String.format("(%s*)%s->value && (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());		
+		super.cText = String.format("(%s*)%s->value && (%s*)%s->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());		
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		//right should pass in a type
@@ -147,14 +147,15 @@ class BrkExpr extends CuExpr {
 		String temp = "";
 		for (CuExpr e : val)
 		{
-			temp += "*%s.value[j++] = " + e.toString() + ";\n";
+			temp += String.format("(%s*)(%s.value)++ = " + e.toString() + ";\n", e.getCastType(), iter);
 		}
 		super.name = String.format(
-				"int j=0;\nIterable %s;\n"
+				"Iterable %s;\n"
 				+ "%s.size = %d\n",				
 				iter, iter, val.size());
 		super.name += temp;
 		super.castType = "Iterable";
+		super.cText = iter;
 	
 	}
 	@Override protected CuType calculateType(CuContext context) {
@@ -231,10 +232,15 @@ class DivideExpr extends CuExpr{
 		super.methodId = "divide";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
+		String temp = Helper.getVarName();
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
 		
-		super.cText = String.format("(%s*)%s->value / (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
+		super.name += String.format("Integer %s;\n%s.value=", temp, temp);
+		super.name += String.format("(%s*)%s->value + (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
+		
+		super.cText = temp;
+		super.castType = "Integer";
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
@@ -261,12 +267,12 @@ class EqualExpr extends CuExpr{
 		
 		if (eq) {
 			super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
-			super.cText = String.format("(%s*)%s->value == (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
+			super.cText = String.format("(%s*)%s->value == (%s*)%s->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
 		}
 		else {
 			method2 = "negate";
 			super.text = String.format("%s . %s < > ( %s ) . negate ( )", left.toString(), super.methodId, right.toString());
-			super.cText = String.format("(%s*)%s->value != (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
+			super.cText = String.format("(%s*)%s->value != (%s*)%s->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
 		}
 		System.out.println(super.cText);
 	}
@@ -298,9 +304,9 @@ class GreaterThanExpr extends CuExpr{
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
 		if(strict)
-			super.cText = String.format("(%s*)%s->value > (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
+			super.cText = String.format("(%s*)%s->value > (%s*)%s->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
 		else
-			super.cText = String.format("(%s*)%s->value >= (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
+			super.cText = String.format("(%s*)%s->value >= (%s*)%s->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
 	}
 
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
@@ -323,9 +329,9 @@ class LessThanExpr extends CuExpr{
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
 		if(strict)
-			super.cText = String.format("(%s*)%s->value < (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
+			super.cText = String.format("(%s*)%s->value < (%s*)%s->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
 		else
-			super.cText = String.format("(%s*)%s->value <= (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
+			super.cText = String.format("(%s*)%s->value <= (%s*)%s->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
@@ -344,12 +350,15 @@ class MinusExpr extends CuExpr{
 		super.methodId = "minus";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
+		String temp = Helper.getVarName();
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
-
-		super.cText = String.format("(%s*)%s->value - (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
+		super.name += String.format("Integer %s;\n%s.value=", temp, temp);
+		super.name += String.format("(%s*)%s->value + (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
 		
-	}
+		super.cText = temp;
+		super.castType = "Integer";
+		}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
 	}
@@ -369,11 +378,15 @@ class ModuloExpr extends CuExpr{
 		super.methodId = "modulo";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
+		String temp = Helper.getVarName();
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
-
-		super.cText = String.format("(%s*)%s->value % (%s*)%s->value", left.getCastType(), left.toC(), right.getCastType(), right.toC());
-	}
+		super.name += String.format("Integer %s;\n%s.value=", temp, temp);
+		super.name += String.format("(%s*)%s->value + (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
+		
+		super.cText = temp;
+		super.castType = "Integer";
+		}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
 	}
@@ -416,7 +429,7 @@ class NegativeExpr extends CuExpr{
 
 		super.name += e.construct() + ";\n";
 
-		super.cText = String.format("-((%s*)%s->value)", e.getCastType(), e.toC());
+		super.cText = String.format("-((%s*)%s->value)", "Integer", e.toC());
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return unaryExprType(context, val.getType(context).id, super.methodId);
@@ -452,7 +465,7 @@ class OrExpr extends CuExpr{
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
 
-		super.cText = String.format("(%s*)%s->value || (%s*)%s->value", left.getCastType(), left.toString(), right.getCastType(), right.toString());
+		super.cText = String.format("(%s*)%s->value || (%s*)%s->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
@@ -467,10 +480,14 @@ class PlusExpr extends CuExpr{
 		super.methodId = "plus";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 
+		String temp = Helper.getVarName();
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
-
-		super.cText = String.format("(%s*)%s->value + (%s*)%s->value", left.getCastType(), left.toString(), right.getCastType(), right.toString());
+		super.name += String.format("Integer %s;\n%s.value=", temp, temp);
+		super.name += String.format("(%s*)%s->value + (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
+		
+		super.cText = temp;
+		super.castType = "Integer";
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		//System.out.println("in plus expr begin");
@@ -493,28 +510,28 @@ class ThroughExpr extends CuExpr{
 				+ "%s/*iterable name*/.size = %d"
 				+ "for(i=%s/*start val*/; i<=%s/*end val*/; i++)\n"
 				+ "*%s.value[j++] = i"
-				, temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())+1, e1.toString(), e2.toString(), "array");
+				, temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())+1, e1.toC(), e2.toC(), temp);
 		else if (low)
 			super.name = String.format(
 					"int i, j=0;\nIterable %s/*iterable name*/;\n"
 					+ "%s/*iterable name*/.size = %d"
 					+ "for(i=%s/*start val*/; i<%s/*end val*/; i++)\n"
 					+ "*%s.value[j++] = i"
-					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toString(), e2.toString(), "array");
+					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toC(), e2.toC(), temp);
 		else if (up)
 			super.name = String.format(
 					"int i, j=0;\nIterable %s/*iterable name*/;\n"
 					+ "%s/*iterable name*/.size = %d"
 					+ "for(i=%s+1/*start val*/; i<=%s/*end val*/; i++)\n"
 					+ "*%s.value[j++] = i"
-					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toString(), e2.toString(), "array");
+					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toC(), e2.toC(), temp);
 		else
 			super.name = String.format(
 					"int i, j=0;\nIterable %s/*iterable name*/;\n"
 					+ "%s/*iterable name*/.size = %d"
 					+ "for(i=%s+1/*start val*/; i<%s/*end val*/; i++)\n"
 					+ "*%s.value[j++] = i"
-					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())-1, e1.toString(), e2.toString(), "array");
+					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())-1, e1.toC(), e2.toC(), temp);
 		
 		super.castType = "Iterable";
 		super.cText = temp;
@@ -539,12 +556,16 @@ class TimesExpr extends CuExpr{
 		this.right = e2;
 		super.methodId = "times";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
-	
+
+		String temp = Helper.getVarName();
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
-
-		super.cText = String.format("(%s*)%s->value * (%s*)%s->value", left.getCastType(), left.toString(), right.getCastType(), right.toString());
-	}
+		super.name += String.format("Integer %s;\n%s.value=", temp, temp);
+		super.name += String.format("(%s*)%s->value + (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
+		
+		super.cText = temp;
+		super.castType = "Integer";
+		}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
 	}
