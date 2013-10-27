@@ -7,6 +7,8 @@ import java.util.Map;
 public abstract class CuStat {
 	protected String text = "";
 	protected String ctext = "";
+	//added for project 4
+	protected List<String> newVars = new ArrayList<String>();
 	@Override public String toString() {
 		return text;
 	}
@@ -28,7 +30,10 @@ class AssignStat extends CuStat{
 		var = t;
 		ee = e;
 		super.text = var.toString() + " := " + ee.toString() + " ;";
-		super.ctext = ee.construct() + "char * " + var.toString() + " = " + ee.toC() + ";\n";
+		super.ctext = ee.construct();
+		super.ctext += "void * " + var.toString() +";\n";
+		super.ctext += var.toString() + " = &" + ee.toC() + ";\n";
+		super.newVars.add(var.toString());
 	}
 	
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
@@ -63,6 +68,12 @@ class ForStat extends CuStat{
 		e = ee;
 		s1 = ss;
 		super.text = "for ( " + var + " in " + e.toString() + " ) " + s1.toString();
+		super.ctext = e.construct();
+		String iter_name = Helper.getVarName();
+		super.ctext += "int " + iter_name + ";\n";
+		super.ctext += "for (" + iter_name + "=0; " + iter_name + "<" + e.toC() + ".size;" + iter_name + "++) {\n";
+		super.ctext += "void * " + var.toString() + "=" + e.toC() + ".value[" + iter_name + "];\n";
+		super.ctext += s1.toC() + "}\n";
 	}
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
 		//whenever we calculate expr type, we use a temporary context with merged mutable and
@@ -113,6 +124,34 @@ class IfStat extends CuStat{
     @Override public void add (CuStat st) {
     	s2 = st;
     	super.text += " else " + s2.toString();
+    	//if we don't have s2, there won't be new vars
+		for (String str : s1.newVars) {
+			if (s2.newVars.contains(str)) {
+				super.newVars.add(str);
+			}
+		}
+    }
+    
+    //for if statement, ctext is build here
+    @Override public String toC() {
+    	super.ctext += this.e.construct();
+    	String temp_s1 = s1.toC();
+    	String temp_s2 = "";
+    	if (s2 != null)
+    		temp_s2 = s2.toC();
+    	//dealing with scoping
+    	for (String str : super.newVars) {
+    		temp_s1.replaceAll("void * " + str + ";\n", "");
+    		temp_s2.replaceAll("void * " + str + ";\n", "");
+    		super.ctext += "void * " + str + ";\n";
+    	}
+    	super.ctext += "if (" + e.toC() + ") {\n";
+    	super.ctext += temp_s1 + "}\n";
+    	if (s2 != null) {
+    		super.ctext += "else {\n";
+    		super.ctext += temp_s2 + "}\n";
+    	}
+    	return super.ctext;
     }
     
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
@@ -162,6 +201,8 @@ class ReturnStat extends CuStat{
 	public ReturnStat (CuExpr ee) {
 		e = ee;
 		super.text = "return " + e.toString() + " ;";
+		super.ctext += e.construct();
+		super.ctext += "return &" + e.toC() + ";\n";
 	}
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
 		//System.out.println("in return stat, begin");
@@ -182,6 +223,27 @@ class Stats extends CuStat{
 	public Stats (List<CuStat> cu) {
 		al = (ArrayList<CuStat>) cu;
 		text = "{ " + Helper.listFlatten(al) + " }";
+		ArrayList<String> c_stats = new ArrayList<String>();
+		for(CuStat cs : al) {
+			for (String str: cs.newVars) {
+				if (!super.newVars.contains(str)) {
+					super.newVars.add(str);
+				}
+			}
+			//to be safe, we need to call toC
+			c_stats.add(cs.toC());
+		}
+		
+		for(String str : super.newVars) {
+			super.ctext += "void * " + str + ";\n";
+			for (String cstr : c_stats) {
+				cstr.replaceAll("void * " + str + ";\n", "");
+			}
+		}
+		
+		for (String cstr : c_stats) {
+			super.ctext += cstr;
+		}
 	}
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
 		//System.out.println("in stats statement, begin");
@@ -211,6 +273,10 @@ class WhileStat extends CuStat{
 		e = ex;
 		s1 = st;
 		text = "while ( " + e.toString() + " ) " + s1.toString();
+		super.ctext = e.construct();
+		super.ctext += "while (" + e.toC() + ") {\n";
+		super.ctext += s1.toC();
+		super.ctext += "}\n";
 	}
     public HReturn calculateType(CuContext context) throws NoSuchTypeException {
 		//whenever we calculate expr type, we use a temporary context with merged mutable and

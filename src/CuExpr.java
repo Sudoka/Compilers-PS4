@@ -28,6 +28,11 @@ Helper.P("return expression type " + type);
 	public String getName(){
 		return name;
 	}
+	
+	public String construct() {
+		Helper.ToDo("please correct this");
+		return "";
+	}
 	protected CuType binaryExprType(CuContext context, String leftId, String methodId, CuType rightType) throws NoSuchTypeException {
 		//System.out.println("in binaryExprType, begin");
 		//System.out.println("leftid is " + leftId + ", methodid is " + methodId + ",right type is " + rightType.id);
