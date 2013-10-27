@@ -8,6 +8,8 @@ public abstract class CuProgr {
 	@Override public String toString() {
 		return text;
 	}
+	//added for project 4
+	protected List<String> newVars = new ArrayList<String>();
 	//new functions
 	public void add_prg(CuProgr p){}
 	public void add_lastStat(CuStat s) {}
@@ -24,11 +26,32 @@ class FullPrg extends CuProgr {
 	CuStat s;
 	public void add_prg(CuProgr p){
 		elements.add(p);
-		super.ctext += p.toC();
+		for(String str : p.newVars) {
+			if (!super.newVars.contains(str)) {
+				super.newVars.add(str);
+			}
+		}
 	}
 	public void add_lastStat(CuStat s) {
 		this.s = s;
-		super.ctext += s.toC();
+		for(String str : s.newVars) {
+			if (!super.newVars.contains(str)) {
+				super.newVars.add(str);
+			}
+		}
+	}
+	@Override public String toC() {
+		String temp_str = "";
+		for (CuProgr cp : elements) {
+			temp_str += cp.toC();
+		}
+		temp_str += s.toC();
+    	for (String str : super.newVars) {
+    		super.ctext += "void * " + str + ";\n";
+    		temp_str = temp_str.replaceAll("void \\* " + str + ";\n", "");
+    	}
+    	super.ctext += temp_str;
+		return super.ctext;
 	}
 	public void calculateType(CuContext context) throws NoSuchTypeException {
 		int i = 0;
@@ -124,6 +147,7 @@ class StatPrg extends CuProgr {
 		this.stat = s;
 		super.text = s.toString();
 		super.ctext = s.toC();
+		super.newVars = s.newVars;
 	}
 	
 	@Override public void calculateType(CuContext context) throws NoSuchTypeException {
