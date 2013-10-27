@@ -31,5 +31,7 @@ public class Cubex {
 			System.exit(-2);
 		}
 		System.out.println("accept");
+		
+		System.out.print(parser.stat().s.toC());
 	}
 }
