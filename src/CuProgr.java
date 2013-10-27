@@ -4,6 +4,7 @@ import java.util.List;
 
 public abstract class CuProgr {
 	protected String text = "";
+	protected String ctext = "";
 	@Override public String toString() {
 		return text;
 	}
@@ -12,6 +13,10 @@ public abstract class CuProgr {
 	public void add_lastStat(CuStat s) {}
 	
 	public void calculateType(CuContext context) throws NoSuchTypeException {}
+	
+	public String toC() {
+		return ctext;
+	}
 }
 
 class FullPrg extends CuProgr {
@@ -19,9 +24,11 @@ class FullPrg extends CuProgr {
 	CuStat s;
 	public void add_prg(CuProgr p){
 		elements.add(p);
+		super.ctext += p.toC();
 	}
 	public void add_lastStat(CuStat s) {
 		this.s = s;
+		super.ctext += s.toC();
 	}
 	public void calculateType(CuContext context) throws NoSuchTypeException {
 		int i = 0;
@@ -116,6 +123,7 @@ class StatPrg extends CuProgr {
 		//System.out.println("in statement program constructor");
 		this.stat = s;
 		super.text = s.toString();
+		super.ctext = s.toC();
 	}
 	
 	@Override public void calculateType(CuContext context) throws NoSuchTypeException {
