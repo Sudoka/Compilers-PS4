@@ -144,15 +144,18 @@ class BrkExpr extends CuExpr {
 		super.text=Helper.printList("[", val, "]", ",");
 		
 		String iter = Helper.getVarName();
+		String j = Helper.getVarName();
 		String temp = "";
 		for (CuExpr e : val)
 		{
-			temp += String.format("(%s*)(%s.value)++ = " + e.toString() + ";\n", e.getCastType(), iter);
+			name += e.construct();
+			temp += String.format("%s.value[%s++] = &" + e.toC() + ";\n", iter, j);
 		}
-		super.name = String.format(
-				"Iterable %s;\n"
-				+ "%s.size = %d\n",				
-				iter, iter, val.size());
+		super.name += String.format(
+				"int %s = 0;\nIterable %s;\n"
+				+ "%s.size = %d;\n"
+				+ "%s.value = (void**)malloc(%d * sizeof(void*));\n",				
+				j, iter, iter, val.size(), iter, val.size());
 		super.name += temp;
 		super.castType = "Iterable";
 		super.cText = iter;
@@ -213,7 +216,7 @@ class CString extends CuExpr {
 		super.text=s;
 		
 		String temp = Helper.getVarName();
-		super.name = String.format("String %s;\n%s.value = %s;\n", temp, temp, "\"" + s + "\"");
+		super.name = String.format("String %s;\n%s.value = %s;\n", temp, temp, s);
 		
 		super.cText = temp;
 		super.castType = "String";
@@ -237,7 +240,7 @@ class DivideExpr extends CuExpr{
 		super.name += right.construct() + ";\n";
 		
 		super.name += String.format("Integer %s;\n%s.value=", temp, temp);
-		super.name += String.format("(%s*)%s->value + (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
+		super.name += String.format("(%s*)%s->value / (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
 		
 		super.cText = temp;
 		super.castType = "Integer";
@@ -354,7 +357,7 @@ class MinusExpr extends CuExpr{
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
 		super.name += String.format("Integer %s;\n%s.value=", temp, temp);
-		super.name += String.format("(%s*)%s->value + (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
+		super.name += String.format("(%s*)%s->value - (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
 		
 		super.cText = temp;
 		super.castType = "Integer";
@@ -382,7 +385,7 @@ class ModuloExpr extends CuExpr{
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
 		super.name += String.format("Integer %s;\n%s.value=", temp, temp);
-		super.name += String.format("(%s*)%s->value + (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
+		super.name += String.format("(%s*)%s->value % (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
 		
 		super.cText = temp;
 		super.castType = "Integer";
@@ -561,7 +564,7 @@ class TimesExpr extends CuExpr{
 		super.name += left.construct() + ";\n";
 		super.name += right.construct() + ";\n";
 		super.name += String.format("Integer %s;\n%s.value=", temp, temp);
-		super.name += String.format("(%s*)%s->value + (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
+		super.name += String.format("(%s*)%s->value * (%s*)%s->value;\n", "Integer", left.toC(), "Integer", right.toC());
 		
 		super.cText = temp;
 		super.castType = "Integer";
