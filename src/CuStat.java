@@ -141,8 +141,8 @@ class IfStat extends CuStat{
     		temp_s2 = s2.toC();
     	//dealing with scoping
     	for (String str : super.newVars) {
-    		temp_s1.replaceAll("void * " + str + ";\n", "");
-    		temp_s2.replaceAll("void * " + str + ";\n", "");
+    		temp_s1 = temp_s1.replaceAll("void \\* " + str + ";\n", "");
+    		temp_s2 = temp_s2.replaceAll("void \\* " + str + ";\n", "");
     		super.ctext += "void * " + str + ";\n";
     	}
     	super.ctext += "if (" + e.toC() + ") {\n";
@@ -231,14 +231,18 @@ class Stats extends CuStat{
 				}
 			}
 			//to be safe, we need to call toC
-			c_stats.add(cs.toC());
+			//c_stats.add(cs.toC());
 		}
 		
 		for(String str : super.newVars) {
 			super.ctext += "void * " + str + ";\n";
-			for (String cstr : c_stats) {
-				cstr.replaceAll("void * " + str + ";\n", "");
+		}
+		for (CuStat cs : al) {
+			String temp_str = cs.toC();
+			for(String str : super.newVars) {
+				temp_str = temp_str.replaceAll(("void \\* " + str + ";\n"), "");
 			}
+			c_stats.add(temp_str);
 		}
 		
 		for (String cstr : c_stats) {
