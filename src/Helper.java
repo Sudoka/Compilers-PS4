@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -8,6 +9,7 @@ import java.util.regex.*;
 
 
 public class Helper {
+	protected static HashMap<String, String> cVarType = new HashMap<String, String>();
 	static int one = 97;
 	static int two = 97;
 	static int three = 97;

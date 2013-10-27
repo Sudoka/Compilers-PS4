@@ -34,6 +34,7 @@ class AssignStat extends CuStat{
 		super.ctext += "void * " + var.toString() +";\n";
 		super.ctext += var.toString() + " = &" + ee.toC() + ";\n";
 		super.newVars.add(var.toString());
+		Helper.cVarType.put(var.toString(), ee.getCastType());
 	}
 	
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
