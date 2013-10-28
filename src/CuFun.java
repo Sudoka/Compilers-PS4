@@ -27,6 +27,7 @@ class Function extends CuFun {
 		
 
 		Helper.cFunType.put(v, ts.data_t.id);
+		ArrayList<String> local=new ArrayList<String>();
 		
 		sb.append("void* "+v.toString()+"(");
 		String delim = "";
@@ -36,13 +37,14 @@ class Function extends CuFun {
 			Helper.cVarType.put(e.getKey(), e.getValue().id);
 		}
 		sb.append(") {\n");
-		sb.append(funBody.toC());
+		sb.append(funBody.toC(local));
 		sb.append("}");
 	}
 
 	public String toC(){
 		return sb.toString();
 	}
+	
 	//Figure 7: Type checking Returns
 	@Override public CuType calculateType(String v, CuTypeScheme ts, CuStat s){
 		return null;
