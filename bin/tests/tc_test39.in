@@ -1,0 +1,33 @@
+#test for return - function return - accept
+list := [1,2,4];
+lst := 1..3;
+result := 0;
+
+{
+
+  result2 := [];
+  result9 := [];
+  return ["40"];
+  #result10:= [true];
+}
+
+fun safeModulo(l : Integer, r : Integer, d : Integer) : Integer
+{
+	m := l%r;
+	for(i in m)
+	{
+	    #return ["50"]; #reject
+		return i;
+	}
+	#return ["50"];   #reject
+	return d;
+	#return ["50"];   #reject
+}
+
+list3 := false..true;
+value := false;
+
+
+
+
+return ["50"];

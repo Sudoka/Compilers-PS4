@@ -1,0 +1,23 @@
+# if an interface does not provide a method implementation, a class inheriting from the interface must provide an implementation
+
+interface List<T>
+{
+	fun getFirst() : Iterable<T>;
+	fun getRest() : List<T>;
+	fun getIterable() : Iterable<T>;
+	fun append(l:List<T>) : List<T>;
+	fun reverse() : List<T>;
+}
+
+class Nil<T>() extends List<T>
+{
+	super();
+	# omit method implementation, should not type check
+	# fun getFirst() : Iterable<T> = [];
+	fun getRest() : List<T> = Nil<T>();
+	fun getIterable() : Iterable<T> = [];
+	fun append(l:List<T>) : List<T> = l;
+	fun reverse() : List<T> = Nil<T>();
+}
+
+return ["Hello World!"];
