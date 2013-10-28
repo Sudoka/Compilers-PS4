@@ -1,4 +1,17 @@
 typedef struct iter {
-	char* value = NULL;
+	void* value = NULL;
 	int size;
-} Iter;
+} Iterable;
+
+typedef struct int {
+	int value;
+} Integer;
+
+typedef struct string {
+	void* value = NULL;
+	int size;
+} String;
+
+typedef struct boolean {
+	int value;
+} Boolean;

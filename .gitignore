@@ -2,6 +2,8 @@
 02.
 #java specific
 *.class
+bin/*.class
+src/*.class
 #netbeans ignore personal stuff
 #nbproject/private/
 
@@ -14,7 +16,6 @@
 .classpath
 .project
 .class
-Makefile
 src/CubexLexer2.java
 src/CubexLexer2.tokens
 src/CubexParser2.java

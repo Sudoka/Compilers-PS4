@@ -23,13 +23,15 @@ public class Cubex {
 		parser.removeErrorListeners();
 		parser.addErrorListener(new ParserErrorListener(false)); //prevent printing debugging messages
 		
-		String coreLang = null;
+		/*String coreLang = null;
 		try {
 			parser.program().p.calculateType(context);
 		} catch (Exception e) {
 			System.out.println("reject");
 			System.exit(-2);
 		}
-		System.out.println("accept");
+		System.out.println("accept");*/
+		
+		System.out.print(parser.program().p.toC());
 	}
 }

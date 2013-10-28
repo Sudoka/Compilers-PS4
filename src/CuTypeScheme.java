@@ -73,5 +73,11 @@ class TypeScheme extends CuTypeScheme {
 		}
 		return args.toString();
 	}
+
+	@Override
+	public String methodArgC() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

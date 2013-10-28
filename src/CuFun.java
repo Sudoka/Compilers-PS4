@@ -1,16 +1,22 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 //struct for functions
 public abstract class CuFun {
 	public String v;
 	public CuTypeScheme ts;
-	public CuStat funBody = null; //new Stats(new ArrayList<CuStat>());
+	public CuStat funBody = null; 
+
+	protected StringBuilder sb= new StringBuilder();
+	protected String ctext="";
+	//new Stats(new ArrayList<CuStat>());
 	//public void add(CuVvc v, CuTypeScheme ts) {}
 	//public void add(CuVvc v, CuTypeScheme ts, CuStat s) {}
 	//public void add(CuStat s){}
 	public abstract CuType calculateType(String v, CuTypeScheme ts, CuStat s);
+	public abstract String toC();
 }
 
 class Function extends CuFun {
@@ -20,25 +26,25 @@ class Function extends CuFun {
 		super.v = v_input;
 		super.ts = ts_input;
 		super.funBody=s_input;
+		
+		sb.append("void* "+v.toString()+"(");
+		String delim = "";
+		for (Entry e : ts.data_tc.entrySet()){
+			sb.append(delim).append(e.getKey()+e.getValue().toString());
+			delim=" , ";
+		}
+		sb.append(") {\n");
+		sb.append("}");
 	}
 
-	
+	public String toC(){
+		return sb.toString();
+	}
 	//Figure 7: Type checking Returns
 	@Override public CuType calculateType(String v, CuTypeScheme ts, CuStat s){
 		
 		return null;
 	}
-	
-//	@Override public void add(CuVvc v, CuTypeScheme ts) {
-//		this.v.add(v);
-//		this.ts.add(ts);
-//	}
-//	
-//	@Override public void add(CuVvc v, CuTypeScheme ts, CuStat s) {
-//		this.v.add(v);
-//		this.ts.add(ts);
-//		this.funBody=s;
-//	}
 	
 	
 }

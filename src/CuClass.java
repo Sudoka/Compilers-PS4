@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 
 public abstract class CuClass {
 	protected String text = "";
-	int refCount=0;
 	String name;
 	CuType            superType = new Top();	
 	List<String>       kindCtxt = null;
@@ -23,8 +22,6 @@ public abstract class CuClass {
 	public void add(String v, CuTypeScheme ts, CuStat s) {}
 	public void add(String v_name, CuTypeScheme ts) {}
 	public void add(CuVvc v_name, CuTypeScheme ts) {}
-	public void moreCount(){}
-	public void lessCount(){}
 	public boolean isInterface() {return false; }
 	public CuClass calculateType(CuContext context) throws NoSuchTypeException { return this;}
 
@@ -47,9 +44,6 @@ class Cls extends CuClass {
 		this.fieldTypes=tc;
 	}
 	
-	@Override public void moreCount(){}
-	@Override public void lessCount(){}
-
 	@Override public void add (CuStat s) {
 		classStatement.add(s);}
 
@@ -217,7 +211,7 @@ class Cls extends CuClass {
 					throw new NoSuchTypeException();
 				}
 			}
-			temp.mMutVariables = ts.data_tc;
+			temp.mMutVariables = new HashMap<String,CuType>(ts.data_tc);
 			//System.out.println("fun body is" + iter.funBody.toString());
 			HReturn re = iter.funBody.calculateType(temp);
 			//System.out.println("b is " + re.b + re.tau.toString() + "data_t is " + ts.data_t.toString());
@@ -236,6 +230,7 @@ class Cls extends CuClass {
 				throw new NoSuchTypeException();
 			}
 		}
+		
 		//System.out.println("in class calculateType, end " + super.name);
 		return this;
 	}
