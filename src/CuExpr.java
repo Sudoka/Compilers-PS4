@@ -33,6 +33,10 @@ Helper.P("return expression type " + type);
 	public String getCastType(){
 		return castType;
 	}
+	
+	public boolean isFunCall () {
+		return false;
+	}
 	protected CuType binaryExprType(CuContext context, String leftId, String methodId, CuType rightType) throws NoSuchTypeException {
 		//System.out.println("in binaryExprType, begin");
 		//System.out.println("leftid is " + leftId + ", methodid is " + methodId + ",right type is " + rightType.id);
@@ -604,6 +608,9 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		super.cText = String.format("%s . *(vtable+%d) %s", val.toString(), offset, temp);
 		
 	}
+	@Override public boolean isFunCall () {
+		return true;
+	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 //System.out.println("in VarExp, begin");
         CuType tHat = val.getType(context); // 1st line in Figure 5 exp
@@ -674,6 +681,9 @@ Helper.P("VcExp= "+text);
 		
 		
 	}
+	@Override public boolean isFunCall () {
+		return true;
+	}
 	@Override protected CuType calculateType(CuContext context)  throws NoSuchTypeException{
 		//System.out.println("in VcExp, begin val is " + val);
 		//type check each tao_i // check tao in scope
@@ -711,7 +721,7 @@ Helper.P("VcExp= "+text);
 class VvExp extends CuExpr{
 	private String val;
 	private List<CuType> types = new ArrayList<CuType>();
-	private List<CuExpr> es;
+	private List<CuExpr> es = null;
 	
 	public VvExp(String str){
 		val = str;
@@ -723,6 +733,13 @@ class VvExp extends CuExpr{
 		types = pt;
 		es = e;
 		super.text += Helper.printList("<", pt, ">", ",")+Helper.printList("(", es, ")", ",");
+	}
+	
+	@Override public boolean isFunCall () {
+		if (es == null)
+			return false;
+		else
+			return true;
 	}
 
 	@Override protected CuType calculateType(CuContext context) {
