@@ -20,20 +20,23 @@ public abstract class CuFun {
 }
 
 class Function extends CuFun {
-
-
 	public Function (String v_input, CuTypeScheme ts_input, CuStat s_input){
 		super.v = v_input;
 		super.ts = ts_input;
 		super.funBody=s_input;
 		
+
+		Helper.cFunType.put(v, ts.data_t.id);
+		
 		sb.append("void* "+v.toString()+"(");
 		String delim = "";
-		for (Entry e : ts.data_tc.entrySet()){
+		for (Entry<String, CuType> e : ts.data_tc.entrySet()){
 			sb.append(delim).append(e.getKey()+e.getValue().toString());
 			delim=" , ";
+			Helper.cVarType.put(e.getKey(), e.getValue());
 		}
 		sb.append(") {\n");
+		sb.append(funBody.toC());
 		sb.append("}");
 	}
 
@@ -42,7 +45,6 @@ class Function extends CuFun {
 	}
 	//Figure 7: Type checking Returns
 	@Override public CuType calculateType(String v, CuTypeScheme ts, CuStat s){
-		
 		return null;
 	}
 	
