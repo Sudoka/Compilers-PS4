@@ -32,8 +32,12 @@ class AssignStat extends CuStat{
 		super.text = var.toString() + " := " + ee.toString() + " ;";
 		super.ctext = ee.construct();
 		super.ctext += "void * " + var.toString() +";\n";
-		super.ctext += var.toString() + " = &" + ee.toC() + ";\n";
+		if (ee.isFunCall())
+			super.ctext += var.toString() + " = " + ee.toC() + ";\n";
+		else
+			super.ctext += var.toString() + " = &" + ee.toC() + ";\n";
 		super.newVars.add(var.toString());
+		Helper.cVarType.put(var.toString(), ee.getCastType());
 	}
 	
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
@@ -202,7 +206,10 @@ class ReturnStat extends CuStat{
 		e = ee;
 		super.text = "return " + e.toString() + " ;";
 		super.ctext += e.construct();
-		super.ctext += "return &" + e.toC() + ";\n";
+		if (e.isFunCall())
+			super.ctext += "return " + e.toC() + ";\n";
+		else
+			super.ctext += "return &" + e.toC() + ";\n";
 	}
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
 		//System.out.println("in return stat, begin");
