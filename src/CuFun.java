@@ -33,7 +33,7 @@ class Function extends CuFun {
 		for (Entry<String, CuType> e : ts.data_tc.entrySet()){
 			sb.append(delim).append(e.getKey()+e.getValue().toString());
 			delim=" , ";
-			Helper.cVarType.put(e.getKey(), e.getValue());
+			Helper.cVarType.put(e.getKey(), e.getValue().id);
 		}
 		sb.append(") {\n");
 		sb.append(funBody.toC());
