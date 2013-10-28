@@ -107,10 +107,41 @@ class AndExpr extends CuExpr{
 		super.methodId = "add";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
-		name += left.construct() + ";\n";
-		name += right.construct() + ";\n";
+		String temp = Helper.getVarName();
 		
-		super.cText = String.format("((%s*)%s)->value && ((%s*)%s)->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());		
+		super.cText = temp+".value";
+		super.castType = "Boolean";
+		
+		String leftC = left.construct();
+		String rightC = right.construct();
+		
+		String leftCastType = ""; 
+		String rightCastType = "";
+		
+		name += "\n" + leftC + rightC;
+		
+		if (leftC.equals("") && rightC.equals("")){
+			//both are variables
+			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			super.name += String.format("((%s*)%s)->value && ((%s*)%s)->value;\n", "Boolean", left.toC(), "Boolean", right.toC());			
+		}
+		else if (leftC.equals("") && !rightC.equals("")) { 
+			//right is Boolean
+			leftCastType = "(" + right.getCastType() + "*)";			
+			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			super.name += String.format("(%s %s)->value && %s.value;\n", leftCastType, left.toC(), right.toC());
+		}
+		else if (!leftC.equals("") && rightC.equals("")) {
+			//left is Boolean
+			rightCastType = "(" + left.getCastType() + "*)";
+			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			super.name += String.format("%s.value && (%s %s)->value;\n", left.toC(), rightCastType, right.toC());
+		}
+		else {
+			//both are Booleans
+			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			super.name += String.format("%s.value && %s.value;\n", left.toC(), right.toC());
+		}
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		//right should pass in a type
@@ -185,10 +216,15 @@ class CBoolean extends CuExpr{
 	public CBoolean(Boolean b){
 		val=b;
 		super.text=b.toString();
-		if (val)
-			super.cText = "1";
+		
+		super.castType = "Boolean";
+		String temp = Helper.getVarName();
+		super.cText = temp;
+		
+		if (val)			
+			super.name = String.format("Boolean %s;\n%s.value = %d;\n", temp, temp, 1);
 		else
-			super.cText = "0";
+			super.name = String.format("Boolean %s;\n%s.value = %d;\n", temp, temp, 0);
 	}
 	@Override protected CuType calculateType(CuContext context) {
 		if (val == null) { throw new NoSuchTypeException();}
@@ -295,19 +331,111 @@ class EqualExpr extends CuExpr{
 		right = e2;
 		super.methodId = "equals";
 		
-		super.name += left.construct() + ";\n";
-		super.name += right.construct() + ";\n";
-		
 		if (eq) {
 			super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
-			super.cText = String.format("((%s*)%s)->value == ((%s*)%s)->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
 		}
 		else {
 			method2 = "negate";
 			super.text = String.format("%s . %s < > ( %s ) . negate ( )", left.toString(), super.methodId, right.toString());
-			super.cText = String.format("((%s*)%s)->value != ((%s*)%s)->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
 		}
-		System.out.println(super.cText);
+		
+		castType = "Boolean";
+		String leftC = left.construct();
+		String rightC = right.construct();
+		
+		String leftCastType = ""; 
+		String rightCastType = "";
+		
+		name += "\n" + leftC + rightC;
+		
+		if (leftC.equals("") && rightC.equals("")){
+			leftCastType = "(" + Helper.cVarType.get(left.toC()) + "*)";
+			rightCastType = "(" + Helper.cVarType.get(right.toC()) + "*)";
+			
+			if (!Helper.cVarType.get(left.toC()).equals("String") && !Helper.cVarType.get(right.toC()).equals("String")) {
+				if (eq)
+					super.cText = String.format(
+							"(%s %s)->value == (%s %s)->value", leftCastType,
+							left.toC(), rightCastType, right.toC());
+				else
+					super.cText = String.format(
+							"(%s %s)->value != (%s %s)->value", leftCastType,
+							left.toC(), rightCastType, right.toC());
+			}
+			else {
+				if (eq)
+					super.cText = String.format(
+							"*((%s %s)->value) == *((%s %s)->value)", leftCastType,
+							left.toC(), rightCastType, right.toC());
+				else
+					super.cText = String.format(
+							"*((%s %s)->value) != *((%s %s)->value)", leftCastType,
+							left.toC(), rightCastType, right.toC());
+			
+			}
+			
+		}
+		else if (leftC.equals("") && !rightC.equals("")) { 
+			//right's type is known
+			leftCastType = "(" + right.getCastType() + "*)";
+			
+			if (!right.castType.equals("String")) {			
+				if (eq)
+					super.cText = String.format("(%s %s)->value == %s.value",
+							leftCastType, left.toC(), right.toC());
+				else
+					super.cText = String.format("(%s %s)->value != %s.value",
+							leftCastType, left.toC(), right.toC());
+			}
+			else {
+				if (eq)
+					super.cText = String.format("*((%s %s)->value) == *(%s.value)",
+							leftCastType, left.toC(), right.toC());
+				else
+					super.cText = String.format("*((%s %s)->value) != *(%s.value)",
+							leftCastType, left.toC(), right.toC());
+			}
+		}
+		else if (!leftC.equals("") && rightC.equals("")) {
+			//left's type is known
+			rightCastType = "(" + left.getCastType() + "*)";
+			
+			if (!left.castType.equals("String")) {			
+				if (eq)
+					super.cText = String.format("%s.value == (%s %s)->value",
+							left.toC(), rightCastType, right.toC());
+				else
+					super.cText = String.format("%s.value != (%s %s)->value",
+							left.toC(), rightCastType, right.toC());
+			}
+			else {
+				if (eq)
+					super.cText = String.format("*(%s.value) == *((%s %s)->value)", left.toC(), rightCastType, right.toC());
+				else
+					super.cText = String.format("*(%s.value) != *((%s %s)->value)", left.toC(), rightCastType, right.toC());
+				
+			}
+		}
+		else {
+			//both types are not known
+			if (!left.castType.equals("String") && !right.castType.equals("String")) {
+				if (eq)
+					super.cText = String.format("%s.value == %s.value",
+							left.toC(), right.toC());
+				else
+					super.cText = String.format("%s.value != %s.value",
+							left.toC(), right.toC());
+			}
+			else
+			{
+				if (eq)
+					super.cText = String.format("*(%s.value) == *(%s.value)",
+							left.toC(), right.toC());
+				else
+					super.cText = String.format("*(%s.value) != *(%s.value)",
+							left.toC(), right.toC());			
+			}
+		}
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		CuType t = binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
@@ -334,6 +462,7 @@ class GreaterThanExpr extends CuExpr{
 		Helper.ToDo("strict boolean??");
 		super.text = String.format("%s . %s < > ( %s , %s )", left.toString(), super.methodId, right.toString(), strict);
 		
+		castType = "Boolean";
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -394,6 +523,7 @@ class LessThanExpr extends CuExpr{
 		super.methodId = "lessThan";
 		super.text = String.format("%s . %s < > ( %s, %s )", left.toString(), super.methodId, right.toString(), strict);
 		
+		castType = "Boolean";
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -562,9 +692,26 @@ class NegateExpr extends CuExpr{
 		super.methodId = "negate";
 		super.text = String.format("%s . %s < > ( )", val.toString(), super.methodId);
 
-		super.name += e.construct() + ";\n";
+		String temp = Helper.getVarName();
+		
+		super.cText = temp+".val";
+		super.castType = "Boolean";
+		
+		String eC = e.construct();		
+		
+		name += "\n" + eC;	
+		
+		if(eC.equals(""))
+		{
+			name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			name += String.format("!(((%s*)%s)->value);\n", "Boolean", e.toC());
+		}
+		else
+		{
+			name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			name += String.format("!(%s.value);\n", e.toC());
+		}
 
-		super.cText = String.format("!(((%s*)%s)->value)", e.getCastType(), e.toC());
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return unaryExprType(context, val.getType(context).id, super.methodId);
@@ -637,10 +784,41 @@ class OrExpr extends CuExpr{
 		super.methodId = "or";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 
-		super.name += left.construct() + ";\n";
-		super.name += right.construct() + ";\n";
-
-		super.cText = String.format("((%s*)%s)->value || ((%s*)%s)->value", right.getCastType(), left.toC(), right.getCastType(), right.toC());
+		String temp = Helper.getVarName();
+		
+		super.cText = temp+".value";
+		super.castType = "Boolean";
+		
+		String leftC = left.construct();
+		String rightC = right.construct();
+		
+		String leftCastType = ""; 
+		String rightCastType = "";
+		
+		name += "\n" + leftC + rightC;
+		
+		if (leftC.equals("") && rightC.equals("")){
+			//both are variables
+			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			super.name += String.format("((%s*)%s)->value || ((%s*)%s)->value;\n", "Boolean", left.toC(), "Boolean", right.toC());			
+		}
+		else if (leftC.equals("") && !rightC.equals("")) { 
+			//right is Boolean
+			leftCastType = "(" + right.getCastType() + "*)";			
+			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			super.name += String.format("(%s %s)->value || %s.value;\n", leftCastType, left.toC(), right.toC());
+		}
+		else if (!leftC.equals("") && rightC.equals("")) {
+			//left is Boolean
+			rightCastType = "(" + left.getCastType() + "*)";
+			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			super.name += String.format("%s.value || (%s %s)->value;\n", left.toC(), rightCastType, right.toC());
+		}
+		else {
+			//both are Booleans
+			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+			super.name += String.format("%s.value || %s.value;\n", left.toC(), right.toC());
+		}
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
@@ -708,31 +886,31 @@ class ThroughExpr extends CuExpr{
 		String temp = Helper.getVarName();
 		if (low && up)
 			super.name = String.format(
-				"int i, j=0;\nIterable %s/*iterable name*/;\n"
-				+ "%s/*iterable name*/.size = %d"
-				+ "for(i=%s/*start val*/; i<=%s/*end val*/; i++)\n"
-				+ "*%s.value[j++] = i"
+				"int i, j=0;\nIterable %s;\n"
+				+ "%s.size = %d;\n"
+				+ "for(i=%s; i<=%s; i++)\n"
+				+ "*%s.value[j++] = i;\n"
 				, temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())+1, e1.toC(), e2.toC(), temp);
 		else if (low)
 			super.name = String.format(
-					"int i, j=0;\nIterable %s/*iterable name*/;\n"
-					+ "%s/*iterable name*/.size = %d"
-					+ "for(i=%s/*start val*/; i<%s/*end val*/; i++)\n"
-					+ "*%s.value[j++] = i"
+					"int i, j=0;\nIterable %s;\n"
+					+ "%s.size = %d;"
+					+ "for(i=%s; i<%s/*end val*/; i++)\n"
+					+ "*%s.value[j++] = i;\n"
 					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toC(), e2.toC(), temp);
 		else if (up)
 			super.name = String.format(
-					"int i, j=0;\nIterable %s/*iterable name*/;\n"
-					+ "%s/*iterable name*/.size = %d"
-					+ "for(i=%s+1/*start val*/; i<=%s/*end val*/; i++)\n"
-					+ "*%s.value[j++] = i"
+					"int i, j=0;\nIterable %s;\n"
+					+ "%s.size = %d;\n"
+					+ "for(i=%s+1; i<=%s; i++)\n"
+					+ "*%s.value[j++] = i;\n"
 					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toC(), e2.toC(), temp);
 		else
 			super.name = String.format(
-					"int i, j=0;\nIterable %s/*iterable name*/;\n"
-					+ "%s/*iterable name*/.size = %d"
-					+ "for(i=%s+1/*start val*/; i<%s/*end val*/; i++)\n"
-					+ "*%s.value[j++] = i"
+					"int i, j=0;\nIterable %s;\n"
+					+ "%s.size = %d;\n"
+					+ "for(i=%s+1; i<%s; i++)\n"
+					+ "*%s.value[j++] = i;\n"
 					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())-1, e1.toC(), e2.toC(), temp);
 		
 		super.castType = "Iterable";
