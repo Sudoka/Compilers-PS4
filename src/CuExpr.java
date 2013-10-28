@@ -813,21 +813,27 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		super.text = String.format("%s . %s %s %s", this.val.toString(), this.method, 
 				Helper.printList("<", this.types, ">", ","), Helper.printList("(", this.es, ")", ","));
 		
-		//to be modified when class definition becomes clearer
-		int offset = 0;
+		
+		castType = Helper.cVarType.get(e+"_"+var);
+		int offset = 0;									//to be modified when class definition becomes clearer
+		String tempName = Helper.getVarName();
+		String fptr = Helper.getVarName();
+		name += "\n";
+		name += String.format("void* this%s;\nthis%s = &%s;\n", tempName, tempName, e);
 		String temp = "";
 		if (es == null)
-			temp = "(&this)";
-		temp += "(&this, ";
+			temp = String.format("(&this%s)", tempName);
+		temp += String.format("(&this%s, ", tempName);
 		for (CuExpr exp : es) {
-			super.name += exp.construct() + ";\n";
+			super.name += exp.construct();
 			temp += "&" + exp.toC() + ", ";
 		}
 		int j = temp.lastIndexOf(", ");
 		if (j > 1) temp = temp.substring(0, j);
 		temp += ")";
 		
-		super.cText = String.format("%s . *(vtable+%d) %s", val.toString(), offset, temp);
+		name += String.format("(void*) (%s*) ();\n%s = %s.(*vtable[%d]);\n", fptr, fptr, val.toString(), offset);
+		super.cText = String.format("%s %s", fptr, temp);
 		
 	}
 	@Override public boolean isFunCall () {
@@ -887,12 +893,13 @@ class VcExp extends CuExpr {
 Helper.P("VcExp= "+text);
 		//System.out.println("in VcExp constructor, end");
 		
+		castType = Helper.cVarType.get(v);
 		String temp = "";
 		if (es == null)
 			temp = "()";
 		temp += "(";
 		for (CuExpr exp : es) {
-			super.name += exp.construct() + ";\n";
+			super.name += exp.construct();
 			temp += "&" + exp.toC() + ", ";
 		}
 		int j = temp.lastIndexOf(", ");
@@ -955,6 +962,25 @@ class VvExp extends CuExpr{
 		types = pt;
 		es = e;
 		super.text += Helper.printList("<", pt, ">", ",")+Helper.printList("(", es, ")", ",");
+		
+		super.castType = Helper.cVarType.get(cText);
+		super.name += "\n";
+		
+		String temp = "", tempName = "";
+		if (es == null)
+			temp = "()";
+		temp += "(";
+		for (CuExpr exp : es) {
+			tempName = exp.construct();
+			temp += "&" + exp.toC() + ", ";
+			super.name += tempName;
+		}
+		int j = temp.lastIndexOf(", ");
+		if (j > 1) temp = temp.substring(0, j);
+		temp += ")";
+		
+		super.cText=val.toString()+temp;
+		
 	}
 	
 	@Override public boolean isFunCall () {
