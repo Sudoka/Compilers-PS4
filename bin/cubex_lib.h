@@ -1,21 +1,26 @@
 typedef struct iter {
-	void** value = NULL;
+	void** value;
 	int size;
+	int nrefs;
 } Iterable;
 
-typedef struct int {
+typedef struct integer {
+	int nrefs;
 	int value;
 } Integer;
 
 typedef struct string {
-	void* value = NULL;
+	int nrefs;
+	char* value;
 	int size;
 } String;
 
 typedef struct boolean {
+	int nrefs;
 	int value;
 } Boolean;
 
-typedef struct char {
+typedef struct character {
+	int nrefs;
 	char value;
 } Character;

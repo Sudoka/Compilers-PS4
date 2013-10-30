@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,15 +24,16 @@ public class Cubex {
 		parser.removeErrorListeners();
 		parser.addErrorListener(new ParserErrorListener(false)); //prevent printing debugging messages
 		
-		/*String coreLang = null;
+		CuProgr ourProgram = null;
 		try {
-			parser.program().p.calculateType(context);
+			ourProgram = parser.program().p;
+			ourProgram.calculateType(context);
 		} catch (Exception e) {
 			System.out.println("reject");
 			System.exit(-2);
 		}
-		System.out.println("accept");*/
-		
-		System.out.print(parser.program().p.toC());
+		System.out.println("accept");
+		ArrayList<String> localVars = new ArrayList<String>();
+		System.out.print(ourProgram.toC(localVars));
 	}
 }

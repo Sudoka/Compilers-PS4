@@ -16,7 +16,7 @@ public abstract class CuProgr {
 	
 	public void calculateType(CuContext context) throws NoSuchTypeException {}
 	
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		return ctext;
 	}
 }
@@ -26,29 +26,30 @@ class FullPrg extends CuProgr {
 	CuStat s;
 	public void add_prg(CuProgr p){
 		elements.add(p);
-		for(String str : p.newVars) {
-			if (!super.newVars.contains(str)) {
-				super.newVars.add(str);
-			}
-		}
 	}
 	public void add_lastStat(CuStat s) {
 		this.s = s;
+	}
+	@Override public String toC(ArrayList<String> localVars) {
+		String temp_str = "";
+		for (CuProgr cp : elements) {
+			temp_str += cp.toC(localVars);
+			for(String str : cp.newVars) {
+				if (!super.newVars.contains(str)) {
+					super.newVars.add(str);
+				}
+			}
+		}
+		//need to call toC first before using newVars		
+		temp_str += s.toC(localVars);
 		for(String str : s.newVars) {
 			if (!super.newVars.contains(str)) {
 				super.newVars.add(str);
 			}
 		}
-	}
-	@Override public String toC() {
-		String temp_str = "";
-		for (CuProgr cp : elements) {
-			temp_str += cp.toC();
-		}
-		temp_str += s.toC();
     	for (String str : super.newVars) {
-    		super.ctext += "void * " + str + ";\n";
-    		temp_str = temp_str.replaceAll("void \\* " + str + ";\n", "");
+    		super.ctext += "void * " + str + " = NULL;\n";
+    		temp_str = temp_str.replaceAll("void \\* " + str + " = NULL;\n", "");
     	}
     	super.ctext += temp_str;
 		return super.ctext;
@@ -146,10 +147,12 @@ class StatPrg extends CuProgr {
 		//System.out.println("in statement program constructor");
 		this.stat = s;
 		super.text = s.toString();
-		super.ctext = s.toC();
-		super.newVars = s.newVars;
 	}
-	
+	@Override public String toC(ArrayList<String> localVars) {
+		super.ctext = stat.toC(localVars);
+		super.newVars = stat.newVars;
+		return super.ctext;
+	}
 	@Override public void calculateType(CuContext context) throws NoSuchTypeException {
 		//System.out.println("in statement program");
 		HReturn re = stat.calculateType(context);

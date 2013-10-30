@@ -1,9 +1,0 @@
-# we cannot extend a class that does not have a constructor
-# including all internal types
-
-class Apple() extends Integer
-{
-	super();
-}
-
-return ["hello world"];

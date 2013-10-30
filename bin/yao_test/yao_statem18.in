@@ -1,3 +1,0 @@
-a := [3, "hello", true];
-
-return ["accept"];

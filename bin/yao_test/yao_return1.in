@@ -1,6 +1,0 @@
-if (true)
-	a := 0;
-else
-	return 0;
-	
-return ["accept"];

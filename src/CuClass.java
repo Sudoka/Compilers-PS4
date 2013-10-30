@@ -263,29 +263,11 @@ class Cls extends CuClass {
 		int i=0;
 		vtable.append(String.format("void* %sTbl = malloc(sizeof(%d*sizeof(void*)));\n", name, funList.size()));
 		for (Entry<String, CuFun> e: funList.entrySet()){
-			fun.append(e.getValue().toC());
-			//Helper.cFunType.put(name+"_"+e.getKey(), e.getValue().ts.data_t.id);
-			
-			
-
-			for (Entry<String, CuType> e : ts.data_tc.entrySet()){
-				inputs.append(delim).append(e.getKey() +"* "+e.getValue().toString());
-				delim=" , ";
-				Helper.cVarType.put(e.getKey(), e.getValue().id);
-			}
-			
-			
-			
-			
-			vtable.append(String.format("void* %s(%s)=%s;",name+"_"+e.getKey(),
-					e.getValue().inputs.toString(),
-					e.getValue()));
-			vtable.append(String.format("%sTbl[%d]=",name, i));
-
-vtable[0] = abc;
+			fun.append(e.getValue().toC(name));
+			vtable.append(String.format("%sTbl[%d]=%s", name, i, name+"_"+e.getKey()));
 			i++;
 		}
-		return fun.toString()+def.toString();
+		return fun.toString()+vtable.toString()+def.toString();
 	}
 }
 

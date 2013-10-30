@@ -1,8 +1,0 @@
-# return a subtype of the declared type
-
-fun foo() : Iterable<Character>
-{
-	return "hello";
-}
-
-return ["Hello world!"];
