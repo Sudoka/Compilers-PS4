@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 
 public abstract class CuTypeScheme {
@@ -15,6 +16,7 @@ public abstract class CuTypeScheme {
 	public void calculateType(CuContext context) throws NoSuchTypeException {}
 	public boolean sameAs (CuTypeScheme that, CuContext context) {
 		return false;}
+	public abstract String methodArgC(); 
 }
 
 class TypeScheme extends CuTypeScheme {
@@ -64,4 +66,18 @@ class TypeScheme extends CuTypeScheme {
 		context = original_context;
 		return true;
 	}
+	public String methodArg(){
+		StringBuilder args=new StringBuilder();
+		for (Entry e:data_tc.entrySet()){
+			args.append(e.getKey()+" "+e.getValue()+", ");
+		}
+		return args.toString();
+	}
+
+	@Override
+	public String methodArgC() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 }

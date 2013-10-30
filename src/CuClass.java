@@ -36,7 +36,6 @@ class Cls extends CuClass {
 	//List<CuType> appliedTypePara=new ArrayList<CuType>();
 	List<CuStat> classStatement = new ArrayList<CuStat>();
 	//private static final Exception NoSuchTypeExpression() = null;
-	
 	List<CuExpr>        superArg = new ArrayList<CuExpr>();
 
 	public Cls(String clsintf, List<String> kc, LinkedHashMap<String, CuType> tc) {
@@ -44,7 +43,7 @@ class Cls extends CuClass {
 		super.kindCtxt=kc;
 		this.fieldTypes=tc;
 	}
-
+	
 	@Override public void add (CuStat s) {
 		classStatement.add(s);}
 
@@ -114,8 +113,6 @@ class Cls extends CuClass {
 						//check signature, but not here
 						//e.getValue().ts.calculateType(context);
 						//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
-						//check whether the 
-						//I don't think we should check here because you can not check two tyscheme equivalence with generic parames
 						if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context)){
 							throw new NoSuchTypeException();
 						}
@@ -233,6 +230,7 @@ class Cls extends CuClass {
 				throw new NoSuchTypeException();
 			}
 		}
+		
 		//System.out.println("in class calculateType, end " + super.name);
 		return this;
 	}
