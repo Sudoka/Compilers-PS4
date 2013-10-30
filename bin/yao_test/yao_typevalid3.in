@@ -1,7 +1,0 @@
-interface Cons<T>()
-{
-	fun getFirst<T>(param : T) : T = param;
-}
-
-yao := Cons<Int>();
-return ["accept"];

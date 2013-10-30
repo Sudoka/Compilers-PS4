@@ -1,7 +1,0 @@
-class Cons<T>()
-{
-	super();
-}
-
-yao := Cons<Integer>();
-return ["accept"];

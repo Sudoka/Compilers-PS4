@@ -1,8 +1,0 @@
-# typechecker test program 18
-
-class MyIterable<T>() extends Iterable<T>
-{
-	super();
-}
-
-return ["Whoops"];

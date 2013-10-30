@@ -16,7 +16,7 @@ public abstract class CuExpr {
 	public void add(List<CuType> pt, List<CuExpr> es) {}
 	public final CuType getType(CuContext context) throws NoSuchTypeException {
 		if(type == null) { type = calculateType(context); }
-Helper.P("return expression type " + type);
+		Helper.P("return expression type " + type);
 		return type;
 	}
 	protected CuType calculateType(CuContext context) throws NoSuchTypeException { return null;};
@@ -93,7 +93,7 @@ Helper.P("return expression type " + type);
         
         t.plugIn(map);
         //System.out.println("t type is " + t.type.toString());
-Helper.P(String.format("this=%s<%s> parent %s, that=%s<%s>, map=%s", type,type.map,type.parentType, t,t.map, map));
+        Helper.P(String.format("this=%s<%s> parent %s, that=%s<%s>, map=%s", type,type.map,type.parentType, t,t.map, map));
         return type.isSubtypeOf(t);
     }
 }
@@ -226,6 +226,7 @@ class BrkExpr extends CuExpr {
 		super.cText = iter;
 		return super.toC();
 	}
+
 }
 
 class CBoolean extends CuExpr{
@@ -1242,7 +1243,7 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
         
         if (ts.data_kc.size() != types.size()) throw new NoSuchTypeException();
         Map<String, CuType> mapping = new HashMap<String, CuType>();
-Helper.P(String.format("kc=%s. types=%s. eMap=%s",ts.data_kc, types,val.calculateType(context).map));
+        Helper.P(String.format("kc=%s. types=%s. eMap=%s",ts.data_kc, types,val.calculateType(context).map));
         for (int i = 0; i < types.size(); i++) {
         	mapping.put(ts.data_kc.get(i), types.get(i));
         }
@@ -1261,7 +1262,7 @@ Helper.P(String.format("kc=%s. types=%s. eMap=%s",ts.data_kc, types,val.calculat
         }        	
         //System.out.println("in VarExp, end");
         ts.data_t.plugIn(mapping);
-Helper.P(String.format("%s returns %s<%s>, mapping %s", this, ts.data_t,ts.data_t.map, mapping));
+        Helper.P(String.format("%s returns %s<%s>, mapping %s", this, ts.data_t,ts.data_t.map, mapping));
         return ts.data_t;
 	}
 	
