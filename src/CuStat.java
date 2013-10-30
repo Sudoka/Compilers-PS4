@@ -34,6 +34,7 @@ class AssignStat extends CuStat{
 	}
 	
 	@Override public String toC(ArrayList<String> localVars) {
+		String exp_toC = ee.toC();
 		super.ctext = ee.construct();
 		//the below sentence can be removed by higher level blocks
 		super.ctext += "void * " + var.toString() +" = NULL;\n";
@@ -46,7 +47,7 @@ class AssignStat extends CuStat{
 		super.ctext += "((int*) &" + var.toString() + ")[1]--;\n";
 		super.ctext += "}\n";
 		//((int*) &test)[0]
-		super.ctext += var.toString() + " = " + ee.toC() + ";\n";
+		super.ctext += var.toString() + " = " + exp_toC + ";\n";
 		//increase the new reference count
 		super.ctext += "((int*) &" + var.toString() + ")[1]++;\n";
 		/*if (ee.isFunCall())
@@ -96,12 +97,13 @@ class ForStat extends CuStat{
 	
 	@Override public String toC(ArrayList<String> localVars)
 	{
+		String exp_toC = e.toC();
 		super.ctext = e.construct();
 		String iter_name = Helper.getVarName();
 		super.ctext += "int " + iter_name + ";\n";
-		super.ctext += "for (" + iter_name + "=0; " + iter_name + "<" + e.toC() + ".size;" + iter_name + "++) {\n";
+		super.ctext += "for (" + iter_name + "=0; " + iter_name + "<" + exp_toC + ".size;" + iter_name + "++) {\n";
 		Helper.ToDo("change the e.toC to e.getNextElement");
-		super.ctext += "void * " + var.toString() + "=" + e.toC() + ".value[" + iter_name + "];\n";
+		super.ctext += "void * " + var.toString() + "=" + exp_toC + ".value[" + iter_name + "];\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>();
 		super.ctext += s1.toC(localVarsInFor);
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate
@@ -177,6 +179,7 @@ class IfStat extends CuStat{
     
     //for if statement, ctext is build here
     @Override public String toC(ArrayList<String> localVars) {
+    	String exp_toC = e.toC();
     	super.ctext += this.e.construct();
     	ArrayList<String> s1_localVars = new ArrayList<String>();
     	ArrayList<String> s2_localVars = new ArrayList<String>();
@@ -213,7 +216,7 @@ class IfStat extends CuStat{
     		temp_s2 = temp_s2.replaceAll("void \\* " + str + " = NULL;\n", "");
     		super.ctext += "void * " + str + " = NULL;\n";
     	}
-    	super.ctext += "if (" + e.toC() + ") {\n";
+    	super.ctext += "if (" + exp_toC + ") {\n";
     	super.ctext += temp_s1;
 		//now reference counting/free memory due to scoping
 		for (String cur_str : s1_localVars) {
@@ -306,9 +309,9 @@ class ReturnStat extends CuStat{
 			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
 			super.ctext += "}\n";
 		}
-		
+		String exp_toC = e.toC();
 		super.ctext += e.construct();
-		super.ctext += "return " + e.toC() + ";\n";
+		super.ctext += "return " + exp_toC + ";\n";
 		/*if (e.isFunCall())
 			super.ctext += "return " + e.toC() + ";\n";
 		else
@@ -389,8 +392,9 @@ class WhileStat extends CuStat{
 		text = "while ( " + e.toString() + " ) " + s1.toString();
 	}
 	@Override public String toC(ArrayList<String> localVars) {
+		String exp_toC = e.toC();
 		super.ctext = e.construct();
-		super.ctext += "while (" + e.toC() + ") {\n";
+		super.ctext += "while (" + exp_toC + ") {\n";
 		ArrayList<String> while_localVars = new ArrayList<String>();
 		super.ctext += s1.toC(while_localVars);
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate
