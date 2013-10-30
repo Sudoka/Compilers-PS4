@@ -10,6 +10,7 @@ public abstract class CuFun {
 	public CuStat funBody = null; 
 
 	protected StringBuilder sb= new StringBuilder();
+	protected StringBuilder inputs=new StringBuilder();
 	protected String ctext="";
 	//new Stats(new ArrayList<CuStat>());
 	//public void add(CuVvc v, CuTypeScheme ts) {}
@@ -25,17 +26,18 @@ class Function extends CuFun {
 		super.ts = ts_input;
 		super.funBody=s_input;
 		
-
+		//TODO: please let statement call this instead
 		Helper.cFunType.put(v, ts.data_t.id);
 		ArrayList<String> local=new ArrayList<String>();
 		
 		sb.append("void* "+v.toString()+"(");
 		String delim = "";
 		for (Entry<String, CuType> e : ts.data_tc.entrySet()){
-			sb.append(delim).append(e.getKey()+e.getValue().toString());
+			inputs.append(delim).append(e.getKey() +"* "+e.getValue().toString());
 			delim=" , ";
 			Helper.cVarType.put(e.getKey(), e.getValue().id);
 		}
+		sb.append(inputs);
 		sb.append(") {\n");
 		sb.append(funBody.toC(local));
 		sb.append("}");

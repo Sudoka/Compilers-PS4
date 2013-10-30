@@ -15,3 +15,7 @@ typedef struct string {
 typedef struct boolean {
 	int value;
 } Boolean;
+
+typedef struct char {
+	char value;
+} Character;

@@ -177,7 +177,8 @@ class BrkExpr extends CuExpr {
 	public BrkExpr(List<CuExpr> es){
 		this.val = es;
 		super.text=Helper.printList("[", val, "]", ",");
-		
+ArrayList<String> temp=new ArrayList<String>();
+
 		String iter = Helper.getVarName();
 		String j = Helper.getVarName();
 		String temp = "";
@@ -194,8 +195,8 @@ class BrkExpr extends CuExpr {
 		super.name += temp;
 		super.castType = "Iterable";
 		super.cText = iter;
-	
 	}
+	
 	@Override protected CuType calculateType(CuContext context) {
 		//System.out.println("in bracket expression, start");
 		if (val == null || val.isEmpty()) return new Iter(CuType.bottom);

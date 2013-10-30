@@ -7,13 +7,14 @@ import java.util.Map.Entry;
 
 public abstract class CuClass {
 	protected String text = "";
+	protected StringBuilder def=new StringBuilder();
+	protected StringBuilder fun=new StringBuilder();
+	protected StringBuilder body=new StringBuilder();
+	
 	String name;
 	CuType            superType = new Top();	
 	List<String>       kindCtxt = null;
 	Map<String,CuTypeScheme> mFunctions = new HashMap<String,CuTypeScheme>();
-	//we probably don't need this since we are using CuFun
-	//List<String> implemented_methods = new ArrayList<String>();
-	
 	HashMap<String, CuFun>  funList = new HashMap<String, CuFun>();
 
 	public void add(List<CuExpr> s) {}
@@ -22,8 +23,11 @@ public abstract class CuClass {
 	public void add(String v, CuTypeScheme ts, CuStat s) {}
 	public void add(String v_name, CuTypeScheme ts) {}
 	public void add(CuVvc v_name, CuTypeScheme ts) {}
+	public void moreCount(){}
+	public void lessCount(){}
 	public boolean isInterface() {return false; }
 	public CuClass calculateType(CuContext context) throws NoSuchTypeException { return this;}
+	public abstract String toC();
 
 	@Override public String toString() {
 		return text;
@@ -42,8 +46,17 @@ class Cls extends CuClass {
 		super.name=clsintf;
 		super.kindCtxt=kc;
 		this.fieldTypes=tc;
+		
+		def.append("typedef struct {\n");
+		def.append("		void* vtable;\n");
+		def.append("		void* nref;\n");
+		for (Entry<String,CuType> e :fieldTypes.entrySet()){
+			def.append("		void* "+e.getKey()+";\n");
+		}
+		def.append("			} "+name+";");
 	}
-	
+
+
 	@Override public void add (CuStat s) {
 		classStatement.add(s);}
 
@@ -245,14 +258,38 @@ class Cls extends CuClass {
 		return "to string messed up";
 	}
 
-	
+	public String toC(){
+		StringBuilder vtable=new StringBuilder();
+		int i=0;
+		vtable.append(String.format("void* %sTbl = malloc(sizeof(%d*sizeof(void*)));\n", name, funList.size()));
+		for (Entry<String, CuFun> e: funList.entrySet()){
+			fun.append(e.getValue().toC());
+			//Helper.cFunType.put(name+"_"+e.getKey(), e.getValue().ts.data_t.id);
+			
+			
+
+			for (Entry<String, CuType> e : ts.data_tc.entrySet()){
+				inputs.append(delim).append(e.getKey() +"* "+e.getValue().toString());
+				delim=" , ";
+				Helper.cVarType.put(e.getKey(), e.getValue().id);
+			}
+			
+			
+			
+			
+			vtable.append(String.format("void* %s(%s)=%s;",name+"_"+e.getKey(),
+					e.getValue().inputs.toString(),
+					e.getValue()));
+			vtable.append(String.format("%sTbl[%d]=",name, i));
+
+vtable[0] = abc;
+			i++;
+		}
+		return fun.toString()+def.toString();
+	}
 }
 
 class Intf extends CuClass{
-	//Map<String, CuType> fieldTypes=new LinkedHashMap<String,CuType>();
-	
-	//List<CuType> appliedTypePara=new ArrayList<CuType>();
-	//List<CuStat> classStatement = new ArrayList<CuStat>();
 	
 	public Intf (String iname, List<String> kname){
 		super.name = iname;
@@ -405,6 +442,10 @@ class Intf extends CuClass{
 				Helper.printList("", classStatement, "", ""), Helper.printList("(", this.superArg, ")", ","), Helper.printList("", fun, "", ""));
 	    */
 		return "to string messed up";
+	}
+
+	public String toC(){
+		return "";
 	}
 }
 
