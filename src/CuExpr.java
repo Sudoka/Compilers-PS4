@@ -107,11 +107,22 @@ class AndExpr extends CuExpr{
 		super.methodId = "add";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
+		
+		
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		//right should pass in a type
+		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+	}
+	
+	@Override
+	public String toC() {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp+".value";
 		super.castType = "Boolean";
-		
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -120,34 +131,32 @@ class AndExpr extends CuExpr{
 		super.name += String.format("Boolean* %s = (Boolean*) malloc(sizeof(Boolean));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value && ((%s*)%s)->value;\n", "Boolean", left.toC(), "Boolean", right.toC());			
+		super.name += String.format("((%s*)%s)->value && ((%s*)%s)->value;\n", "Boolean", leftToC, "Boolean", rightToC);			
 
 		/*if (leftC.equals("") && rightC.equals("")){
-			//both are variables
-			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
-			super.name += String.format("((%s*)%s)->value && ((%s*)%s)->value;\n", "Boolean", left.toC(), "Boolean", right.toC());			
-		}
-		else if (leftC.equals("") && !rightC.equals("")) { 
-			//right is Boolean
-			leftCastType = "(" + right.getCastType() + "*)";			
-			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
-			super.name += String.format("(%s %s)->value && %s.value;\n", leftCastType, left.toC(), right.toC());
-		}
-		else if (!leftC.equals("") && rightC.equals("")) {
-			//left is Boolean
-			rightCastType = "(" + left.getCastType() + "*)";
-			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
-			super.name += String.format("%s.value && (%s %s)->value;\n", left.toC(), rightCastType, right.toC());
-		}
-		else {
-			//both are Booleans
-			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
-			super.name += String.format("%s.value && %s.value;\n", left.toC(), right.toC());
-		}*/
+		//both are variables
+		super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+		super.name += String.format("((%s*)%s)->value && ((%s*)%s)->value;\n", "Boolean", left.toC(), "Boolean", right.toC());			
 	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		//right should pass in a type
-		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+	else if (leftC.equals("") && !rightC.equals("")) { 
+		//right is Boolean
+		leftCastType = "(" + right.getCastType() + "*)";			
+		super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+		super.name += String.format("(%s %s)->value && %s.value;\n", leftCastType, left.toC(), right.toC());
+	}
+	else if (!leftC.equals("") && rightC.equals("")) {
+		//left is Boolean
+		rightCastType = "(" + left.getCastType() + "*)";
+		super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+		super.name += String.format("%s.value && (%s %s)->value;\n", left.toC(), rightCastType, right.toC());
+	}
+	else {
+		//both are Booleans
+		super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
+		super.name += String.format("%s.value && %s.value;\n", left.toC(), right.toC());
+	}*/
+		
+		return super.toC();
 	}
 }
 
@@ -180,23 +189,6 @@ class BrkExpr extends CuExpr {
 		this.val = es;
 		super.text=Helper.printList("[", val, "]", ",");
 		
-		String iter = Helper.getVarName();
-		String j = Helper.getVarName();
-		String temp = "";
-		for (CuExpr e : val)
-		{
-			name += e.construct();
-			temp += String.format("%s.value[%s++] = &" + e.toC() + ";\n", iter, j);
-		}
-		super.name += String.format(
-				"int %s = 0;\nIterable %s;\n"
-				+ "%s.size = %d;\n"
-				+ "%s.value = (void**)malloc(%d * sizeof(void*));\n",				
-				j, iter, iter, val.size(), iter, val.size());
-		super.name += temp;
-		super.castType = "Iterable";
-		super.cText = iter;
-	
 	}
 	@Override protected CuType calculateType(CuContext context) {
 		//System.out.println("in bracket expression, start");
@@ -211,6 +203,29 @@ class BrkExpr extends CuExpr {
 		
 		return new Iter(t);
 	}
+	
+	@Override
+	public String toC() {
+		String iter = Helper.getVarName();
+		String j = Helper.getVarName();
+		String temp = "", eToC;
+		
+		for (CuExpr e : val)
+		{
+			eToC = e.toC();
+			name += e.construct();
+			temp += String.format("%s.value[%s++] = &" + eToC + ";\n", iter, j);
+		}
+		super.name += String.format(
+				"int %s = 0;\nIterable %s;\n"
+				+ "%s.size = %d;\n"
+				+ "%s.value = (void**)malloc(%d * sizeof(void*));\n",				
+				j, iter, iter, val.size(), iter, val.size());
+		super.name += temp;
+		super.castType = "Iterable";
+		super.cText = iter;
+		return super.toC();
+	}
 }
 
 class CBoolean extends CuExpr{
@@ -219,6 +234,14 @@ class CBoolean extends CuExpr{
 		val=b;
 		super.text=b.toString();
 		
+		}
+	@Override protected CuType calculateType(CuContext context) {
+		if (val == null) { throw new NoSuchTypeException();}
+		return CuType.bool;
+	}
+	
+	@Override
+	public String toC() {
 		super.castType = "Boolean";
 		String temp = Helper.getVarName();
 		super.cText = temp;
@@ -231,10 +254,8 @@ class CBoolean extends CuExpr{
 			super.name = String.format("Boolean* %s = (Boolean *) malloc(sizeof(Boolean));\n"
 					+ "(%s->nrefs)++;\n"
 					+ "%s.value = %d;\n", temp, temp, temp, 0);
-	}
-	@Override protected CuType calculateType(CuContext context) {
-		if (val == null) { throw new NoSuchTypeException();}
-		return CuType.bool;
+	
+		return super.toC();
 	}
 }
 
@@ -244,16 +265,21 @@ class CInteger extends CuExpr {
 		val=i;
 		super.text=i.toString();
 		
-		String temp = Helper.getVarName();
-		super.name = String.format("Integer* %s = (Integer*) malloc(sizeof(Integer));\n"
-				+ "(%s->nrefs) = 0;\n"
-				+ "%s->value = %d;\n", temp, temp, temp, i);		
-		super.cText = temp;
-		super.castType = "Integer";
 	}
 	@Override protected CuType calculateType(CuContext context) {
 		if (val == null) { throw new NoSuchTypeException();}
 		return CuType.integer;
+	}
+	
+	@Override
+	public String toC() {
+		String temp = Helper.getVarName();
+		super.name = String.format("Integer* %s = (Integer*) malloc(sizeof(Integer));\n"
+				+ "(%s->nrefs) = 0;\n"
+				+ "%s->value = %d;\n", temp, temp, temp, val);		
+		super.cText = temp;
+		super.castType = "Integer";
+		return super.toC();
 	}
 }
 
@@ -263,18 +289,24 @@ class CString extends CuExpr {
 		val=s;
 		super.text=s;
 		
-		String temp = Helper.getVarName();
-		super.name = String.format("String* %s = (String *) malloc(sizeof(String));\n"
-				+ "%s->value = (char*) malloc(sizeof(%s));\n"
-				+ "(%s->nrefs) = 0;\n"
-				+ "strcpy(%s->value, %s);\n", temp, temp, s, temp, temp, s);	
-		
-		super.cText = temp;
-		super.castType = "String";
 	}
 	@Override protected CuType calculateType(CuContext context) {
 		if (val == null) { throw new NoSuchTypeException();}
 		return CuType.string;
+	}
+	
+	@Override
+	public String toC() {
+		String temp = Helper.getVarName();
+		super.name = String.format("String* %s = (String *) malloc(sizeof(String));\n"
+				+ "%s->value = (char*) malloc(sizeof(%s));\n"
+				+ "(%s->nrefs) = 0;\n"
+				+ "mystrcpy(%s->value, %s);\n", temp, temp, val, temp, temp, val);	
+		
+		super.cText = temp;
+		super.castType = "String";
+		
+		return super.toC();
 	}
 }
 
@@ -285,12 +317,26 @@ class DivideExpr extends CuExpr{
 		right = e2;
 		super.methodId = "divide";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
-		
-		String temp = Helper.getVarName();
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+	}
+	/*
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
+			throw new NoSuchTypeException();
+		return CuType.integer;
+	}
+	 */
+	
+	@Override
+	public String toC() {
+String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -299,7 +345,7 @@ class DivideExpr extends CuExpr{
 		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value / ((%s*)%s)->value;\n", "Integer", left.toC(), "Integer", right.toC());			
+		super.name += String.format("((%s*)%s)->value / ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -323,17 +369,8 @@ class DivideExpr extends CuExpr{
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value / %s.value;\n", left.toC(), right.toC());
 		}*/
+		return super.toC();
 	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
-	}
-	/*
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
-			throw new NoSuchTypeException();
-		return CuType.integer;
-	}
-	 */
 }
 
 class EqualExpr extends CuExpr{
@@ -351,8 +388,27 @@ class EqualExpr extends CuExpr{
 			method2 = "negate";
 			super.text = String.format("%s . %s < > ( %s ) . negate ( )", left.toString(), super.methodId, right.toString());
 		}
-		
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		CuType t = binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+		if (method2 != null) {
+			CuClass cur_class = context.mClasses.get(t.id);
+			return cur_class.mFunctions.get(method2).data_t;
+		}
+		return t;
+	}
+	/*
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		if (!left.equals(right))
+			throw new NoSuchTypeException();
+		return CuType.bool;
+	} */
+	
+	@Override
+	public String toC() {
 		castType = "Boolean";
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -362,8 +418,8 @@ class EqualExpr extends CuExpr{
 		name += "\n" + leftC + rightC;
 		
 		if (leftC.equals("") && rightC.equals("")){
-			leftCastType = "(" + Helper.cVarType.get(left.toC()) + "*)";
-			rightCastType = "(" + Helper.cVarType.get(right.toC()) + "*)";
+			leftCastType = "(" + Helper.cVarType.get(leftToC) + "*)";
+			rightCastType = "(" + Helper.cVarType.get(rightToC) + "*)";
 		}
 		else if (leftC.equals("") && !rightC.equals("")) { 
 			leftCastType = "(" + right.getCastType() + "*)";
@@ -379,24 +435,24 @@ class EqualExpr extends CuExpr{
 		}
 		
 		if (!leftCastType.equals("(String*)") && !rightCastType.equals("(String*)")) {
-			if (eq)
+			if (method2 == null)
 				super.cText = String.format(
 						"(%s %s)->value == (%s %s)->value", leftCastType,
-						left.toC(), rightCastType, right.toC());
+						leftToC, rightCastType, rightToC);
 			else
 				super.cText = String.format(
 						"(%s %s)->value != (%s %s)->value", leftCastType,
-						left.toC(), rightCastType, right.toC());
+						leftToC, rightCastType, rightToC);
 		}
 		else {
-			if (eq)
+			if (method2 == null)
 				super.cText = String.format(
-						"(strcmp(((%s %s)->value), ((%s %s)->value)) ? 1 : 0)", leftCastType,
-						left.toC(), rightCastType, right.toC());
+						"(mystrcmp(((%s %s)->value), ((%s %s)->value)) ? 1 : 0)", leftCastType,
+						leftToC, rightCastType, rightToC);
 			else
 				super.cText = String.format(
-						"(strcmp(((%s %s)->value), ((%s %s)->value)) ? 0 : 1)", leftCastType,
-						left.toC(), rightCastType, right.toC());
+						"(mystrcmp(((%s %s)->value), ((%s %s)->value)) ? 0 : 1)", leftCastType,
+						leftToC, rightCastType, rightToC);
 		
 		}
 		
@@ -489,33 +545,35 @@ class EqualExpr extends CuExpr{
 							left.toC(), right.toC());			
 			}
 		}*/
+		return super.toC();
 	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		CuType t = binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
-		if (method2 != null) {
-			CuClass cur_class = context.mClasses.get(t.id);
-			return cur_class.mFunctions.get(method2).data_t;
-		}
-		return t;
-	}
-	/*
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		if (!left.equals(right))
-			throw new NoSuchTypeException();
-		return CuType.bool;
-	} */
 }
 
 class GreaterThanExpr extends CuExpr{
 	private CuExpr left, right;
+	boolean b;
 	public GreaterThanExpr(CuExpr e1, CuExpr e2, Boolean strict) {
 		left = e1;
 		right = e2;
+		b = strict;
 		super.methodId = "greaterThan";
 		Helper.ToDo("strict boolean??");
 		super.text = String.format("%s . %s < > ( %s , %s )", left.toString(), super.methodId, right.toString(), strict);
-		
+	}
+
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
+		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
+		if ((!b1) && (!b2))
+			throw new NoSuchTypeException();
+		return CuType.bool;
+	}
+	
+	@Override
+	public String toC() {
 		castType = "Boolean";
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -524,13 +582,13 @@ class GreaterThanExpr extends CuExpr{
 		
 		name += "\n" + leftC + rightC;
 		
-		leftCastType = "(" + Helper.cVarType.get(left.toC()) + "*)";
-		rightCastType = "(" + Helper.cVarType.get(right.toC()) + "*)";
+		leftCastType = "(" + Helper.cVarType.get(leftToC) + "*)";
+		rightCastType = "(" + Helper.cVarType.get(rightToC) + "*)";
 		
-		if (strict)
-			super.cText = String.format("(%s %s)->value > (%s %s)->value", leftCastType, left.toC(), rightCastType, right.toC());
+		if (b)
+			super.cText = String.format("(%s %s)->value > (%s %s)->value", leftCastType, leftToC, rightCastType, rightToC);
 		else
-			super.cText = String.format("(%s %s)->value >= (%s %s)->value", leftCastType, left.toC(), rightCastType, right.toC());
+			super.cText = String.format("(%s %s)->value >= (%s %s)->value", leftCastType, leftToC, rightCastType, rightToC);
 
 		/*if (leftC.equals("") && rightC.equals("")){
 			leftCastType = "(" + Helper.cVarType.get(left.toC()) + "*)";
@@ -564,9 +622,23 @@ class GreaterThanExpr extends CuExpr{
 				super.cText = String.format("%s.value > %s.value", left.toC(), right.toC());
 			else
 				super.cText = String.format("%s.value >= %s.value", left.toC(), right.toC());
-		}*/			
+		}*/		
+		return super.toC();
 	}
+}
 
+class LessThanExpr extends CuExpr{
+	private CuExpr left, right;
+	boolean b;
+	public LessThanExpr(CuExpr e1, CuExpr e2, Boolean strict) {
+		left = e1;
+		right = e2;
+		b = strict;
+		super.methodId = "lessThan";
+		super.text = String.format("%s . %s < > ( %s, %s )", left.toString(), super.methodId, right.toString(), strict);
+		
+		
+	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
 		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
@@ -574,17 +646,12 @@ class GreaterThanExpr extends CuExpr{
 			throw new NoSuchTypeException();
 		return CuType.bool;
 	}
-}
-
-class LessThanExpr extends CuExpr{
-	private CuExpr left, right;
-	public LessThanExpr(CuExpr e1, CuExpr e2, Boolean strict) {
-		left = e1;
-		right = e2;
-		super.methodId = "lessThan";
-		super.text = String.format("%s . %s < > ( %s, %s )", left.toString(), super.methodId, right.toString(), strict);
-		
+	
+	@Override
+	public String toC() {
 		castType = "Boolean";
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -593,12 +660,12 @@ class LessThanExpr extends CuExpr{
 		
 		name += "\n" + leftC + rightC;
 		
-		leftCastType = "(" + Helper.cVarType.get(left.toC()) + "*)";
-		rightCastType = "(" + Helper.cVarType.get(right.toC()) + "*)";
-		if (strict)
-			super.cText = String.format("(%s %s)->value < (%s %s)->value", leftCastType, left.toC(), rightCastType, right.toC());
+		leftCastType = "(" + Helper.cVarType.get(leftToC) + "*)";
+		rightCastType = "(" + Helper.cVarType.get(rightToC) + "*)";
+		if (b)
+			super.cText = String.format("(%s %s)->value < (%s %s)->value", leftCastType, leftToC, rightCastType, rightToC);
 		else
-			super.cText = String.format("(%s %s)->value <= (%s %s)->value", leftCastType, left.toC(), rightCastType, right.toC());
+			super.cText = String.format("(%s %s)->value <= (%s %s)->value", leftCastType, leftToC, rightCastType, rightToC);
 
 		/*if (leftC.equals("") && rightC.equals("")) {
 			leftCastType = "(" + Helper.cVarType.get(left.toC()) + "*)";
@@ -633,13 +700,7 @@ class LessThanExpr extends CuExpr{
 			else
 				super.cText = String.format("%s.value <= %s.value", left.toC(), right.toC());
 		}*/
-	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
-		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
-		if ((!b1) && (!b2))
-			throw new NoSuchTypeException();
-		return CuType.bool;
+		return super.toC();
 	}
 }
 
@@ -651,11 +712,25 @@ class MinusExpr extends CuExpr{
 		super.methodId = "minus";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
-		String temp = Helper.getVarName();
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+	}
+	/*
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
+			throw new NoSuchTypeException();
+		return CuType.integer;
+	}*/
+	
+	@Override
+	public String toC() {
+String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -667,7 +742,7 @@ class MinusExpr extends CuExpr{
 		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value - ((%s*)%s)->value;\n", "Integer", left.toC(), "Integer", right.toC());			
+		super.name += String.format("((%s*)%s)->value - ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -691,16 +766,8 @@ class MinusExpr extends CuExpr{
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value - %s.value;\n", left.toC(), right.toC());
 		}*/
+		return super.toC();
 	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
-	}
-	/*
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
-			throw new NoSuchTypeException();
-		return CuType.integer;
-	}*/
 }
 
 class ModuloExpr extends CuExpr{
@@ -711,11 +778,26 @@ class ModuloExpr extends CuExpr{
 		super.methodId = "modulo";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
+		
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+	}
+	/*
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
+			throw new NoSuchTypeException();
+		return CuType.integer;
+	}*/
+	
+	@Override
+	public String toC() {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -724,7 +806,7 @@ class ModuloExpr extends CuExpr{
 		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value % ((%s*)%s)->value;\n", "Integer", left.toC(), "Integer", right.toC());			
+		super.name += String.format("((%s*)%s)->value % ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -748,16 +830,8 @@ class ModuloExpr extends CuExpr{
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value % %s.value;\n", left.toC(), right.toC());
 		}*/
+		return super.toC();
 	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
-	}
-	/*
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
-			throw new NoSuchTypeException();
-		return CuType.integer;
-	}*/
 }
 
 class NegateExpr extends CuExpr{
@@ -767,19 +841,32 @@ class NegateExpr extends CuExpr{
 		super.methodId = "negate";
 		super.text = String.format("%s . %s < > ( )", val.toString(), super.methodId);
 
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		return unaryExprType(context, val.getType(context).id, super.methodId);
+	}
+	/*
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		if (!val.getType(context).isBoolean())
+			throw new NoSuchTypeException();
+		return CuType.bool;
+	}*/
+	
+	@Override
+	public String toC() {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp+".val";
 		super.castType = "Boolean";
-		
-		String eC = e.construct();		
+		String valToC = val.toC();
+		String eC = val.construct();		
 		
 		name += "\n" + eC;	
 		
 		name += String.format("Boolean* %s = (Boolean*) malloc(sizeof(Boolean));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		name += String.format("!(((%s*)%s)->value);\n", "Boolean", e.toC());
+		name += String.format("!(((%s*)%s)->value);\n", "Boolean", valToC);
 
 /*		if(eC.equals(""))
 		{
@@ -792,16 +879,8 @@ class NegateExpr extends CuExpr{
 			name += String.format("!(%s.value);\n", e.toC());
 		}*/
 
+		return super.toC();
 	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		return unaryExprType(context, val.getType(context).id, super.methodId);
-	}
-	/*
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		if (!val.getType(context).isBoolean())
-			throw new NoSuchTypeException();
-		return CuType.bool;
-	}*/
 }
 
 class NegativeExpr extends CuExpr{
@@ -811,20 +890,32 @@ class NegativeExpr extends CuExpr{
 		super.methodId = "negative";
 		super.text = String.format("%s . %s < > ( )", val.toString(), super.methodId);
 
-
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		return unaryExprType(context, val.getType(context).id, super.methodId);
+	}
+	/*
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		if (!val.getType(context).isInteger())
+			throw new NoSuchTypeException();
+		return CuType.integer;
+	}*/
+	
+	@Override
+	public String toC() {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		
-		String eC = e.construct();		
+		String valToC = val.toC();
+		String eC = val.construct();		
 		
 		name += "\n" + eC;
 		
 		name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		name += String.format("-(((%s*)%s)->value);\n", "Integer", e.toC());	
+		name += String.format("-(((%s*)%s)->value);\n", "Integer", valToC);	
 		
 		/*if(eC.equals(""))
 		{
@@ -837,17 +928,8 @@ class NegativeExpr extends CuExpr{
 			name += String.format("Integer %s;\n%s.value=", temp, temp);
 			name += String.format("-(%s.value);\n", e.toC());
 		}*/
-		
+		return super.toC();
 	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		return unaryExprType(context, val.getType(context).id, super.methodId);
-	}
-	/*
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		if (!val.getType(context).isInteger())
-			throw new NoSuchTypeException();
-		return CuType.integer;
-	}*/
 }
 
 class OnwardsExpr extends CuExpr{
@@ -870,11 +952,20 @@ class OrExpr extends CuExpr{
 		super.methodId = "or";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+	}
+	
+	@Override
+	public String toC() {
+
 		String temp = Helper.getVarName();
 		
 		super.cText = temp+".value";
 		super.castType = "Boolean";
-		
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -883,7 +974,7 @@ class OrExpr extends CuExpr{
 		super.name += String.format("Boolean* %s  = (Boolean*) malloc(sizeof(Boolean));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value || ((%s*)%s)->value;\n", "Boolean", left.toC(), "Boolean", right.toC());	
+		super.name += String.format("((%s*)%s)->value || ((%s*)%s)->value;\n", "Boolean", leftToC, "Boolean", rightToC);	
 		
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -909,9 +1000,7 @@ class OrExpr extends CuExpr{
 			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value || %s.value;\n", left.toC(), right.toC());
 		}*/
-	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+		return super.toC();
 	}
 }
 
@@ -922,12 +1011,20 @@ class PlusExpr extends CuExpr{
 		right = e2;
 		super.methodId = "plus";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
-
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		//System.out.println("in plus expr begin");
+		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+	}
+	
+	@Override
+	public String toC() {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -936,7 +1033,7 @@ class PlusExpr extends CuExpr{
 		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value + ((%s*)%s)->value;\n", "Integer", left.toC(), "Integer", right.toC());			
+		super.name += String.format("((%s*)%s)->value + ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 		
 		/*
 		if (leftC.equals("") && rightC.equals("")){
@@ -961,10 +1058,7 @@ class PlusExpr extends CuExpr{
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value + %s.value;\n", left.toC(), right.toC());
 		}*/
-	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		//System.out.println("in plus expr begin");
-		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+		return super.toC();
 	}
 }
 
@@ -976,35 +1070,71 @@ class ThroughExpr extends CuExpr{
 		super.methodId = "through";
 		super.text = String.format("%s . %s < > ( %s , %s , %s )", left.toString(), methodId, right.toString(), low, up);
 		
+		//need to deal with boolean, characters and strings
 		String temp = Helper.getVarName();
-		if (low && up)
-			super.name = String.format(
-				"int i, j=0;\nIterable %s;\n"
-				+ "%s.size = %d;\n"
-				+ "for(i=%s; i<=%s; i++)\n"
-				+ "*%s.value[j++] = i;\n"
-				, temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())+1, e1.toC(), e2.toC(), temp);
-		else if (low)
-			super.name = String.format(
-					"int i, j=0;\nIterable %s;\n"
-					+ "%s.size = %d;"
-					+ "for(i=%s; i<%s/*end val*/; i++)\n"
-					+ "*%s.value[j++] = i;\n"
-					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toC(), e2.toC(), temp);
-		else if (up)
-			super.name = String.format(
-					"int i, j=0;\nIterable %s;\n"
-					+ "%s.size = %d;\n"
-					+ "for(i=%s+1; i<=%s; i++)\n"
-					+ "*%s.value[j++] = i;\n"
-					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString()), e1.toC(), e2.toC(), temp);
-		else
-			super.name = String.format(
-					"int i, j=0;\nIterable %s;\n"
-					+ "%s.size = %d;\n"
-					+ "for(i=%s+1; i<%s; i++)\n"
-					+ "*%s.value[j++] = i;\n"
-					,temp, temp, Integer.parseInt(e2.toString())-Integer.parseInt(e1.toString())-1, e1.toC(), e2.toC(), temp);
+		left.toC();
+		right.toC();
+		super.name += e1.construct();
+		super.name += e2.construct();
+		
+		if (e1.getCastType().equals("Integer"))
+		{
+		
+			if (low && up)
+				super.name = String.format(
+						"int i, j=0;\nIterable* %s = (Iterable*) malloc(sizeof(Iterable));\n" + "%s->size = %d;\n"
+								+ "%s->type = eInteger;\n"
+								+ "%s->nrefs = 0;\n"
+								+ "for(i=%s->value; i<=%s; i++) {\n"
+								+ "Integer* %s = (Integer*) malloc(sizeof(Integer));\n"
+								+ "%s->nrefs = 0;\n"
+								+ "%s->value = i;"
+								+ "*%s->value[j++] = i;\n}\n",
+						temp, temp,
+						Integer.parseInt(e2.toString())
+								- Integer.parseInt(e1.toString()) + 1,
+						temp, temp,
+						e1.toC(), e2.toC(), temp);
+			else if (low)
+				super.name = String.format(
+						"int i, j=0;\nIterable %s;\n" + "%s.size = %d;"
+								+ "%s->type = eInteger;\n"
+								+ "%s->nrefs = 0;\n"
+								+ "for(i=%s; i<%s/*end val*/; i++)\n"
+								+ "*%s.value[j++] = i;\n",
+						temp,
+						temp,
+						Integer.parseInt(e2.toString())
+								- Integer.parseInt(e1.toString()), e1.toC(),
+								temp, temp,
+								e2.toC(), temp);
+			else if (up)
+				super.name = String.format(
+						"int i, j=0;\nIterable %s;\n" + "%s.size = %d;\n"
+								+ "%s->type = eInteger;\n"
+								+ "%s->nrefs = 0;\n"
+								+ "for(i=%s+1; i<=%s; i++)\n"
+								+ "*%s.value[j++] = i;\n",
+						temp,
+						temp,
+						Integer.parseInt(e2.toString())
+								- Integer.parseInt(e1.toString()), e1.toC(),
+								temp, temp,
+								e2.toC(), temp);
+			else
+				super.name = String.format(
+						"int i, j=0;\nIterable %s;\n" + "%s.size = %d;\n"
+								+ "%s->type = eInteger;\n"
+								+ "%s->nrefs = 0;\n"
+								+ "for(i=%s+1; i<%s; i++)\n"
+								+ "*%s.value[j++] = i;\n",
+						temp,
+						temp,
+						Integer.parseInt(e2.toString())
+								- Integer.parseInt(e1.toString()) - 1,
+								temp, temp,
+								e1.toC(), e2.toC(), temp);
+		}
 		
 		super.castType = "Iterable";
 		super.cText = temp;
@@ -1030,11 +1160,20 @@ class TimesExpr extends CuExpr{
 		super.methodId = "times";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 
-		String temp = Helper.getVarName();
+	}
+	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
+		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+	}
+	
+	@Override
+	public String toC() {
+		// TODO Auto-generated method stub
+String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		
+		String leftToC = left.toC();
+		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -1043,7 +1182,7 @@ class TimesExpr extends CuExpr{
 		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value * ((%s*)%s)->value;\n", "Integer", left.toC(), "Integer", right.toC());			
+		super.name += String.format("((%s*)%s)->value * ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -1067,9 +1206,7 @@ class TimesExpr extends CuExpr{
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value * %s.value;\n", left.toC(), right.toC());
 		}*/
-	}
-	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
-		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
+		return super.toC();
 	}
 }
 
@@ -1085,47 +1222,6 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		this.es = es;
 		super.text = String.format("%s . %s %s %s", this.val.toString(), this.method, 
 				Helper.printList("<", this.types, ">", ","), Helper.printList("(", this.es, ")", ","));
-		
-		
-		castType = Helper.cVarType.get(e+"_"+var);
-		int offset = 0;									//to be modified when class definition becomes clearer
-		String tempName = Helper.getVarName();
-		String fptr = Helper.getVarName(), fptrArg = "", tempCastType = "";
-		String classType = Helper.cVarType.get(e.toC()) + "*";
-		name += "\n";
-		name += String.format("%s this%s = (%s) %s;\n", classType, tempName, classType, e);
-		String temp = "";
-		if (es == null)
-		{
-			temp = String.format("((%s) this%s)", classType, tempName);
-			fptrArg = "(" + classType + ")";
-		}
-		else {
-			temp += String.format("((%s) this%s, ", classType, tempName);
-			fptrArg = "(" + classType + ", ";
-			for (CuExpr exp : es) {
-				super.name += exp.construct();
-				tempCastType = exp.getCastType();
-				if (tempCastType.equals(""))
-					tempCastType = Helper.cVarType.get(exp.toC());
-				temp += "(" + tempCastType + "*)" + exp.toC() + ", ";
-				fptrArg += tempCastType + "*, ";
-			}
-			int j = temp.lastIndexOf(", ");
-			if (j > 1)
-				temp = temp.substring(0, j);
-			j = 0;
-			j = fptrArg.lastIndexOf(", ");
-			if (j > 1)
-				fptrArg = fptrArg.substring(0, j);
-			temp += ")";
-			fptrArg += ")";
-		}
-		
-		name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
-								/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
-		super.cText = String.format("%s %s", fptr, temp);
-		
 	}
 	@Override public boolean isFunCall () {
 		return true;
@@ -1168,6 +1264,52 @@ Helper.P(String.format("kc=%s. types=%s. eMap=%s",ts.data_kc, types,val.calculat
 Helper.P(String.format("%s returns %s<%s>, mapping %s", this, ts.data_t,ts.data_t.map, mapping));
         return ts.data_t;
 	}
+	
+	@Override
+		public String toC() {
+			// TODO Auto-generated method stub
+		castType = Helper.cVarType.get(val+"_"+method);
+		int offset = 0;									//to be modified when class definition becomes clearer
+		String tempName = Helper.getVarName();
+		String fptr = Helper.getVarName(), fptrArg = "", tempCastType = "";
+		String classType = Helper.cVarType.get(val.toC()) + "*";
+		name += "\n";
+		name += String.format("%s this%s = (%s) %s;\n", classType, tempName, classType, val);
+		String temp = "", expToC = "";
+		if (es == null)
+		{
+			temp = String.format("((%s) this%s)", classType, tempName);
+			fptrArg = "(" + classType + ")";
+		}
+		else {
+			temp += String.format("((%s) this%s, ", classType, tempName);
+			fptrArg = "(" + classType + ", ";
+			for (CuExpr exp : es) {
+				expToC = exp.toC();
+				super.name += exp.construct();
+				tempCastType = exp.getCastType();
+				if (tempCastType.equals(""))
+					tempCastType = Helper.cVarType.get(expToC);
+				temp += "(" + tempCastType + "*)" + expToC + ", ";
+				fptrArg += tempCastType + "*, ";
+			}
+			int j = temp.lastIndexOf(", ");
+			if (j > 1)
+				temp = temp.substring(0, j);
+			j = 0;
+			j = fptrArg.lastIndexOf(", ");
+			if (j > 1)
+				fptrArg = fptrArg.substring(0, j);
+			temp += ")";
+			fptrArg += ")";
+		}
+		
+		name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
+								/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
+		super.cText = String.format("(*%s) %s", fptr, temp);
+		
+			return super.toC();
+		}
 
 }
 class VcExp extends CuExpr {
@@ -1183,39 +1325,6 @@ class VcExp extends CuExpr {
 		super.text=val.toString()+Helper.printList("<", types, ">", ",")+Helper.printList("(", es, ")", ",");
 Helper.P("VcExp= "+text);
 		//System.out.println("in VcExp constructor, end");
-		
-		castType = Helper.cVarType.get(v);
-		String temp = "", tempCastType = "";
-		if (es == null)
-			temp = "()";
-		temp += "(";
-		for (CuExpr exp : es) {
-			super.name += exp.construct();
-			tempCastType = exp.getCastType();
-			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(exp.toC());
-			temp += "(" + tempCastType + "*)" + exp.toC() + ", ";
-		}
-		int j = temp.lastIndexOf(", ");
-		if (j > 1) temp = temp.substring(0, j);
-		temp += ")";
-		
-		String objectName = Helper.getVarName();
-		super.name += String.format("%s* %s = (%s*) malloc(sizeof(%s));\n"
-				+ "(&%s)[0] = %s;	//pointer to vtable\n"
-				+ "((int*) &%s)[1] = 0;		//pointer to nrefs\n",
-				v, objectName, v, v, objectName, Helper.cClassVtablePtr.get(v), objectName);
-		
-		j = 2;
-		
-		for (CuExpr exp : es) {
-			tempCastType = exp.getCastType();
-			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(exp.toC());
-			super.name += String.format("((" + tempCastType + "*) &%s)[%d] = " + exp.toC() + ";\n", objectName, j++);
-		}
-		
-		super.name += "\n"+Helper.cClassStats.get(v) + "\n";
-		super.cText= objectName;
-		
 	}
 	@Override public boolean isFunCall () {
 		return true;
@@ -1252,6 +1361,45 @@ Helper.P("VcExp= "+text);
  Helper.P(String.format("VcExp return %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
         return cur_ts.data_t;
 	}
+	
+	@Override
+	public String toC() {
+		// TODO Auto-generated method stub
+		castType = Helper.cVarType.get(val);
+		String temp = "", tempCastType = "", expToC = "";
+		if (es == null)
+			temp = "()";
+		temp += "(";
+		for (CuExpr exp : es) {
+			expToC = exp.toC();
+			super.name += exp.construct();
+			tempCastType = exp.getCastType();
+			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
+			temp += "(" + tempCastType + "*)" + expToC + ", ";
+		}
+		int j = temp.lastIndexOf(", ");
+		if (j > 1) temp = temp.substring(0, j);
+		temp += ")";
+		
+		String objectName = Helper.getVarName();
+		super.name += String.format("%s* %s = (%s*) malloc(sizeof(%s));\n"
+				+ "(&%s)[0] = %s;	//pointer to vtable\n"
+				+ "((int*) &%s)[1] = 0;		//pointer to nrefs\n",
+				val, objectName, val, val, objectName, Helper.cClassVtablePtr.get(val), objectName);
+		
+		j = 2;
+		
+		for (CuExpr exp : es) {
+			expToC = exp.toC();
+			tempCastType = exp.getCastType();
+			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
+			super.name += String.format("((" + tempCastType + "*) &%s)[%d] = " + expToC + ";\n", objectName, j++);
+		}
+		
+		super.name += "\n"+Helper.cClassStats.get(val) + "\n";
+		super.cText= objectName;
+		return super.toC();
+	}
 }
 
 class VvExp extends CuExpr{
@@ -1262,37 +1410,12 @@ class VvExp extends CuExpr{
 	public VvExp(String str){
 		val = str;
 		super.text=str;
-		
-		super.cText =str;
-		super.castType = Helper.cVarType.get(str);
 	}
 	
 	@Override public void add(List<CuType> pt, List<CuExpr> e){
 		types = pt;
 		es = e;
 		super.text += Helper.printList("<", pt, ">", ",")+Helper.printList("(", es, ")", ",");
-		
-		super.castType = Helper.cVarType.get(val);
-		super.name += "\n";
-		
-		String temp = "", tempName = "";
-		String tempCastType = "";
-		if (es == null)
-			temp = "()";
-		temp += "(";
-		for (CuExpr exp : es) {
-			tempName = exp.construct();
-			tempCastType = exp.getCastType();
-			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(exp.toC());
-			temp += "(" + tempCastType + "*)" + exp.toC() + ", ";
-			super.name += tempName;
-		}
-		int j = temp.lastIndexOf(", ");
-		if (j > 1) temp = temp.substring(0, j);
-		temp += ")";
-		
-		super.cText=val.toString()+temp;
-		
 	}
 	
 	@Override public boolean isFunCall () {
@@ -1340,6 +1463,41 @@ Helper.P(String.format("calculated %s", es.get(i)));
         cur_ts.data_t.plugIn(mapping);
 Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
         return cur_ts.data_t;
+	}
+	
+	@Override
+	public String toC() {
+		// TODO Auto-generated method stub
+		if(es==null)
+		{
+			super.cText = val;
+			super.castType = Helper.cVarType.get(val);
+		}
+		else
+		{
+			super.castType = Helper.cVarType.get(val);
+			super.name += "\n";
+			
+			String temp = "", tempName = "", expToC = "";
+			String tempCastType = "";
+			if (es == null)
+				temp = "()";
+			temp += "(";
+			for (CuExpr exp : es) {
+				expToC = exp.toC();
+				tempName = exp.construct();
+				tempCastType = exp.getCastType();
+				if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
+				temp += "(" + tempCastType + "*)" + expToC + ", ";
+				super.name += tempName;
+			}
+			int j = temp.lastIndexOf(", ");
+			if (j > 1) temp = temp.substring(0, j);
+			temp += ")";
+			
+			super.cText=val.toString()+temp;			
+		}
+		return super.toC();
 	}
 	
 }
