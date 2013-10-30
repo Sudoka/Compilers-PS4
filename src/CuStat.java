@@ -39,7 +39,7 @@ class AssignStat extends CuStat{
 		super.ctext += "void * " + var.toString() +" = NULL;\n";
 		super.ctext += "if (" + var.toString() + "!= NULL) {\n";
 		//check whether it is the last pointer pointing to the object, if yes, free memory
-		super.ctext += "if ((int*) &" + var.toString() + ")[1] == 1)\n";
+		super.ctext += "if (((int*) &" + var.toString() + ")[1] == 1)\n";
 		super.ctext += "free(" + var.toString() + ");\n";
 		super.ctext += "else\n";
 		//decrement the reference count
@@ -114,7 +114,7 @@ class ForStat extends CuStat{
 		for (String cur_str : localVarsInFor) {
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
-			super.ctext += "if ((int*) &" + cur_str + ")[1] == 1)\n";
+			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
 			super.ctext += "free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
@@ -219,7 +219,7 @@ class IfStat extends CuStat{
 		for (String cur_str : s1_localVars) {
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
-			super.ctext += "if ((int*) &" + cur_str + ")[1] == 1)\n";
+			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
 			super.ctext += "free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
@@ -234,7 +234,7 @@ class IfStat extends CuStat{
     		for (String cur_str : s2_localVars) {
     			super.ctext += "if (" + cur_str + "!= NULL) {\n";
     			//check whether it is the last pointer pointing to the object, if yes, free memory
-    			super.ctext += "if ((int*) &" + cur_str + ")[1] == 1)\n";
+    			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
     			super.ctext += "free(" + cur_str + ");\n";
     			super.ctext += "else\n";
     			//decrement the reference count
@@ -299,7 +299,7 @@ class ReturnStat extends CuStat{
 		for (String cur_str : localVars) {
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
-			super.ctext += "if ((int*) &" + cur_str + ")[1] == 1)\n";
+			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
 			super.ctext += "free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
@@ -403,7 +403,7 @@ class WhileStat extends CuStat{
 		for (String cur_str : while_localVars) {
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
-			super.ctext += "if ((int*) &" + cur_str + ")[1] == 1)\n";
+			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
 			super.ctext += "free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
