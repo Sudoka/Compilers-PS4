@@ -267,7 +267,7 @@ class CString extends CuExpr {
 		super.name = String.format("String* %s = (String *) malloc(sizeof(String));\n"
 				+ "%s->value = (char*) malloc(sizeof(%s));\n"
 				+ "(%s->nrefs) = 0;\n"
-				+ "strcpy(%s->value, %s);\n", temp, temp, s, temp, temp, s);	//does this needs to be malloc-ed too?
+				+ "strcpy(%s->value, %s);\n", temp, temp, s, temp, temp, s);	
 		
 		super.cText = temp;
 		super.castType = "String";
@@ -361,10 +361,24 @@ class EqualExpr extends CuExpr{
 		
 		name += "\n" + leftC + rightC;
 		
-		leftCastType = "(" + Helper.cVarType.get(left.toC()) + "*)";
-		rightCastType = "(" + Helper.cVarType.get(right.toC()) + "*)";
+		if (leftC.equals("") && rightC.equals("")){
+			leftCastType = "(" + Helper.cVarType.get(left.toC()) + "*)";
+			rightCastType = "(" + Helper.cVarType.get(right.toC()) + "*)";
+		}
+		else if (leftC.equals("") && !rightC.equals("")) { 
+			leftCastType = "(" + right.getCastType() + "*)";
+			rightCastType = "(" + right.getCastType() + "*)";
+		}
+		else if (!leftC.equals("") && rightC.equals("")) {
+			rightCastType = "(" + left.getCastType() + "*)";
+			leftCastType = "(" + left.getCastType() + "*)";
+		}
+		else {
+			leftCastType =  "(" + left.getCastType() + "*)";
+			rightCastType = "(" + right.getCastType() + "*)";
+		}
 		
-		if (!Helper.cVarType.get(left.toC()).equals("String") && !Helper.cVarType.get(right.toC()).equals("String")) {
+		if (!leftCastType.equals("(String*)") && !rightCastType.equals("(String*)")) {
 			if (eq)
 				super.cText = String.format(
 						"(%s %s)->value == (%s %s)->value", leftCastType,
@@ -864,9 +878,6 @@ class OrExpr extends CuExpr{
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
-		String leftCastType = ""; 
-		String rightCastType = "";
-		
 		name += "\n" + leftC + rightC;
 		
 		super.name += String.format("Boolean* %s  = (Boolean*) malloc(sizeof(Boolean));\n"
@@ -1079,22 +1090,40 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		castType = Helper.cVarType.get(e+"_"+var);
 		int offset = 0;									//to be modified when class definition becomes clearer
 		String tempName = Helper.getVarName();
-		String fptr = Helper.getVarName();
+		String fptr = Helper.getVarName(), fptrArg = "", tempCastType = "";
+		String classType = Helper.cVarType.get(e.toC()) + "*";
 		name += "\n";
-		name += String.format("void* this%s;\nthis%s = &%s;\n", tempName, tempName, e);
+		name += String.format("%s this%s = (%s) %s;\n", classType, tempName, classType, e);
 		String temp = "";
 		if (es == null)
-			temp = String.format("(&this%s)", tempName);
-		temp += String.format("(&this%s, ", tempName);
-		for (CuExpr exp : es) {
-			super.name += exp.construct();
-			temp += "&" + exp.toC() + ", ";
+		{
+			temp = String.format("((%s) this%s)", classType, tempName);
+			fptrArg = "(" + classType + ")";
 		}
-		int j = temp.lastIndexOf(", ");
-		if (j > 1) temp = temp.substring(0, j);
-		temp += ")";
+		else {
+			temp += String.format("((%s) this%s, ", classType, tempName);
+			fptrArg = "(" + classType + ", ";
+			for (CuExpr exp : es) {
+				super.name += exp.construct();
+				tempCastType = exp.getCastType();
+				if (tempCastType.equals(""))
+					tempCastType = Helper.cVarType.get(exp.toC());
+				temp += "(" + tempCastType + "*)" + exp.toC() + ", ";
+				fptrArg += tempCastType + "*, ";
+			}
+			int j = temp.lastIndexOf(", ");
+			if (j > 1)
+				temp = temp.substring(0, j);
+			j = 0;
+			j = fptrArg.lastIndexOf(", ");
+			if (j > 1)
+				fptrArg = fptrArg.substring(0, j);
+			temp += ")";
+			fptrArg += ")";
+		}
 		
-		name += String.format("(void*) (%s*) ();\n%s = %s.(*vtable[%d]);\n", fptr, fptr, val.toString(), offset);
+		name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
+								/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
 		super.cText = String.format("%s %s", fptr, temp);
 		
 	}
@@ -1156,20 +1185,36 @@ Helper.P("VcExp= "+text);
 		//System.out.println("in VcExp constructor, end");
 		
 		castType = Helper.cVarType.get(v);
-		String temp = "";
+		String temp = "", tempCastType = "";
 		if (es == null)
 			temp = "()";
 		temp += "(";
 		for (CuExpr exp : es) {
 			super.name += exp.construct();
-			temp += "&" + exp.toC() + ", ";
+			tempCastType = exp.getCastType();
+			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(exp.toC());
+			temp += "(" + tempCastType + "*)" + exp.toC() + ", ";
 		}
 		int j = temp.lastIndexOf(", ");
 		if (j > 1) temp = temp.substring(0, j);
 		temp += ")";
 		
-		super.cText=val.toString()+temp;
+		String objectName = Helper.getVarName();
+		super.name += String.format("%s* %s = (%s*) malloc(sizeof(%s));\n"
+				+ "(&%s)[0] = %s;	//pointer to vtable\n"
+				+ "((int*) &%s)[1] = 0;		//pointer to nrefs\n",
+				v, objectName, v, v, objectName, Helper.cClassVtablePtr.get(v), objectName);
 		
+		j = 2;
+		
+		for (CuExpr exp : es) {
+			tempCastType = exp.getCastType();
+			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(exp.toC());
+			super.name += String.format("((" + tempCastType + "*) &%s)[%d] = " + exp.toC() + ";\n", objectName, j++);
+		}
+		
+		super.name += "\n"+Helper.cClassStats.get(v) + "\n";
+		super.cText= objectName;
 		
 	}
 	@Override public boolean isFunCall () {
@@ -1217,7 +1262,9 @@ class VvExp extends CuExpr{
 	public VvExp(String str){
 		val = str;
 		super.text=str;
+		
 		super.cText =str;
+		super.castType = Helper.cVarType.get(str);
 	}
 	
 	@Override public void add(List<CuType> pt, List<CuExpr> e){
@@ -1225,16 +1272,19 @@ class VvExp extends CuExpr{
 		es = e;
 		super.text += Helper.printList("<", pt, ">", ",")+Helper.printList("(", es, ")", ",");
 		
-		super.castType = Helper.cVarType.get(cText);
+		super.castType = Helper.cVarType.get(val);
 		super.name += "\n";
 		
 		String temp = "", tempName = "";
+		String tempCastType = "";
 		if (es == null)
 			temp = "()";
 		temp += "(";
 		for (CuExpr exp : es) {
 			tempName = exp.construct();
-			temp += "&" + exp.toC() + ", ";
+			tempCastType = exp.getCastType();
+			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(exp.toC());
+			temp += "(" + tempCastType + "*)" + exp.toC() + ", ";
 			super.name += tempName;
 		}
 		int j = temp.lastIndexOf(", ");
