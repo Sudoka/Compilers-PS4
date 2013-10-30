@@ -47,8 +47,8 @@ class FullPrg extends CuProgr {
 		}
 		temp_str += s.toC(localVars);
     	for (String str : super.newVars) {
-    		super.ctext += "void * " + str + ";\n";
-    		temp_str = temp_str.replaceAll("void \\* " + str + ";\n", "");
+    		super.ctext += "void * " + str + " = NULL;\n";
+    		temp_str = temp_str.replaceAll("void \\* " + str + " = NULL;\n", "");
     	}
     	super.ctext += temp_str;
 		return super.ctext;

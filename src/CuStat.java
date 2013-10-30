@@ -211,7 +211,7 @@ class IfStat extends CuStat{
     	for (String str : super.newVars) {
     		temp_s1 = temp_s1.replaceAll("void \\* " + str + " = NULL;\n", "");
     		temp_s2 = temp_s2.replaceAll("void \\* " + str + " = NULL;\n", "");
-    		super.ctext += "void * " + str + ";\n";
+    		super.ctext += "void * " + str + " = NULL;\n";
     	}
     	super.ctext += "if (" + e.toC() + ") {\n";
     	super.ctext += temp_s1;
@@ -348,7 +348,7 @@ class Stats extends CuStat{
 		}
 		
 		for(String str : super.newVars) {
-			super.ctext += "void * " + str + ";\n";
+			super.ctext += "void * " + str + " = NULL;\n";
 		}
 
 		for(String str : super.newVars) {
