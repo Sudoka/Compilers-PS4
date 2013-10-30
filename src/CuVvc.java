@@ -1,4 +1,3 @@
-
 public abstract class CuVvc {
 	final static protected String TOP = "Thing";
 	final static protected String BOTTOM = "Nothing";
