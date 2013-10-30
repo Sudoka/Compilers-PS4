@@ -16,7 +16,7 @@ public abstract class CuProgr {
 	
 	public void calculateType(CuContext context) throws NoSuchTypeException {}
 	
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		return ctext;
 	}
 }
@@ -40,12 +40,12 @@ class FullPrg extends CuProgr {
 			}
 		}
 	}
-	@Override public String toC() {
+	@Override public String toC(ArrayList<String> localVars) {
 		String temp_str = "";
 		for (CuProgr cp : elements) {
-			temp_str += cp.toC();
+			temp_str += cp.toC(localVars);
 		}
-		temp_str += s.toC();
+		temp_str += s.toC(localVars);
     	for (String str : super.newVars) {
     		super.ctext += "void * " + str + ";\n";
     		temp_str = temp_str.replaceAll("void \\* " + str + ";\n", "");
@@ -146,10 +146,12 @@ class StatPrg extends CuProgr {
 		//System.out.println("in statement program constructor");
 		this.stat = s;
 		super.text = s.toString();
-		super.ctext = s.toC();
-		super.newVars = s.newVars;
 	}
-	
+	@Override public String toC(ArrayList<String> localVars) {
+		super.ctext = stat.toC(localVars);
+		super.newVars = stat.newVars;
+		return super.ctext;
+	}
 	@Override public void calculateType(CuContext context) throws NoSuchTypeException {
 		//System.out.println("in statement program");
 		HReturn re = stat.calculateType(context);
