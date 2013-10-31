@@ -59,6 +59,9 @@ public abstract class CuType {
 		//System.out.println("t2 is " + t2.toString());
 		if(t1.isIterable() && t2.isIterable())
 		{
+			if (t1.isString() && t2.isString()) {
+				return CuType.string;
+			}
 			//System.out.println("common parent of " + t1.type + " " + t2.type);
 			return new Iter(CuType.commonParent(t1.type, t2.type));
 		}
@@ -117,7 +120,11 @@ class VClass extends CuType {
 			map.put(t, CuType.bottom); // type parameter is mapped to bottom initially
 		}
 */
-		if (s.equals("String")) parentType.add(new Iter(CuType.character)); // String<> extends Iterable<Character<>>
+		if (s.equals("String")) {
+			//newly added by Yinglei, should not not do harm
+			super.type = CuType.character;
+			parentType.add(new Iter(CuType.character)); // String<> extends Iterable<Character<>>
+		}
 		super.text=super.id+ " "+ Helper.printList("<", args, ">", ",");
 		// TODO: merge to Iter(), no need anymore
 		if (super.id.equals("Iterable")) {
@@ -436,6 +443,7 @@ Helper.P(String.format("map %s", map));
 Helper.P("Interable subtyping begin: this type is " + this.type + " that type is" + that.type);
 		//added by Yinglei to fix PA3, String is iterable, but only string is subtype of string
 		if (that.isString() && !this.isString()) return false;
+		if (that.isString() && this.isString()) return true;
 		// TODO: make sure calculateType is called already
 		if (this.equals(that) || that.isTop()) return true;
 		if (that.isIterable() && this.type.isSubtypeOf(that.type)) {
