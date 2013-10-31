@@ -104,7 +104,7 @@ class AndExpr extends CuExpr{
 		left = e1;
 		right = e2;
 //		super.desiredType = CuType.bool;
-		super.methodId = "add";
+		super.methodId = "and";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
 		
@@ -174,7 +174,16 @@ class AppExpr extends CuExpr {
 		if (!t1.isIterable() || !t2.isIterable()) {
 			throw new NoSuchTypeException();
 		}
+		//added by Yinglei to fix PA3, Iterable can't be extended, so I think we only need to treat string separately
+		if (t1.isString()) {
+			t1 = new Iter(CuType.character);
+		}
+		if (t2.isString()) {
+			t2 = new Iter(CuType.character);
+		}
+Helper.P("t1 is " + t1.toString() + " t2 is " + t2.toString() + ", t1 type is " + t1.type.toString() + " t2 type is " + t2.type.toString());
 		CuType type = CuType.commonParent(t1.type, t2.type);
+Helper.P("common parent of types is " + type.toString());
 		return new Iter(type);
 		/*CuType type = CuType.commonParent(left.getType(context), right.getType(context));
 		if (type.isIterable()) return type;
@@ -1541,9 +1550,15 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
         	}
         }        	
         //System.out.println("in VarExp, end");
-        ts.data_t.plugIn(mapping);
+        /*ts.data_t.plugIn(mapping);
         Helper.P(String.format("%s returns %s<%s>, mapping %s", this, ts.data_t,ts.data_t.map, mapping));
-        return ts.data_t;
+        return ts.data_t;*/
+        //Yinglei: should not change data_t, should make a copy
+        CuType reType = ts.data_t.getcopy();
+        reType.plugIn(mapping);
+//Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
+        //return cur_ts.data_t;
+		return reType;
 	}
 	
 	@Override
@@ -1637,9 +1652,15 @@ Helper.P("VcExp= "+text);
             }	
         }
         //System.out.println("in VcExp, end");
-        cur_ts.data_t.plugIn(mapping);
+       /* cur_ts.data_t.plugIn(mapping);
  Helper.P(String.format("VcExp return %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
-        return cur_ts.data_t;
+        return cur_ts.data_t;*/
+        //Yinglei: should not change data_t, should make a copy
+        CuType reType = cur_ts.data_t.getcopy();
+        reType.plugIn(mapping);
+//Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
+        //return cur_ts.data_t;
+		return reType;
 	}
 	
 	@Override
@@ -1705,8 +1726,10 @@ class VvExp extends CuExpr{
 	}
 
 	@Override protected CuType calculateType(CuContext context) {
+Helper.P("in VvExp typechecker, var is " + val.toString());
 		//System.out.println(String.format("in VvExp %s, begin %s", text, val));
 		if (es == null) return context.getVariable(val);
+Helper.P("es is not null, es is " + es.toString());
 		//else, it will be the same as in VcExp
         // check tao in scope
 		//System.out.println("not a variable, checking function context");
@@ -1720,8 +1743,8 @@ class VvExp extends CuExpr{
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
         List<CuType> tList = new ArrayList<CuType>();
         for (CuType cur_type : cur_ts.data_tc.values()) {
-        	if(cur_type.id.equals("Iterable"))
-        		cur_type.type = Helper.getTypeForIterable(cur_type.text);
+        	//if(cur_type.id.equals("Iterable"))
+        	//	cur_type.type = Helper.getTypeForIterable(cur_type.text);
             tList.add(cur_type);
         }
         Map<String, CuType> mapping = new HashMap<String, CuType>();
@@ -1734,14 +1757,19 @@ class VvExp extends CuExpr{
         for (int i = 0; i < es.size(); i++) {
         	//System.out.println(es.get(i).toString());
             if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
-            	//System.out.println("type mismatch, " + "es is " + es.get(i).toString() + "tListgeti is " + tList.get(i).toString() );
+Helper.P("type mismatch, " + "es is " + es.get(i).toString() + "tListgeti is " + tList.get(i).toString() );
                 throw new NoSuchTypeException();
             }
 Helper.P(String.format("calculated %s", es.get(i)));
         }
-        cur_ts.data_t.plugIn(mapping);
-Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
-        return cur_ts.data_t;
+Helper.P("1mapping is " + mapping.toString());
+        //Yinglei: should not change data_t, should make a copy
+        CuType reType = cur_ts.data_t.getcopy();
+        reType.plugIn(mapping);
+//Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
+        //return cur_ts.data_t;
+Helper.P("vvexp return type is " + reType.toString());
+		return reType;
 	}
 	
 	@Override
