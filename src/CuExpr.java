@@ -827,9 +827,7 @@ class ModuloExpr extends CuExpr{
 		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		
-		super.name += String.format("((%s *)%s)->value %% ((%s *)%s)->value;\n", integer, leftToC, integer, rightToC);			
-
+		super.name += String.format("((%s*)%s)->value %% ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
@@ -1731,7 +1729,7 @@ class VvExp extends CuExpr{
         for (int i = 0; i < types.size(); i++) {
         	mapping.put(cur_ts.data_kc.get(i), types.get(i));
         }
-Helper.P("VvExp MAPPING "+mapping);
+        Helper.P("VvExp MAPPING "+mapping);
 		//added by Yinglei
 		if (cur_ts.data_tc.size() != es.size()) throw new NoSuchTypeException();
         for (int i = 0; i < es.size(); i++) {

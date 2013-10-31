@@ -25,15 +25,16 @@ public class Cubex {
 		parser.addErrorListener(new ParserErrorListener(false)); //prevent printing debugging messages
 		
 		CuProgr ourProgram = null;
-		try {
+		//try {
 			ourProgram = parser.program().p;
 			ourProgram.calculateType(context);
-		} catch (Exception e) {
-			System.out.println("reject");
-			System.exit(-2);
-		}
+			
+			ArrayList<String> localVars = new ArrayList<String>();
+			System.out.print(ourProgram.toC(localVars));
+		//} catch (Exception e) {
+		//	System.out.println("reject");
+		//	System.exit(-2);
+		//}
 		System.out.println("accept");
-		ArrayList<String> localVars = new ArrayList<String>();
-		System.out.print(ourProgram.toC(localVars));
 	}
 }
