@@ -92,6 +92,9 @@ public abstract class CuExpr {
         //System.out.println("in isType of, after type check, type is " + type.toString());
         
         t.plugIn(map);
+        if (t instanceof VTypePara) {
+        	t = map.get(t.id);
+        }
         //System.out.println("t type is " + t.type.toString());
         Helper.P(String.format("this=%s<%s> parent %s, that=%s<%s>, map=%s", type,type.map,type.parentType, t,t.map, map));
         return type.isSubtypeOf(t);

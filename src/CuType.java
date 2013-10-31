@@ -348,6 +348,12 @@ class VTypePara extends CuType {
 		return that.isTypePara(); // id is not important since it is generic type
 	}
 	//added by Yinglei
+	@Override public Map<String, CuType> plugIn(Map<String, CuType> t) {
+		map.put(this.id, t.get(this.id));
+		//this.id = t.get(this.id).id;
+		this.text = t.get(this.id).toString();
+		return map;
+	}
 	//copy Constructor, added by Yinglei
 	@Override CuType getcopy() {
 		CuType re = new VTypePara(super.id);
