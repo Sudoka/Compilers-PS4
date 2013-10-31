@@ -236,7 +236,7 @@ class BrkExpr extends CuExpr {
 					+ tempNameArr.get(i) + "->nref=1;\n" 
 					+ tempNameArr.get(i) + "->value=" + tempDataArr.get(i) + ";\n"
 					+ tempNameArr.get(i) + "->additional=" + tempNameArr.get(i + 1) + ";\n" 
-					+ tempNameArr.get(i) + "->gen=NULL;\n" 
+					+ tempNameArr.get(i) + "->next=NULL;\n" 
 					+ tempNameArr.get(i)+ "->concat=NULL;\n";
 		}	
 			
@@ -994,14 +994,14 @@ class OnwardsExpr extends CuExpr{
 							+ iterTemp + "->nref = 1;\n"
 							+ iterTemp + "->value = " + trueTemp + ";\n"
 							+ iterTemp + "->additional = NULL;\n"
-							+ iterTemp + "->gen = NULL;\n"
+							+ iterTemp + "->next = NULL;\n"
 							+ iterTemp + "->concat = NULL;\n";
 										
 					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
-							+ iter + "->gen = NULL;\n"
+							+ iter + "->next = NULL;\n"
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
@@ -1019,7 +1019,7 @@ class OnwardsExpr extends CuExpr{
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
-							+ iter + "->gen = NULL;\n"
+							+ iter + "->next = NULL;\n"
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
@@ -1038,7 +1038,7 @@ class OnwardsExpr extends CuExpr{
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + valToC + ";\n"
 						+ iter + "->additional = NULL;\n"
-						+ iter + "->gen = &" + val.getCastType() + "_onwards;\n"
+						+ iter + "->next = &" + val.getCastType() + "_onwards;\n"
 						+ iter + "->concat = NULL;\n";
 		
 				cText = valToC;
@@ -1056,7 +1056,7 @@ class OnwardsExpr extends CuExpr{
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = NULL;\n"
-						+ iter + "->gen = &" + val.getCastType() + "_onwards;\n"
+						+ iter + "->next = &" + val.getCastType() + "_onwards;\n"
 						+ iter + "->concat = NULL;\n";
 				
 				cText = iter;
@@ -1228,7 +1228,7 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
-							+ iter + "->gen = NULL;\n"
+							+ iter + "->next = NULL;\n"
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
@@ -1251,14 +1251,14 @@ class ThroughExpr extends CuExpr{
 							+ iterTemp + "->nref = 1;\n"
 							+ iterTemp + "->value = " + trueTemp + ";\n"
 							+ iterTemp + "->additional = NULL;\n"
-							+ iterTemp + "->gen = NULL;\n"
+							+ iterTemp + "->next = NULL;\n"
 							+ iterTemp + "->concat = NULL;\n";
 										
 					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
-							+ iter + "->gen = NULL;\n"
+							+ iter + "->next = NULL;\n"
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
@@ -1283,7 +1283,7 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
-							+ iter + "->gen = NULL;\n"
+							+ iter + "->next = NULL;\n"
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
@@ -1298,7 +1298,7 @@ class ThroughExpr extends CuExpr{
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
-						+ iter + "->gen = &" + left.getCastType() + "_through;\n"
+						+ iter + "->next = &" + left.getCastType() + "_through;\n"
 						+ iter + "->concat = NULL;\n";
 				
 				cText = iter;
@@ -1328,7 +1328,7 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
-							+ iter + "->gen = NULL;\n"
+							+ iter + "->next = NULL;\n"
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
@@ -1347,7 +1347,7 @@ class ThroughExpr extends CuExpr{
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
-						+ iter + "->gen = &" + left.getCastType() + "_through;\n"
+						+ iter + "->next = &" + left.getCastType() + "_through;\n"
 						+ iter + "->concat = NULL;\n";
 				
 				cText = iter;
@@ -1377,7 +1377,7 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
-							+ iter + "->gen = NULL;\n"
+							+ iter + "->next = NULL;\n"
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
@@ -1397,7 +1397,7 @@ class ThroughExpr extends CuExpr{
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + temp + ";\n"
-						+ iter + "->gen = &" + left.getCastType() + "_through;\n"
+						+ iter + "->next = &" + left.getCastType() + "_through;\n"
 						+ iter + "->concat = NULL;\n";
 				
 				cText = iter;
@@ -1427,7 +1427,7 @@ class ThroughExpr extends CuExpr{
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp1 + ";\n"
 						+ iter + "->additional = " + temp2 + ";\n"
-						+ iter + "->gen = &" + left.getCastType() + "_through;\n"
+						+ iter + "->next = &" + left.getCastType() + "_through;\n"
 						+ iter + "->concat = NULL;\n";
 				
 				cText = iter;
