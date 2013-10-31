@@ -11,7 +11,7 @@ public abstract class CuType {
 	protected static CuType string = new VClass("String", new ArrayList<CuType>());
 	protected static CuType iterable(ArrayList<CuType> arg) {return new Iter(arg);}
 	protected List<CuType> parentType = new ArrayList<CuType>();
-	List<CuType> iniArgs;
+	List<CuType> iniArgs = new ArrayList<CuType>();
 	protected String id;
 	protected String text = "";
 	protected Map<String, CuType> map = new LinkedHashMap<String, CuType>();// typeParameter->non-generic type arguments
@@ -169,32 +169,46 @@ class VClass extends CuType {
 	}
 	/* instantiate this class */
 	@Override public Map<String, CuType> plugIn(Map<String, CuType> ts) {
-		/*//TODO: make sure calculateType is called before
+		//TODO: make sure calculateType is called before
 		if(map.size()==0) return this.map;
-		//commented out by Yinglei, we don't want recursive mapping
-		//Map<String, CuType> t = flattenMap(ts);
-		Map<String, CuType> t = ts;
+		Map<String, CuType> t = flattenMap(ts);
 		for(Entry<String, CuType> p : map.entrySet()) {
 			String k = p.getKey();
 			CuType val = p.getValue();
 			if (t.containsKey(val.id)) {
 				map.put(k, t.get(val.id));
 			}
-			//commented out by Yinglei because we don't want recusive plugin
-			//p.getValue().plugIn(t);
+			p.getValue().plugIn(t);
 		}
-		Helper.P(String.format("PLUGIN VClass map ori=%s, t=%s", this.map,t));*/
+		//Helper.P(String.format("PLUGIN VClass map ori=%s, t=%s", this.map,t));
 		//Yinglei thinks this plugin is very simple replacement
+Helper.P("VClass plugin: begin, map is " + ts.toString() + "iniArgs is " + iniArgs.toString() + "type is " + type.toString());
 		List<CuType> new_iniArgs = new ArrayList<CuType>();
 		for (CuType t_iter : iniArgs) {
 			if (ts.keySet().contains(t_iter.toString()))
 				new_iniArgs.add(ts.get(t_iter.toString()));
-			else
-				new_iniArgs.add(t_iter);
+			else {
+				if (t_iter.iniArgs.size()>0) {
+					CuType iter_copy = t_iter.getcopy();
+					iter_copy.plugIn(ts);
+					new_iniArgs.add(iter_copy);
+				}
+				else
+					new_iniArgs.add(t_iter);
+			}
 		}
 		iniArgs = new_iniArgs;
 		if(ts.keySet().contains(type.toString()))
 			type = ts.get(type.toString());
+		else {
+			if (type.iniArgs.size()>0) {
+				CuType iter_copy = type.getcopy();
+				iter_copy.plugIn(ts);
+				type = iter_copy;
+			}
+		}
+Helper.P("VClass plugin: end, map is " + ts.toString() + "iniArgs is " + iniArgs.toString() + "type is " + type.toString());
+		super.text=super.id+ " "+ Helper.printList("<", iniArgs, ">", ",");
 		return this.map;
 	}
 	public Map<String, CuType> flattenMap(Map<String, CuType> t) {
@@ -460,14 +474,12 @@ Helper.P("Interable subtyping return true 2: this type is " + this.type + " that
 	}
 	@Override public Map<String, CuType> plugIn(Map<String, CuType> ts) {
 		//TODO: make sure calculateType is called before
-		/*if(map.size()==0) return this.map;
+		if(map.size()==0) return this.map;
 		String key = "Bottom";
 		for (Entry<String, CuType> p : map.entrySet()) {
 			key = p.getKey();
 		}
-		//Commented out by Yinglei
-		//Map<String, CuType> t = flattenMap(ts);
-		Map<String, CuType> t = ts;
+		Map<String, CuType> t = flattenMap(ts);
 		type.plugIn(t); // plug in recursively
 		//System.out.println("type is " + type.toString());
 		for (Entry<String, CuType> p : t.entrySet()) {
@@ -476,11 +488,11 @@ Helper.P("Interable subtyping return true 2: this type is " + this.type + " that
 				map.put(key, p.getValue()); // only plug in valid keys
 				type = p.getValue();
 				//System.out.println("after plug in type is " + type.toString());
-Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));
+//Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));
 				return this.map;
 			}
 		}
-Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));*/
+//Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));
 		//Yinglei thinks this plugin is very simple replacement
 Helper.P("iter plugin: begin, map is " + ts.toString() + "iniArgs is " + iniArgs.toString() + "type is " + type.toString());
 		List<CuType> new_iniArgs = new ArrayList<CuType>();
@@ -490,23 +502,27 @@ Helper.P("iter plugin: begin, map is " + ts.toString() + "iniArgs is " + iniArgs
 			else {
 				if (t_iter.iniArgs.size()>0) {
 					CuType iter_copy = t_iter.getcopy();
+Helper.P("before plugin, iter_copy is " + iter_copy.toString());
 					iter_copy.plugIn(ts);
+Helper.P("after plugin, iter_copy is " + iter_copy.toString());
 					new_iniArgs.add(iter_copy);
 				}
 				else
 					new_iniArgs.add(t_iter);
 			}
 		}
-		iniArgs = new_iniArgs;
+		this.iniArgs = new_iniArgs;
 		if(ts.keySet().contains(type.toString()))
-			type = ts.get(type.toString());
+			this.type = ts.get(type.toString());
 		else
 			if (type.iniArgs.size()>0) {
 				CuType iter_copy = type.getcopy();
 				iter_copy.plugIn(ts);
-				type = iter_copy;
+				this.type = iter_copy;
 			}
-Helper.P("iter plugin: end, map is " + ts.toString() + "iniArgs is " + iniArgs.toString() + "type is " + type.toString());
+Helper.P("iter plugin: end, map is " + ts.toString() + "this iniArgs is " + this.iniArgs.toString() + " this type is " + this.type.toString());
+//Helper.P("this is " + this.toString());
+		super.text=super.id+ " <" + type.toString()+">";
 		return this.map;
 	}
 }
