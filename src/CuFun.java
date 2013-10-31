@@ -10,13 +10,14 @@ public abstract class CuFun {
 	public CuStat funBody = null; 
 
 	protected StringBuilder sb= new StringBuilder();
+	protected StringBuilder inputs=new StringBuilder();
 	protected String ctext="";
 	//new Stats(new ArrayList<CuStat>());
 	//public void add(CuVvc v, CuTypeScheme ts) {}
 	//public void add(CuVvc v, CuTypeScheme ts, CuStat s) {}
 	//public void add(CuStat s){}
 	public abstract CuType calculateType(String v, CuTypeScheme ts, CuStat s);
-	public abstract String toC();
+	public abstract String toC(String str);
 }
 
 class Function extends CuFun {
@@ -25,23 +26,27 @@ class Function extends CuFun {
 		super.ts = ts_input;
 		super.funBody=s_input;
 		
+	}
 
-		Helper.cFunType.put(v, ts.data_t.id);
+	public String toC(String className){
+		String prepend="";
+		if (!className.equals(""))
+			prepend=className+"_";
+		//TODO: please let statement call this instead
+		Helper.cFunType.put(prepend+v, ts.data_t.id);
 		ArrayList<String> local=new ArrayList<String>();
 		
 		sb.append("void* "+v.toString()+"(");
 		String delim = "";
 		for (Entry<String, CuType> e : ts.data_tc.entrySet()){
-			sb.append(delim).append(e.getKey()+e.getValue().toString());
+			inputs.append(delim).append(e.getKey() +"* "+e.getValue().toString());
 			delim=" , ";
-			Helper.cVarType.put(e.getKey(), e.getValue().id);
+			Helper.cVarType.put(prepend+e.getKey(), e.getValue().id);
 		}
+		sb.append(inputs);
 		sb.append(") {\n");
 		sb.append(funBody.toC(local));
 		sb.append("}");
-	}
-
-	public String toC(){
 		return sb.toString();
 	}
 	

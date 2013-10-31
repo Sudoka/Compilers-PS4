@@ -1,5 +1,0 @@
-a := ("hello" == "hi");
-while (a)
-	b := "hello";
-
-return ["accept"];

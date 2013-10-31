@@ -1,7 +1,0 @@
-e := true;
-while (e)
-	d := 0;
-
-e := d + 1;
-
-return ["reject"];
