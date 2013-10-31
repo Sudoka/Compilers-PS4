@@ -108,7 +108,7 @@ class VClass extends CuType {
 	public VClass(String s, List<CuType> args){
 		super.id = s;
 		iniArgs = args; // the <tao1, tao2 ...> when it is constructed
-Helper.P(String.format("VClass %s<%s>", s, args.toString()));
+//Helper.P(String.format("VClass %s<%s>", s, args.toString()));
 /*		for (CuType t : args) {
 			map.put(t, CuType.bottom); // type parameter is mapped to bottom initially
 		}
@@ -316,6 +316,7 @@ class Iter extends VClass {
 	CuType iniArg;// is not null
 	public Iter(CuType args) {
 		super(CuVvc.ITERABLE, new ArrayList<CuType> ()); // id is "Iterable"
+		Helper.P("inside Iter, arg type is " + args.toString());
 		if (args == null) throw new NoSuchTypeException();
 		iniArg = args;
 		init();
@@ -344,7 +345,13 @@ class Iter extends VClass {
 	}
 	@Override public boolean isIterable() {return true;}
 	@Override public boolean equals(CuType that) {
+Helper.P("inside Iter equals function, this is " + this.toString() + " that is " + that.toString());
 		if (!that.isIterable()) return false;
+		//added by Yinglei to fix PA3
+		if (this.isString() && !that.isString()) return false;
+		//added by Yinglei to fix PA3
+		if (that.isString() && !this.isString()) return false;
+Helper.P("inside Iter equals function, this type is " + this.type.toString() + " that type is " + that.type.toString());
 		if (this.type.isTypePara() && that.type.isTypePara()) return true;
 		return this.type.equals(((VClass)that).type);
 	}
@@ -362,9 +369,13 @@ Helper.P(String.format("map %s", map));
 		return this;
 	}
 	@Override public boolean isSubtypeOf(CuType that) {
+Helper.P("Interable subtyping begin: this type is " + this.type + " that type is" + that.type);
+		//added by Yinglei to fix PA3, String is iterable, but only string is subtype of string
+		if (that.isString() && !this.isString()) return false;
 		// TODO: make sure calculateType is called already
 		if (this.equals(that) || that.isTop()) return true;
 		if (that.isIterable() && this.type.isSubtypeOf(that.type)) {
+Helper.P("Interable subtyping return true 2: this type is " + this.type + " that type is" + that.type);
 			return true;
 		}
 		return false;

@@ -62,6 +62,7 @@ class AssignStat extends CuStat{
 	}
 	
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
+Helper.P("assign stat begin " + ee.toString() );
 		//System.out.println("In assig start");
 		//System.out.println("var="+var.toString() + " expr="+ ee.toString());
 		//check var is in immutable, type check fails
@@ -74,12 +75,14 @@ class AssignStat extends CuStat{
 		tcontext.mergeVariable();
 		//System.out.println("In assig stat, before expr check");
 		CuType exprType = ee.calculateType(tcontext);
+Helper.P("ee type is " + exprType);
 		//System.out.println("In assig stat, after expr check");
 		context.updateMutType(var.toString(), exprType);
 		HReturn re = new HReturn();
 		re.b = false;
 		re.tau = CuType.bottom;
 		//System.out.println("In assignment statement end");
+Helper.P("assign stat end " + ee.toString());
 		return re;
 	}
 }
@@ -250,12 +253,15 @@ class IfStat extends CuStat{
     }
     
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
+Helper.P("if begin, e is " + e.toString());
 		//whenever we calculate expr type, we use a temporary context with merged mutable and
 		//immutable variables
 		CuContext tcontext = new CuContext (context);
 		tcontext.mergeVariable();		
     	//check whether e is boolean
+Helper.P(tcontext.mVariables.toString());
     	CuType eType = e.calculateType(tcontext);
+Helper.P("e type is " + eType);
     	if (!eType.isBoolean()) {
     		throw new NoSuchTypeException();
     	}
@@ -286,6 +292,7 @@ class IfStat extends CuStat{
 			re_out.b = true;
 		}
 		re_out.tau = CuType.commonParent(re1.tau, re2.tau);
+Helper.P("if end, e is " + e.toString());
 		return re_out;
 	}
 
@@ -319,6 +326,7 @@ class ReturnStat extends CuStat{
 		return super.ctext;
 	}
 	public HReturn calculateType(CuContext context) throws NoSuchTypeException {
+Helper.P("return begin " + e.toString());
 		//System.out.println("in return stat, begin");
 		HReturn re = new HReturn();
 		re.b = true;
@@ -327,6 +335,7 @@ class ReturnStat extends CuStat{
 		CuContext tcontext = new CuContext (context);
 		tcontext.mergeVariable();	
 		re.tau = e.calculateType(tcontext);
+Helper.P("e type is " + re.tau);
 		//System.out.println("in return stat, exp is " + e.toString() + " end");
 		return re;
 	}

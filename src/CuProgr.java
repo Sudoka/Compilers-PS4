@@ -66,6 +66,7 @@ class FullPrg extends CuProgr {
 			//System.out.println("finished one");
 		}
 		HReturn re = this.s.calculateType(context);
+Helper.P("program return, type is " + re.tau.toString());
 		if (!re.tau.isSubtypeOf(new Iter(CuType.string)) || (re.b== false)) {
 			throw new NoSuchTypeException();
 		}
@@ -112,7 +113,7 @@ class FunPrg extends CuProgr {
 		return Helper.printList("", fun, "", "");
 	}
 	@Override  public void calculateType(CuContext context) throws NoSuchTypeException {
-		//System.out.println("in func program");
+Helper.P("in func program " + name);
 		//System.out.println(this.statement.toString());
 		//update the function context
 		context.mergeVariable();

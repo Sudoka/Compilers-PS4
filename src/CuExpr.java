@@ -104,7 +104,7 @@ class AndExpr extends CuExpr{
 		left = e1;
 		right = e2;
 //		super.desiredType = CuType.bool;
-		super.methodId = "add";
+		super.methodId = "and";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
 		String temp = Helper.getVarName();
@@ -165,7 +165,16 @@ class AppExpr extends CuExpr {
 		if (!t1.isIterable() || !t2.isIterable()) {
 			throw new NoSuchTypeException();
 		}
+		//added by Yinglei to fix PA3, Iterable can't be extended, so I think we only need to treat string separately
+		if (t1.isString()) {
+			t1 = new Iter(CuType.character);
+		}
+		if (t2.isString()) {
+			t2 = new Iter(CuType.character);
+		}
+Helper.P("t1 is " + t1.toString() + " t2 is " + t2.toString() + ", t1 type is " + t1.type.toString() + " t2 type is " + t2.type.toString());
 		CuType type = CuType.commonParent(t1.type, t2.type);
+Helper.P("common parent of types is " + type.toString());
 		return new Iter(type);
 		/*CuType type = CuType.commonParent(left.getType(context), right.getType(context));
 		if (type.isIterable()) return type;
@@ -1303,8 +1312,10 @@ class VvExp extends CuExpr{
 	}
 
 	@Override protected CuType calculateType(CuContext context) {
+Helper.P("in VvExp typechecker, var is " + val.toString());
 		//System.out.println(String.format("in VvExp %s, begin %s", text, val));
 		if (es == null) return context.getVariable(val);
+Helper.P("es is not null, es is " + es.toString());
 		//else, it will be the same as in VcExp
         // check tao in scope
 		//System.out.println("not a variable, checking function context");
