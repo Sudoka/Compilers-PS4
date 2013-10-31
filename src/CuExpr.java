@@ -820,7 +820,6 @@ class ModuloExpr extends CuExpr{
 		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
-		String integer = "Integer";
 		
 		name += "\n" + leftC + rightC;
 		
