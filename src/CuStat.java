@@ -35,7 +35,7 @@ class AssignStat extends CuStat{
 	
 	@Override public String toC(ArrayList<String> localVars) {
 		String exp_toC = ee.toC();
-		super.ctext ="//										ASSIGN\n";
+		super.ctext ="//                                                  ASSIGN\n";
 		super.ctext += ee.construct();
 		//the below sentence can be removed by higher level blocks
 		super.ctext += "void * " + var.toString() +" = NULL;\n";
@@ -100,7 +100,7 @@ class ForStat extends CuStat{
 	@Override public String toC(ArrayList<String> localVars)
 	{
 		String exp_toC = e.toC();
-		super.ctext +="//										FOR LOOP\n";
+		super.ctext +="//                                                  FOR LOOP\n";
 		super.ctext += e.construct();
 		String iter_name = Helper.getVarName();
 		super.ctext += "int " + iter_name + ";\n";
@@ -185,7 +185,7 @@ class IfStat extends CuStat{
     //for if statement, ctext is build here
     @Override public String toC(ArrayList<String> localVars) {
     	String exp_toC = e.toC();
-		super.ctext ="//										IF STAT\n";
+		super.ctext ="//                                                  IF STAT\n";
     	super.ctext += this.e.construct();
     	ArrayList<String> s1_localVars = new ArrayList<String>();
     	ArrayList<String> s2_localVars = new ArrayList<String>();
@@ -307,7 +307,7 @@ class ReturnStat extends CuStat{
 	}
 	@Override public String toC(ArrayList<String> localVars) {
 		//now reference counting/free memory due to scoping
-		super.ctext +="//										RETURN\n";
+		super.ctext +="//                                                  RETURN\n";
 		for (String cur_str : localVars) {
 			super.ctext += "//now reference counting/free memory due to scoping\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
@@ -351,7 +351,7 @@ class Stats extends CuStat{
 	@Override public String toC(ArrayList<String> localVars) {
 		String temp_str = "";
 
-		super.ctext ="//										STATEMENT STARTS\n";
+		super.ctext ="//                                                  STATEMENT STARTS\n";
 		for(CuStat cs : al) {
 			temp_str += cs.toC(localVars);
 			//newVars are generated after toC call
@@ -406,7 +406,7 @@ class WhileStat extends CuStat{
 	@Override public String toC(ArrayList<String> localVars) {
 		String exp_toC = e.toC();
 
-		super.ctext +="//										WHILE LOOP\n";
+		super.ctext +="//                                                  WHILE LOOP\n";
 		super.ctext += e.construct();
 		super.ctext += "while (" + exp_toC + ") {\n";
 		ArrayList<String> while_localVars = new ArrayList<String>();
