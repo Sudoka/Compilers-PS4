@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 
 public abstract class CuProgr {
@@ -16,9 +17,7 @@ public abstract class CuProgr {
 	
 	public void calculateType(CuContext context) throws NoSuchTypeException {}
 	
-	public String toC(ArrayList<String> localVars) {
-		return ctext;
-	}
+	public abstract String toC(ArrayList<String> localVars);
 }
 
 class FullPrg extends CuProgr {
@@ -89,6 +88,9 @@ class ClassPrg extends CuProgr {
 		c.calculateType(context);
 		//System.out.println("in class program, end");
 	}
+	public String toC(ArrayList<String> localVars) {
+		return "CLASS"+ctext;
+	}
 }
 
 class FunPrg extends CuProgr {
@@ -140,6 +142,27 @@ Helper.P("in func program " + name);
 			throw new NoSuchTypeException();
 		}
 	}
+	public String toC(ArrayList<String> localVars){
+		StringBuilder sb= new StringBuilder();
+		StringBuilder inputs=new StringBuilder();
+		Helper.cFunType.put(name, typeScheme.data_t.id);
+		ArrayList<String> local=new ArrayList<String>();
+		
+		sb.append("void* "+name.toString()+"(");
+		String delim = "";
+		for (Entry<String, CuType> e : typeScheme.data_tc.entrySet()){
+			inputs.append(delim).append(e.getValue().id +"* "+e.getKey());
+			delim=" , ";
+			Helper.cVarType.put(e.getKey(), e.getValue().id);
+		}
+		sb.append(inputs);
+		sb.append(") {\n");
+		sb.append(statement.toC(local));
+		sb.append("}\n");
+		sb.append("//										END OF PROG_FUN\n");
+		return sb.toString();
+	}
+
 }
 
 class StatPrg extends CuProgr {

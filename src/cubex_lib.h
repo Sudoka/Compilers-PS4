@@ -1,3 +1,5 @@
+#define NULL ((void*)0)
+
 typedef struct integer {
 	int nrefs;
 	int value;

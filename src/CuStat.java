@@ -35,7 +35,8 @@ class AssignStat extends CuStat{
 	
 	@Override public String toC(ArrayList<String> localVars) {
 		String exp_toC = ee.toC();
-		super.ctext = ee.construct();
+		super.ctext ="//                                                  ASSIGN\n";
+		super.ctext += ee.construct();
 		//the below sentence can be removed by higher level blocks
 		super.ctext += "void * " + var.toString() +" = NULL;\n";
 		super.ctext += "if (" + var.toString() + "!= NULL) {\n";
@@ -101,7 +102,8 @@ class ForStat extends CuStat{
 	@Override public String toC(ArrayList<String> localVars)
 	{
 		String exp_toC = e.toC();
-		super.ctext = e.construct();
+		super.ctext +="//                                                  FOR LOOP\n";
+		super.ctext += e.construct();
 		String iter_name = Helper.getVarName();
 		super.ctext += "int " + iter_name + ";\n";
 		super.ctext += "for (" + iter_name + "=0; " + iter_name + "<" + exp_toC + ".size;" + iter_name + "++) {\n";
@@ -117,6 +119,7 @@ class ForStat extends CuStat{
 		}
 		//now reference counting/free memory due to scoping
 		for (String cur_str : localVarsInFor) {
+			super.ctext += "//now reference counting/free memory due to scoping\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
 			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
@@ -125,6 +128,7 @@ class ForStat extends CuStat{
 			//decrement the reference count
 			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
 			super.ctext += "}\n";
+			super.ctext += "//Done\n";
 		}
 		super.ctext += "}\n";
 		return super.ctext;
@@ -183,6 +187,7 @@ class IfStat extends CuStat{
     //for if statement, ctext is build here
     @Override public String toC(ArrayList<String> localVars) {
     	String exp_toC = e.toC();
+		super.ctext ="//                                                  IF STAT\n";
     	super.ctext += this.e.construct();
     	ArrayList<String> s1_localVars = new ArrayList<String>();
     	ArrayList<String> s2_localVars = new ArrayList<String>();
@@ -223,6 +228,7 @@ class IfStat extends CuStat{
     	super.ctext += temp_s1;
 		//now reference counting/free memory due to scoping
 		for (String cur_str : s1_localVars) {
+			super.ctext += "//now reference counting/free memory due to scoping\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
 			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
@@ -238,6 +244,7 @@ class IfStat extends CuStat{
     		super.ctext += temp_s2;
     		//now reference counting/free memory due to scoping
     		for (String cur_str : s2_localVars) {
+    			super.ctext += "//now reference counting/free memory due to scoping\n";
     			super.ctext += "if (" + cur_str + "!= NULL) {\n";
     			//check whether it is the last pointer pointing to the object, if yes, free memory
     			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
@@ -306,7 +313,9 @@ class ReturnStat extends CuStat{
 	}
 	@Override public String toC(ArrayList<String> localVars) {
 		//now reference counting/free memory due to scoping
+		super.ctext +="//                                                  RETURN\n";
 		for (String cur_str : localVars) {
+			super.ctext += "//now reference counting/free memory due to scoping\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
 			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
@@ -349,6 +358,8 @@ class Stats extends CuStat{
 	}
 	@Override public String toC(ArrayList<String> localVars) {
 		String temp_str = "";
+
+		super.ctext ="//                                                  STATEMENT STARTS\n";
 		for(CuStat cs : al) {
 			temp_str += cs.toC(localVars);
 			//newVars are generated after toC call
@@ -402,7 +413,9 @@ class WhileStat extends CuStat{
 	}
 	@Override public String toC(ArrayList<String> localVars) {
 		String exp_toC = e.toC();
-		super.ctext = e.construct();
+
+		super.ctext +="//                                                  WHILE LOOP\n";
+		super.ctext += e.construct();
 		super.ctext += "while (" + exp_toC + ") {\n";
 		ArrayList<String> while_localVars = new ArrayList<String>();
 		super.ctext += s1.toC(while_localVars);
@@ -414,6 +427,7 @@ class WhileStat extends CuStat{
 		}
 		//now reference counting/free memory due to scoping
 		for (String cur_str : while_localVars) {
+			super.ctext += "//now reference counting/free memory due to scoping\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
 			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";

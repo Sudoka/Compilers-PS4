@@ -190,6 +190,19 @@ Helper.P("common parent of types is " + type.toString());
 		if (type.isBottom()) return new Iter(CuType.bottom);
 		Helper.ToDo("Bottom <: Iterable<Bot>?"); */
 	}
+	
+	@Override
+	public String toC() {
+		String leftToC = left.toC(), rightToC = right.toC();
+		castType = "Iterable";
+		
+		name += left.construct();
+		name += right.construct();
+		name += "concatenate((Iterable*)" + leftToC + ", (Iterable*) " + rightToC + ");\n";
+		
+		cText = leftToC;
+		return super.toC();
+	}
 }
 
 class BrkExpr extends CuExpr {
@@ -215,24 +228,30 @@ class BrkExpr extends CuExpr {
 	
 	@Override
 	public String toC() {
-		String iter = Helper.getVarName();
-		String j = Helper.getVarName();
-		String temp = "", eToC;
+		String eToC;
 		
-		for (CuExpr e : val)
-		{
+		ArrayList<String> tempNameArr=new ArrayList<String>();	
+		ArrayList<String> tempDataArr=new ArrayList<String>();
+		for (CuExpr e : val) {
 			eToC = e.toC();
 			name += e.construct();
-			temp += String.format("%s.value[%s++] = &" + eToC + ";\n", iter, j);
+			tempNameArr.add(Helper.getVarName());
+			tempDataArr.add(eToC);
 		}
-		super.name += String.format(
-				"int %s = 0;\nIterable %s;\n"
-				+ "%s.size = %d;\n"
-				+ "%s.value = (void**)malloc(%d * sizeof(void*));\n",				
-				j, iter, iter, val.size(), iter, val.size());
-		super.name += temp;
+		tempNameArr.add("null");
+
+		for (int i = val.size() - 1; i >= 0; i--) {
+			name += "Iterable* " + tempNameArr.get(i) + "=(Iterable*) malloc(sizeof(Iterable));\n"
+					+ tempNameArr.get(i) + "->nref=1;\n" 
+					+ tempNameArr.get(i) + "->value=" + tempDataArr.get(i) + ";\n"
+					+ tempNameArr.get(i) + "->additional=" + tempNameArr.get(i + 1) + ";\n" 
+					+ tempNameArr.get(i) + "->next=NULL;\n" 
+					+ tempNameArr.get(i)+ "->concat=NULL;\n";
+		}	
+			
+		cText = tempNameArr.get(0);
+		
 		super.castType = "Iterable";
-		super.cText = iter;
 		return super.toC();
 	}
 
@@ -810,14 +829,14 @@ class ModuloExpr extends CuExpr{
 		String rightToC = right.toC();
 		String leftC = left.construct();
 		String rightC = right.construct();
+		String integer = "Integer";
 		
 		name += "\n" + leftC + rightC;
 		
 		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value % ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
-
+		super.name += String.format("((%s*)%s)->value %% ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
@@ -944,13 +963,113 @@ class NegativeExpr extends CuExpr{
 
 class OnwardsExpr extends CuExpr{
 	private CuExpr val;
+	boolean inclusive;
 	public OnwardsExpr(CuExpr e, Boolean inclusiveness) {
 		val = e;
+		inclusive = inclusiveness;
 		super.methodId = "onwards";
 		super.text = String.format("%s . %s < > ( %s )", val.toString(), super.methodId, inclusiveness);
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		return binaryExprType(context, val.getType(context).id, super.methodId, CuType.bool);
+	}
+	
+	@Override
+	public String toC() {
+		castType = "Iterable";		
+		String valToC = val.toC();
+		
+		if (val.getCastType().equals("Boolean"))
+		{
+			if (val.toString().equals("true")) {
+				cText = "NULL";
+			}
+			else {
+				if(inclusive) {
+					String iter = Helper.getVarName();
+					String iterTemp = Helper.getVarName(), falseTemp = Helper.getVarName(), trueTemp = Helper.getVarName();
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 1;\n"
+							+ "%s->nrefs = 0;\n",
+							trueTemp, trueTemp, trueTemp);
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 0;\n"
+							+ "%s->nrefs = 0;\n",
+							falseTemp, falseTemp, falseTemp);
+					
+					name +=  "Iterable* " + iterTemp + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iterTemp + "->nref = 1;\n"
+							+ iterTemp + "->value = " + trueTemp + ";\n"
+							+ iterTemp + "->additional = NULL;\n"
+							+ iterTemp + "->next = NULL;\n"
+							+ iterTemp + "->concat = NULL;\n";
+										
+					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+							+ iter + "->nref = 1;\n"
+							+ iter + "->value = " + falseTemp + ";\n"
+							+ iter + "->additional =" + iterTemp + ";\n"
+							+ iter + "->next = NULL;\n"
+							+ iter + "->concat = NULL;\n";
+					
+					cText = iter;
+				}
+				
+				else {
+					String iter = Helper.getVarName();
+					String temp = Helper.getVarName();
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 1;\n"
+							+ "%s->nrefs = 0;\n",
+							temp, temp, temp);
+					
+					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+							+ iter + "->nref = 1;\n"
+							+ iter + "->value = " + temp + ";\n"
+							+ iter + "->additional = NULL;\n"
+							+ iter + "->next = NULL;\n"
+							+ iter + "->concat = NULL;\n";
+					
+					cText = iter;
+				}
+			}
+				
+			
+		}
+		
+		else {
+			if(inclusive) {
+				name += val.construct();
+				String iter = Helper.getVarName();
+		
+				name += "Iterable* " + iter + " = (Iterable*) malloc(sizeof(Iterable));\n"
+						+ iter + "->nref = 1;\n"
+						+ iter + "->value = " + valToC + ";\n"
+						+ iter + "->additional = NULL;\n"
+						+ iter + "->next = &" + val.getCastType() + "_onwards;\n"
+						+ iter + "->concat = NULL;\n";
+		
+				cText = iter;
+			}
+			else {
+				String temp = Helper.getVarName();
+				String iter = Helper.getVarName();
+												
+				int i = (Integer.parseInt(val.toString())) + 1;
+				name += "Integer* " + temp + " = (Integer*) malloc(sizeof(Integer));\n"
+						+ temp + "->value = " + i + ";\n";					
+					
+				
+				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+						+ iter + "->nref = 1;\n"
+						+ iter + "->value = " + temp + ";\n"
+						+ iter + "->additional = NULL;\n"
+						+ iter + "->next = &" + val.getCastType() + "_onwards;\n"
+						+ iter + "->concat = NULL;\n";
+				
+				cText = iter;
+			}
+		}
+		return super.toC();
 	}
 }
 
@@ -1074,80 +1193,14 @@ class PlusExpr extends CuExpr{
 
 class ThroughExpr extends CuExpr{
 	private CuExpr left, right;
+	boolean bLow, bUp;
 	public ThroughExpr(CuExpr e1, CuExpr e2, Boolean low, Boolean up) {
 		left = e1;
 		right = e2;
+		bLow = low;
+		bUp = up;
 		super.methodId = "through";
 		super.text = String.format("%s . %s < > ( %s , %s , %s )", left.toString(), methodId, right.toString(), low, up);
-		
-		//need to deal with boolean, characters and strings
-		String temp = Helper.getVarName();
-		left.toC();
-		right.toC();
-		super.name += e1.construct();
-		super.name += e2.construct();
-		
-		if (e1.getCastType().equals("Integer"))
-		{
-		
-			if (low && up)
-				super.name = String.format(
-						"int i, j=0;\nIterable* %s = (Iterable*) malloc(sizeof(Iterable));\n" + "%s->size = %d;\n"
-								+ "%s->type = eInteger;\n"
-								+ "%s->nrefs = 0;\n"
-								+ "for(i=%s->value; i<=%s; i++) {\n"
-								+ "Integer* %s = (Integer*) malloc(sizeof(Integer));\n"
-								+ "%s->nrefs = 0;\n"
-								+ "%s->value = i;"
-								+ "*%s->value[j++] = i;\n}\n",
-						temp, temp,
-						Integer.parseInt(e2.toString())
-								- Integer.parseInt(e1.toString()) + 1,
-						temp, temp,
-						e1.toC(), e2.toC(), temp);
-			else if (low)
-				super.name = String.format(
-						"int i, j=0;\nIterable %s;\n" + "%s.size = %d;"
-								+ "%s->type = eInteger;\n"
-								+ "%s->nrefs = 0;\n"
-								+ "for(i=%s; i<%s/*end val*/; i++)\n"
-								+ "*%s.value[j++] = i;\n",
-						temp,
-						temp,
-						Integer.parseInt(e2.toString())
-								- Integer.parseInt(e1.toString()), e1.toC(),
-								temp, temp,
-								e2.toC(), temp);
-			else if (up)
-				super.name = String.format(
-						"int i, j=0;\nIterable %s;\n" + "%s.size = %d;\n"
-								+ "%s->type = eInteger;\n"
-								+ "%s->nrefs = 0;\n"
-								+ "for(i=%s+1; i<=%s; i++)\n"
-								+ "*%s.value[j++] = i;\n",
-						temp,
-						temp,
-						Integer.parseInt(e2.toString())
-								- Integer.parseInt(e1.toString()), e1.toC(),
-								temp, temp,
-								e2.toC(), temp);
-			else
-				super.name = String.format(
-						"int i, j=0;\nIterable %s;\n" + "%s.size = %d;\n"
-								+ "%s->type = eInteger;\n"
-								+ "%s->nrefs = 0;\n"
-								+ "for(i=%s+1; i<%s; i++)\n"
-								+ "*%s.value[j++] = i;\n",
-						temp,
-						temp,
-						Integer.parseInt(e2.toString())
-								- Integer.parseInt(e1.toString()) - 1,
-								temp, temp,
-								e1.toC(), e2.toC(), temp);
-		}
-		
-		super.castType = "Iterable";
-		super.cText = temp;
 	}
 
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
@@ -1159,6 +1212,235 @@ class ThroughExpr extends CuExpr{
 			return new Iter(CuType.integer);
 		else
 			return new Iter(CuType.bool);
+	}
+	
+	@Override
+	public String toC() {
+		castType = "Iterable";
+		String leftToC = left.toC(), rightToC = right.toC();
+		String iter = Helper.getVarName();
+		
+		if(bLow && bUp)	{
+			if(left.getCastType().equals("Boolean")) {
+				//true..true
+				if(left.toString().equals("true") && right.toString().equals("true"))
+				{
+					String temp = Helper.getVarName();
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 1;\n"
+							+ "%s->nrefs = 0;\n",
+							temp, temp, temp);
+					
+					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+							+ iter + "->nref = 1;\n"
+							+ iter + "->value = " + temp + ";\n"
+							+ iter + "->additional = NULL;\n"
+							+ iter + "->next = NULL;\n"
+							+ iter + "->concat = NULL;\n";
+					
+					cText = iter;
+				}
+				
+				//false..true
+				else if (left.toString().equals("false") && right.toString().equals("true"))
+				{
+					String iterTemp = Helper.getVarName(), falseTemp = Helper.getVarName(), trueTemp = Helper.getVarName();
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 1;\n"
+							+ "%s->nrefs = 0;\n",
+							trueTemp, trueTemp, trueTemp);
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 0;\n"
+							+ "%s->nrefs = 0;\n",
+							falseTemp, falseTemp, falseTemp);
+					
+					name +=  "Iterable* " + iterTemp + "(Iterable*) malloc(sizeof(Iterable));\n"
+							+ iterTemp + "->nref = 1;\n"
+							+ iterTemp + "->value = " + trueTemp + ";\n"
+							+ iterTemp + "->additional = NULL;\n"
+							+ iterTemp + "->next = NULL;\n"
+							+ iterTemp + "->concat = NULL;\n";
+										
+					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+							+ iter + "->nref = 1;\n"
+							+ iter + "->value = " + falseTemp + ";\n"
+							+ iter + "->additional =" + iterTemp + ";\n"
+							+ iter + "->next = NULL;\n"
+							+ iter + "->concat = NULL;\n";
+					
+					cText = iter;
+				}
+				
+				//true..false
+				else if (left.toString().equals("true") && right.toString().equals("false"))
+				{
+					cText = "NULL";
+				}
+				
+				//false..false
+				else
+				{
+					String temp = Helper.getVarName();
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 0;\n"
+							+ "%s->nrefs = 0;\n",
+							temp, temp, temp);
+					
+					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+							+ iter + "->nref = 1;\n"
+							+ iter + "->value = " + temp + ";\n"
+							+ iter + "->additional = NULL;\n"
+							+ iter + "->next = NULL;\n"
+							+ iter + "->concat = NULL;\n";
+					
+					cText = iter;
+				}
+			}
+			
+			else {
+				name += left.construct();
+				name += right.construct();
+			
+				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+						+ iter + "->nref = 1;\n"
+						+ iter + "->value = " + leftToC + ";\n"
+						+ iter + "->additional = " + rightToC + ";\n"
+						+ iter + "->next = &" + left.getCastType() + "_through;\n"
+						+ iter + "->concat = NULL;\n";
+				
+				cText = iter;
+			}
+		}
+		else if (bUp){
+			
+			if(left.getCastType().equals("Boolean")) {
+				
+				//true<.true; true<.false; false<.false
+				if ((left.toString().equals("True")) 
+					|| (left.toString().equals("false") && right.toString().equals("false")) )
+				{
+					cText = "NULL";
+				}
+				
+				//false<.true
+				else
+				{
+					String temp = Helper.getVarName();
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 1;\n"
+							+ "%s->nrefs = 0;\n",
+							temp, temp, temp);
+					
+					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+							+ iter + "->nref = 1;\n"
+							+ iter + "->value = " + temp + ";\n"
+							+ iter + "->additional = NULL;\n"
+							+ iter + "->next = NULL;\n"
+							+ iter + "->concat = NULL;\n";
+					
+					cText = iter;
+				}
+			}
+			
+			else {
+				String temp = Helper.getVarName();
+				int i = (Integer.parseInt(left.toString())) + 1;
+				name += "Integer* " + temp + " = (Integer*) malloc(sizeof(Integer));\n"
+						+ temp + "->value = " + i + ";\n";					
+					
+				name += right.construct();
+				
+				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+						+ iter + "->nref = 1;\n"
+						+ iter + "->value = " + temp + ";\n"
+						+ iter + "->additional = " + rightToC + ";\n"
+						+ iter + "->next = &" + left.getCastType() + "_through;\n"
+						+ iter + "->concat = NULL;\n";
+				
+				cText = iter;
+			}
+		}
+		else if (bLow) {
+			
+			if(left.getCastType().equals("Boolean")) {
+				
+				//true.<true; true.<false; false.<false
+				if ((left.toString().equals("True")) 
+					|| (left.toString().equals("false") && right.toString().equals("false")) )
+				{
+					cText = "NULL";
+				}
+				
+				//false.<true
+				else
+				{
+					String temp = Helper.getVarName();
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 0;\n"
+							+ "%s->nrefs = 0;\n",
+							temp, temp, temp);
+					
+					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+							+ iter + "->nref = 1;\n"
+							+ iter + "->value = " + temp + ";\n"
+							+ iter + "->additional = NULL;\n"
+							+ iter + "->next = NULL;\n"
+							+ iter + "->concat = NULL;\n";
+					
+					cText = iter;
+				}
+			}
+			
+			else {
+				String temp = Helper.getVarName();
+				name += left.construct();
+								
+				int i = (Integer.parseInt(left.toString())) - 1;
+				name += "Integer* " + temp + " = (Integer*) malloc(sizeof(Integer));\n"
+						+ temp + "->value = " + i + ";\n";					
+					
+				
+				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+						+ iter + "->nref = 1;\n"
+						+ iter + "->value = " + leftToC + ";\n"
+						+ iter + "->additional = " + temp + ";\n"
+						+ iter + "->next = &" + left.getCastType() + "_through;\n"
+						+ iter + "->concat = NULL;\n";
+				
+				cText = iter;
+			}					
+		}
+		else {
+			
+			if(left.getCastType().equals("Boolean")) {
+				//true<<true; true<<false; false<<false; false<<true
+				cText = "NULL";
+			}
+				
+			else {
+				String temp1 = Helper.getVarName(), temp2 = Helper.getVarName();
+				//name += left.construct();
+								
+				int i = (Integer.parseInt(left.toString())) + 1;
+				name += "Integer* " + temp1 + " = (Integer*) malloc(sizeof(Integer));\n"
+						+ temp1 + "->value = " + i + ";\n";					
+				
+				i = (Integer.parseInt(left.toString())) - 1;
+				name += "Integer* " + temp2 + " = (Integer*) malloc(sizeof(Integer));\n"
+						+ temp2 + "->value = " + i + ";\n";					
+					
+				
+				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+						+ iter + "->nref = 1;\n"
+						+ iter + "->value = " + temp1 + ";\n"
+						+ iter + "->additional = " + temp2 + ";\n"
+						+ iter + "->next = &" + left.getCastType() + "_through;\n"
+						+ iter + "->concat = NULL;\n";
+				
+				cText = iter;
+			}
+		}
+		return super.toC();
 	}
 }
 
@@ -1177,8 +1459,7 @@ class TimesExpr extends CuExpr{
 	
 	@Override
 	public String toC() {
-		// TODO Auto-generated method stub
-String temp = Helper.getVarName();
+		String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
@@ -1283,7 +1564,6 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 	
 	@Override
 		public String toC() {
-			// TODO Auto-generated method stub
 		castType = Helper.cVarType.get(val+"_"+method);
 		int offset = 0;									//to be modified when class definition becomes clearer
 		String tempName = Helper.getVarName();
@@ -1386,7 +1666,6 @@ Helper.P("VcExp= "+text);
 	
 	@Override
 	public String toC() {
-		// TODO Auto-generated method stub
 		castType = Helper.cVarType.get(val);
 		String temp = "", tempCastType = "", expToC = "";
 		if (es == null)
@@ -1473,7 +1752,7 @@ Helper.P("es is not null, es is " + es.toString());
         for (int i = 0; i < types.size(); i++) {
         	mapping.put(cur_ts.data_kc.get(i), types.get(i));
         }
-Helper.P("VvExp MAPPING "+mapping);
+        Helper.P("VvExp MAPPING "+mapping);
 		//added by Yinglei
 		if (cur_ts.data_tc.size() != es.size()) throw new NoSuchTypeException();
         for (int i = 0; i < es.size(); i++) {
@@ -1496,7 +1775,6 @@ Helper.P("vvexp return type is " + reType.toString());
 	
 	@Override
 	public String toC() {
-		// TODO Auto-generated method stub
 		if(es==null)
 		{
 			super.cText = val;
