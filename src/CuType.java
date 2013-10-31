@@ -345,13 +345,13 @@ class Iter extends VClass {
 	}
 	@Override public boolean isIterable() {return true;}
 	@Override public boolean equals(CuType that) {
-Helper.P("inside Iter equals function, this is " + this.toString() + " that is " + that.toString());
+//Helper.P("inside Iter equals function, this is " + this.toString() + " that is " + that.toString());
 		if (!that.isIterable()) return false;
 		//added by Yinglei to fix PA3
 		if (this.isString() && !that.isString()) return false;
 		//added by Yinglei to fix PA3
 		if (that.isString() && !this.isString()) return false;
-Helper.P("inside Iter equals function, this type is " + this.type.toString() + " that type is " + that.type.toString());
+//Helper.P("inside Iter equals function, this type is " + this.type.toString() + " that type is " + that.type.toString());
 		if (this.type.isTypePara() && that.type.isTypePara()) return true;
 		return this.type.equals(((VClass)that).type);
 	}
