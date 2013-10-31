@@ -36,8 +36,5 @@ public class Cubex {
 		//	System.exit(-2);
 		//}
 		System.out.println("accept");
-
-		ArrayList<String> localVars = new ArrayList<String>();
-		System.out.print(ourProgram.toC(localVars));
 	}
 }
