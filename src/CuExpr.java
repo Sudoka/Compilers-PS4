@@ -1465,8 +1465,8 @@ Helper.P("es is not null, es is " + es.toString());
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
         List<CuType> tList = new ArrayList<CuType>();
         for (CuType cur_type : cur_ts.data_tc.values()) {
-        	if(cur_type.id.equals("Iterable"))
-        		cur_type.type = Helper.getTypeForIterable(cur_type.text);
+        	//if(cur_type.id.equals("Iterable"))
+        	//	cur_type.type = Helper.getTypeForIterable(cur_type.text);
             tList.add(cur_type);
         }
         Map<String, CuType> mapping = new HashMap<String, CuType>();
@@ -1479,7 +1479,7 @@ Helper.P("VvExp MAPPING "+mapping);
         for (int i = 0; i < es.size(); i++) {
         	//System.out.println(es.get(i).toString());
             if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
-            	//System.out.println("type mismatch, " + "es is " + es.get(i).toString() + "tListgeti is " + tList.get(i).toString() );
+Helper.P("type mismatch, " + "es is " + es.get(i).toString() + "tListgeti is " + tList.get(i).toString() );
                 throw new NoSuchTypeException();
             }
 Helper.P(String.format("calculated %s", es.get(i)));
