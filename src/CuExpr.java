@@ -1041,7 +1041,7 @@ class OnwardsExpr extends CuExpr{
 						+ iter + "->next = &" + val.getCastType() + "_onwards;\n"
 						+ iter + "->concat = NULL;\n";
 		
-				cText = valToC;
+				cText = iter;
 			}
 			else {
 				String temp = Helper.getVarName();
