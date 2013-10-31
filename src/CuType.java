@@ -181,34 +181,6 @@ class VClass extends CuType {
 			p.getValue().plugIn(t);
 		}
 		//Helper.P(String.format("PLUGIN VClass map ori=%s, t=%s", this.map,t));
-		//Yinglei thinks this plugin is very simple replacement
-Helper.P("VClass plugin: begin, map is " + ts.toString() + "iniArgs is " + iniArgs.toString() + "type is " + type.toString());
-		List<CuType> new_iniArgs = new ArrayList<CuType>();
-		for (CuType t_iter : iniArgs) {
-			if (ts.keySet().contains(t_iter.toString()))
-				new_iniArgs.add(ts.get(t_iter.toString()));
-			else {
-				if (t_iter.iniArgs.size()>0) {
-					CuType iter_copy = t_iter.getcopy();
-					iter_copy.plugIn(ts);
-					new_iniArgs.add(iter_copy);
-				}
-				else
-					new_iniArgs.add(t_iter);
-			}
-		}
-		iniArgs = new_iniArgs;
-		if(ts.keySet().contains(type.toString()))
-			type = ts.get(type.toString());
-		else {
-			if (type.iniArgs.size()>0) {
-				CuType iter_copy = type.getcopy();
-				iter_copy.plugIn(ts);
-				type = iter_copy;
-			}
-		}
-Helper.P("VClass plugin: end, map is " + ts.toString() + "iniArgs is " + iniArgs.toString() + "type is " + type.toString());
-		super.text=super.id+ " "+ Helper.printList("<", iniArgs, ">", ",");
 		return this.map;
 	}
 	public Map<String, CuType> flattenMap(Map<String, CuType> t) {
@@ -493,36 +465,6 @@ Helper.P("Interable subtyping return true 2: this type is " + this.type + " that
 			}
 		}
 //Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));
-		//Yinglei thinks this plugin is very simple replacement
-Helper.P("iter plugin: begin, map is " + ts.toString() + "iniArgs is " + iniArgs.toString() + "type is " + type.toString());
-		List<CuType> new_iniArgs = new ArrayList<CuType>();
-		for (CuType t_iter : iniArgs) {
-			if (ts.keySet().contains(t_iter.toString()))
-				new_iniArgs.add(ts.get(t_iter.toString()));
-			else {
-				if (t_iter.iniArgs.size()>0) {
-					CuType iter_copy = t_iter.getcopy();
-Helper.P("before plugin, iter_copy is " + iter_copy.toString());
-					iter_copy.plugIn(ts);
-Helper.P("after plugin, iter_copy is " + iter_copy.toString());
-					new_iniArgs.add(iter_copy);
-				}
-				else
-					new_iniArgs.add(t_iter);
-			}
-		}
-		this.iniArgs = new_iniArgs;
-		if(ts.keySet().contains(type.toString()))
-			this.type = ts.get(type.toString());
-		else
-			if (type.iniArgs.size()>0) {
-				CuType iter_copy = type.getcopy();
-				iter_copy.plugIn(ts);
-				this.type = iter_copy;
-			}
-Helper.P("iter plugin: end, map is " + ts.toString() + "this iniArgs is " + this.iniArgs.toString() + " this type is " + this.type.toString());
-//Helper.P("this is " + this.toString());
-		super.text=super.id+ " <" + type.toString()+">";
 		return this.map;
 	}
 }
