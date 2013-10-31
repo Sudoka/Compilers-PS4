@@ -17,6 +17,10 @@ public abstract class CuType {
 	protected Map<String, CuType> map = new LinkedHashMap<String, CuType>();// typeParameter->non-generic type arguments
 	protected CuType type = CuType.bottom; // for Iterable<E>
 	CuType(){ changeParent(top); }
+	//copy Constructor, added by Yinglei
+	CuType getcopy() {
+		return this;
+	}
 
 	/** methods in its subtypes */
 	public void changeParents(List<CuType> t) {parentType = t;}
@@ -120,6 +124,21 @@ class VClass extends CuType {
 			if (args.size()>1) throw new NoSuchTypeException(); // Iterable<E>, E cannot have 2 or more elements
 		}
 	}
+	//added by Yinglei
+	//copy Constructor, added by Yinglei
+	@Override CuType getcopy() {
+		CuType re = new VClass(super.id, iniArgs);
+		re.parentType = new ArrayList<CuType>(this.parentType);
+		re.iniArgs = new ArrayList<CuType> (this.iniArgs);
+		re.id = new String (this.id);
+		re.text = new String(this.text);
+		re.map = new LinkedHashMap<String, CuType>(this.map);
+		//change of reference should not change the value it is pointing to, ie re.type = Bottom doesn't make the 
+		//this.type to be bottom
+		re.type = this.type;
+		return re;
+	}
+
 	@Override public CuType calculateType(CuContext context) {
 		//System.out.println("in Vclass type check " + this.toString());
 		// check if class or interface
@@ -150,18 +169,32 @@ class VClass extends CuType {
 	}
 	/* instantiate this class */
 	@Override public Map<String, CuType> plugIn(Map<String, CuType> ts) {
-		//TODO: make sure calculateType is called before
+		/*//TODO: make sure calculateType is called before
 		if(map.size()==0) return this.map;
-		Map<String, CuType> t = flattenMap(ts);
+		//commented out by Yinglei, we don't want recursive mapping
+		//Map<String, CuType> t = flattenMap(ts);
+		Map<String, CuType> t = ts;
 		for(Entry<String, CuType> p : map.entrySet()) {
 			String k = p.getKey();
 			CuType val = p.getValue();
 			if (t.containsKey(val.id)) {
 				map.put(k, t.get(val.id));
 			}
-			p.getValue().plugIn(t);
+			//commented out by Yinglei because we don't want recusive plugin
+			//p.getValue().plugIn(t);
 		}
-		Helper.P(String.format("PLUGIN VClass map ori=%s, t=%s", this.map,t));
+		Helper.P(String.format("PLUGIN VClass map ori=%s, t=%s", this.map,t));*/
+		//Yinglei thinks this plugin is very simple replacement
+		List<CuType> new_iniArgs = new ArrayList<CuType>();
+		for (CuType t_iter : iniArgs) {
+			if (ts.keySet().contains(t_iter.toString()))
+				new_iniArgs.add(ts.get(t_iter.toString()));
+			else
+				new_iniArgs.add(t_iter);
+		}
+		iniArgs = new_iniArgs;
+		if(ts.keySet().contains(type.toString()))
+			type = ts.get(type.toString());
 		return this.map;
 	}
 	public Map<String, CuType> flattenMap(Map<String, CuType> t) {
@@ -245,9 +278,26 @@ class VTypeInter extends CuType {
 		parentType.add(t1);
 		super.text=t1.toString();
 	}
+	public VTypeInter() {
+		
+	}
 	@Override public void add(CuType t) {
 		parentType.add(t);
 		super.text += " \u222A "+t.toString();
+	}
+	//added by Yinglei
+	//copy Constructor, added by Yinglei
+	@Override CuType getcopy() {
+		CuType re = new VTypeInter();
+		re.parentType = new ArrayList<CuType>(this.parentType);
+		re.iniArgs = new ArrayList<CuType> (this.iniArgs);
+		re.id = new String (this.id);
+		re.text = new String(this.text);
+		re.map = new LinkedHashMap<String, CuType>(this.map);
+		//change of reference should not change the value it is pointing to, ie re.type = Bottom doesn't make the 
+		//this.type to be bottom
+		re.type = this.type;
+		return re;
 	}
 	@Override public CuType calculateType(CuContext context) throws NoSuchTypeException {
 Helper.P("VTypeInter calc : "+text);
@@ -304,6 +354,20 @@ class VTypePara extends CuType {
 	@Override public boolean equals(CuType that) {
 		return that.isTypePara(); // id is not important since it is generic type
 	}
+	//added by Yinglei
+	//copy Constructor, added by Yinglei
+	@Override CuType getcopy() {
+		CuType re = new VTypePara(super.id);
+		re.parentType = new ArrayList<CuType>(this.parentType);
+		re.iniArgs = new ArrayList<CuType> (this.iniArgs);
+		re.id = new String (this.id);
+		re.text = new String(this.text);
+		re.map = new LinkedHashMap<String, CuType>(this.map);
+		//change of reference should not change the value it is pointing to, ie re.type = Bottom doesn't make the 
+		//this.type to be bottom
+		re.type = this.type;
+		return re;
+	}
 	public CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!context.hasVTypePara(super.id)){
 			throw new NoSuchTypeException();
@@ -342,6 +406,20 @@ class Iter extends VClass {
 		if (!parents.isEmpty()) super.changeParents(parents);
 		type = this.iniArg;
 		//System.out.println("in iter end");
+	}
+	//added by Yinglei
+	//copy Constructor, added by Yinglei
+	@Override CuType getcopy() {
+		CuType re = new Iter(this.iniArg);
+		re.parentType = new ArrayList<CuType>(this.parentType);
+		re.iniArgs = new ArrayList<CuType> (this.iniArgs);
+		re.id = new String (this.id);
+		re.text = new String(this.text);
+		re.map = new LinkedHashMap<String, CuType>(this.map);
+		//change of reference should not change the value it is pointing to, ie re.type = Bottom doesn't make the 
+		//this.type to be bottom
+		re.type = this.type;
+		return re;
 	}
 	@Override public boolean isIterable() {return true;}
 	@Override public boolean equals(CuType that) {
@@ -382,12 +460,14 @@ Helper.P("Interable subtyping return true 2: this type is " + this.type + " that
 	}
 	@Override public Map<String, CuType> plugIn(Map<String, CuType> ts) {
 		//TODO: make sure calculateType is called before
-		if(map.size()==0) return this.map;
+		/*if(map.size()==0) return this.map;
 		String key = "Bottom";
 		for (Entry<String, CuType> p : map.entrySet()) {
 			key = p.getKey();
 		}
-		Map<String, CuType> t = flattenMap(ts);
+		//Commented out by Yinglei
+		//Map<String, CuType> t = flattenMap(ts);
+		Map<String, CuType> t = ts;
 		type.plugIn(t); // plug in recursively
 		//System.out.println("type is " + type.toString());
 		for (Entry<String, CuType> p : t.entrySet()) {
@@ -400,7 +480,33 @@ Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));
 				return this.map;
 			}
 		}
-Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));
+Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));*/
+		//Yinglei thinks this plugin is very simple replacement
+Helper.P("iter plugin: begin, map is " + ts.toString() + "iniArgs is " + iniArgs.toString() + "type is " + type.toString());
+		List<CuType> new_iniArgs = new ArrayList<CuType>();
+		for (CuType t_iter : iniArgs) {
+			if (ts.keySet().contains(t_iter.toString()))
+				new_iniArgs.add(ts.get(t_iter.toString()));
+			else {
+				if (t_iter.iniArgs.size()>0) {
+					CuType iter_copy = t_iter.getcopy();
+					iter_copy.plugIn(ts);
+					new_iniArgs.add(iter_copy);
+				}
+				else
+					new_iniArgs.add(t_iter);
+			}
+		}
+		iniArgs = new_iniArgs;
+		if(ts.keySet().contains(type.toString()))
+			type = ts.get(type.toString());
+		else
+			if (type.iniArgs.size()>0) {
+				CuType iter_copy = type.getcopy();
+				iter_copy.plugIn(ts);
+				type = iter_copy;
+			}
+Helper.P("iter plugin: end, map is " + ts.toString() + "iniArgs is " + iniArgs.toString() + "type is " + type.toString());
 		return this.map;
 	}
 }

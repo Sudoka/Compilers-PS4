@@ -1270,9 +1270,15 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
         	}
         }        	
         //System.out.println("in VarExp, end");
-        ts.data_t.plugIn(mapping);
+        /*ts.data_t.plugIn(mapping);
         Helper.P(String.format("%s returns %s<%s>, mapping %s", this, ts.data_t,ts.data_t.map, mapping));
-        return ts.data_t;
+        return ts.data_t;*/
+        //Yinglei: should not change data_t, should make a copy
+        CuType reType = ts.data_t.getcopy();
+        reType.plugIn(mapping);
+//Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
+        //return cur_ts.data_t;
+		return reType;
 	}
 	
 	@Override
@@ -1367,9 +1373,15 @@ Helper.P("VcExp= "+text);
             }	
         }
         //System.out.println("in VcExp, end");
-        cur_ts.data_t.plugIn(mapping);
+       /* cur_ts.data_t.plugIn(mapping);
  Helper.P(String.format("VcExp return %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
-        return cur_ts.data_t;
+        return cur_ts.data_t;*/
+        //Yinglei: should not change data_t, should make a copy
+        CuType reType = cur_ts.data_t.getcopy();
+        reType.plugIn(mapping);
+//Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
+        //return cur_ts.data_t;
+		return reType;
 	}
 	
 	@Override
@@ -1472,9 +1484,14 @@ Helper.P("VvExp MAPPING "+mapping);
             }
 Helper.P(String.format("calculated %s", es.get(i)));
         }
-        cur_ts.data_t.plugIn(mapping);
-Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
-        return cur_ts.data_t;
+Helper.P("1mapping is " + mapping.toString());
+        //Yinglei: should not change data_t, should make a copy
+        CuType reType = cur_ts.data_t.getcopy();
+Helper.P("2mapping is " + mapping.toString());
+        reType.plugIn(mapping);
+//Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
+        //return cur_ts.data_t;
+		return reType;
 	}
 	
 	@Override
