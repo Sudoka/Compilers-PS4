@@ -326,18 +326,21 @@ class ReturnStat extends CuStat{
 	@Override public String toC(ArrayList<String> localVars) {
 		//now reference counting/free memory due to scoping
 		super.ctext +="//                                                  RETURN\n";
+		String exp_toC = e.toC();
 		for (String cur_str : localVars) {
 			super.ctext += "//now reference counting/free memory due to scoping\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
-			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
-			super.ctext += "free(" + cur_str + ");\n";
-			super.ctext += "else\n";
+			//special treatment is e is a local variable, we only dereference if so
+			if (!cur_str.equals(exp_toC)) {
+				super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
+				super.ctext += "free(" + cur_str + ");\n";
+				super.ctext += "else\n";
+			}
 			//decrement the reference count
 			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
 			super.ctext += "}\n";
 		}
-		String exp_toC = e.toC();
 		super.ctext += e.construct();
 		super.ctext += "return " + exp_toC + ";\n";
 		/*if (e.isFunCall())
