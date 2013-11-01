@@ -28,6 +28,7 @@ public class Cubex {
 		//try {
 			ourProgram = parser.program().p;
 			ourProgram.calculateType(context);
+			System.out.println("accept");
 			
 			ArrayList<String> localVars = new ArrayList<String>();
 			System.out.print(ourProgram.toC(localVars));
@@ -35,6 +36,5 @@ public class Cubex {
 		//	System.out.println("reject");
 		//	System.exit(-2);
 		//}
-		System.out.println("accept");
 	}
 }
