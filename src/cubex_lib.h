@@ -10,7 +10,7 @@ typedef struct integer {
 typedef struct string {
 	char* value;
 	int nrefs;
-	int size;
+	int len;
 } String;
 
 typedef struct boolean {

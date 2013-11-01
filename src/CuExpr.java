@@ -344,10 +344,11 @@ class CString extends CuExpr {
 	@Override
 	public String toC() {
 		String temp = Helper.getVarName();
-		super.name = String.format("String* %s = (String *) malloc(sizeof(String));\n"
+		super.name = String.format(" %s = (String *) malloc(sizeof(String));\n"
 				+ "%s->value = (char*) malloc(sizeof(%s));\n"
 				+ "(%s->nrefs) = 0;\n"
-				+ "mystrcpy(%s->value, %s);\n", temp, temp, val, temp, temp, val);	
+				+ "%s->len = sizeof(%s) - 1;\n"
+				+ "mystrcpy(%s->value, %s);\n", temp, temp, val, temp, temp, val, temp, val);	
 		
 		super.cText = temp;
 		super.castType = "String";
@@ -1851,6 +1852,7 @@ Helper.P("vvexp return type is " + reType.toString());
 				name += "String* " + temp + " = (String*) malloc(sizeof(String));\n\t"
 						+ temp + "->nrefs = 0;\n\t"
 						+ temp + "->value = (char*) malloc("+ len + " * sizeof(char));\n\t"
+						+ temp + "->len = " + len + ";\n\t"
 						+ "read_line(" + temp + "->value);\n\t";
 		
 				name += "Iterable* " + iter + " = (Iterable*) malloc(sizeof(Iterable));\n\t"
