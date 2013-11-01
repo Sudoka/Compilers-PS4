@@ -58,7 +58,11 @@ Iterable* iterGetNext(Iterable* last){
 }
 
 void concatenate(Iterable* fst, Iterable* snd){
-	while(fst->concat!=NULL){
+	if (fst == NULL) {
+		fst = snd;
+		return;
+	}
+	while(fst->concat!=NULL) {
 		fst=fst->concat;
 	}
 	fst->concat=snd;
@@ -100,9 +104,7 @@ Iterable* input_onwards(Iterable* last){
 	if (len != 0) {
 		this = x3malloc(sizeof(Iterable));
 		this->nref=1; 
-		((String*) last->value)->nrefs--;
-		if (((String*) last->value)->nrefs == 1)
-			free((String*) last->value);
+		
 		last->value = x3malloc(sizeof(String));
 		((String*) last->value)->value = (char*) x3malloc(len* sizeof(char));
 		read_line(((String*) last->value)->value);
@@ -134,5 +136,3 @@ void mystrcpy(char *dst, const char *src) {
    }
    *dst = '\0';
 }
-
-typedef void (*generic_fp)(void);
