@@ -74,7 +74,7 @@ class FullPrg extends CuProgr {
     	
     	super.ctext += temp_str;
     	
-    	super.ctext += "}\t\t\t//end of our_main()\n";
+    	super.ctext += "}\n";
     	
 		return super.ctext;
 	}
@@ -184,7 +184,6 @@ Helper.P("in func program " + name);
 		sb.append(") {\n");
 		sb.append(statement.toC(local));
 		sb.append("}\n");
-		sb.append("//										END OF PROG_FUN\n");
 		return sb.toString();
 	}
 
