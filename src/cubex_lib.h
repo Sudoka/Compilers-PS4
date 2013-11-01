@@ -1,3 +1,4 @@
+#include "cubex_external_functions.h"
 #define NULL ((void*)0)
 
 typedef struct top {} Top;
@@ -23,8 +24,6 @@ typedef struct character {
 	int nrefs;
 } Character;
 
-//typedef enum {eBoolean, eInteger, eCharacter, eMixed} type_t;
-
 typedef struct iter{
 	void* value;
 	int nref;
@@ -35,22 +34,18 @@ typedef struct iter{
 
 
 Iterable* iterGetNext(Iterable* last){
-	Iterable* this=malloc(sizeof(Iterable));
+	Iterable* this=x3malloc(sizeof(Iterable));
 	if (last->next!= NULL){	
-		//onwards&thru
 		this = (last->next)(last);
 	}
 	else {
-		//enumerable
 		this = (Iterable*) last->additional;
 	}
-	//end of first Iterable
 	
 	if (this==NULL && last->concat==NULL){
 		return NULL;
 	}
 	else if (this==NULL){
-		//concatenation
 		this=last->concat;
 	}
 	
@@ -70,7 +65,7 @@ void concatenate(Iterable* fst, Iterable* snd){
 }
 
 Iterable* integer_onwards(Iterable* last){
-	Iterable* this=malloc(sizeof(Iterable));
+	Iterable* this=x3malloc(sizeof(Iterable));
 	this->nref=1; 
 	(((Integer*)(last->value))->value)++;
 	this->value = last->value;
@@ -87,7 +82,7 @@ Iterable* integer_through(Iterable* last){
 		return NULL;
 	}
 	else {
-		Iterable* this=malloc(sizeof(Iterable));
+		Iterable* this=x3malloc(sizeof(Iterable));
 		this->nref=1;
 		(((Integer*)(last->value))->value)++; 
 		this->value = last->value; 
@@ -103,13 +98,13 @@ Iterable* input_onwards(Iterable* last){
 	int len = next_line_length();
 	Iterable* this = NULL;
 	if (len != 0) {
-		this = malloc(sizeof(Iterable));
+		this = x3malloc(sizeof(Iterable));
 		this->nref=1; 
 		((String*) last->value)->nrefs--;
 		if (((String*) last->value)->nrefs == 1)
 			free((String*) last->value);
-		last->value = malloc(sizeof(String));
-		((String*) last->value)->value = (char*) malloc(len* sizeof(char));
+		last->value = x3malloc(sizeof(String));
+		((String*) last->value)->value = (char*) x3malloc(len* sizeof(char));
 		read_line(((String*) last->value)->value);
 		((String*) last->value)->nrefs = 0;
 		this->additional=last->additional;

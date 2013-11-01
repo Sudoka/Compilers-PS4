@@ -135,7 +135,7 @@ class AndExpr extends CuExpr{
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Boolean* %s = (Boolean*) malloc(sizeof(Boolean));\n"
+		super.name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value && ((%s*)%s)->value;\n", "Boolean", leftToC, "Boolean", rightToC);			
@@ -258,7 +258,7 @@ class BrkExpr extends CuExpr {
 		tempNameArr.add("NULL");
 
 		for (int i = val.size() - 1; i >= 0; i--) {
-			name += "Iterable* " + tempNameArr.get(i) + "=(Iterable*) malloc(sizeof(Iterable));\n"
+			name += "Iterable* " + tempNameArr.get(i) + "=(Iterable*) x3malloc(sizeof(Iterable));\n"
 					+ tempNameArr.get(i) + "->nref=1;\n" 
 					+ tempNameArr.get(i) + "->value=" + tempDataArr.get(i) + ";\n"
 					+ tempNameArr.get(i) + "->additional=" + tempNameArr.get(i + 1) + ";\n" 
@@ -293,11 +293,11 @@ class CBoolean extends CuExpr{
 		super.cText = temp;
 		
 		if (val)			
-			super.name = String.format("Boolean* %s = (Boolean *) malloc(sizeof(Boolean));\n"
+			super.name = String.format("Boolean* %s = (Boolean *) x3malloc(sizeof(Boolean));\n"
 					+ "(%s->nrefs) = 0;\n"
 					+ "%s->value = %d;\n", temp, temp, temp, 1);
 		else
-			super.name = String.format("Boolean* %s = (Boolean *) malloc(sizeof(Boolean));\n"
+			super.name = String.format("Boolean* %s = (Boolean *) x3malloc(sizeof(Boolean));\n"
 					+ "(%s->nrefs)++;\n"
 					+ "%s.value = %d;\n", temp, temp, temp, 0);
 	
@@ -320,7 +320,7 @@ class CInteger extends CuExpr {
 	@Override
 	public String toC() {
 		String temp = Helper.getVarName();
-		super.name = String.format("Integer* %s = (Integer*) malloc(sizeof(Integer));\n"
+		super.name = String.format("Integer* %s = (Integer*) x3malloc(sizeof(Integer));\n"
 				+ "(%s->nrefs) = 0;\n"
 				+ "%s->value = %d;\n", temp, temp, temp, val);		
 		super.cText = temp;
@@ -344,8 +344,8 @@ class CString extends CuExpr {
 	@Override
 	public String toC() {
 		String temp = Helper.getVarName();
-		super.name = String.format(" %s = (String *) malloc(sizeof(String));\n"
-				+ "%s->value = (char*) malloc(sizeof(%s));\n"
+		super.name = String.format(" %s = (String *) x3malloc(sizeof(String));\n"
+				+ "%s->value = (char*) x3malloc(sizeof(%s));\n"
 				+ "(%s->nrefs) = 0;\n"
 				+ "%s->len = sizeof(%s) - 1;\n"
 				+ "mystrcpy(%s->value, %s);\n", temp, temp, val, temp, temp, val, temp, val);	
@@ -396,12 +396,12 @@ class DivideExpr extends CuExpr{
 				+ temp + " = NULL;\n"
 				,  "Integer", rightToC);
 		super.name += "else {\n";
-		super.name += String.format("\tInteger* %s  = (Integer*) malloc(sizeof(Integer));\n"
+		super.name += String.format("\tInteger* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
 				+ "\t%s->nrefs = 0;\n"
 				+ "\t%s->value=", intName, intName, intName);
 		super.name += String.format("((%s*)%s)->value / ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);	
 		
-		super.name += "\t" + temp + " = (Iterable*) malloc(sizeof(Iterable));\n\t"
+		super.name += "\t" + temp + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
 				+ temp + "->nrefs = 1;\n\t"
 				+ temp + "->value = " + intName + ";\n\t"
 				+ temp + "->additional = NULL;\n\t"
@@ -803,7 +803,7 @@ String temp = Helper.getVarName();
 		
 		name += "\n" + leftC + rightC;
 
-		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
+		super.name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value - ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
@@ -874,12 +874,12 @@ class ModuloExpr extends CuExpr{
 				+ temp + " = NULL;\n"
 				,  "Integer", rightToC);
 		super.name += "else {\n";
-		super.name += String.format("\tInteger* %s  = (Integer*) malloc(sizeof(Integer));\n"
+		super.name += String.format("\tInteger* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
 				+ "\t%s->nrefs = 0;\n"
 				+ "\t%s->value=", intName, intName, intName);
 		super.name += String.format("((%s*)%s)->value %% ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);	
 		
-		super.name += "\t" + temp + " = (Iterable*) malloc(sizeof(Iterable));\n\t"
+		super.name += "\t" + temp + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
 				+ temp + "->nrefs = 1;\n\t"
 				+ temp + "->value = " + intName + ";\n\t"
 				+ temp + "->additional = NULL;\n\t"
@@ -944,7 +944,7 @@ class NegateExpr extends CuExpr{
 		
 		name += "\n" + eC;	
 		
-		name += String.format("Boolean* %s = (Boolean*) malloc(sizeof(Boolean));\n"
+		name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
 		name += String.format("!(((%s*)%s)->value);\n", "Boolean", valToC);
@@ -993,14 +993,14 @@ class NegativeExpr extends CuExpr{
 		
 		name += "\n" + eC;
 		
-		name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
+		name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
 		name += String.format("-(((%s*)%s)->value);\n", "Integer", valToC);	
 		
 		/*if(eC.equals(""))
 		{
-			name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
+			name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
 					+ "%s->value=", temp, temp);
 			name += String.format("-(((%s*)%s)->value);\n", "Integer", e.toC());
 		}
@@ -1057,7 +1057,7 @@ class OnwardsExpr extends CuExpr{
 							+ iterTemp + "->next = NULL;\n"
 							+ iterTemp + "->concat = NULL;\n";
 										
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
@@ -1075,7 +1075,7 @@ class OnwardsExpr extends CuExpr{
 							+ "%s->nrefs = 0;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1095,7 +1095,7 @@ class OnwardsExpr extends CuExpr{
 				name += val.construct();
 				String iter = Helper.getVarName();
 		
-				name += "Iterable* " + iter + " = (Iterable*) malloc(sizeof(Iterable));\n"
+				name += "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + valToC + ";\n"
 						+ iter + "->additional = NULL;\n"
@@ -1109,11 +1109,11 @@ class OnwardsExpr extends CuExpr{
 				String iter = Helper.getVarName();
 												
 				int i = (Integer.parseInt(val.toString())) + 1;
-				name += "Integer* " + temp + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp + "->value = " + i + ";\n";					
 					
 				
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = NULL;\n"
@@ -1154,14 +1154,14 @@ class OrExpr extends CuExpr{
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Boolean* %s  = (Boolean*) malloc(sizeof(Boolean));\n"
+		super.name += String.format("Boolean* %s  = (Boolean*) x3malloc(sizeof(Boolean));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value || ((%s*)%s)->value;\n", "Boolean", leftToC, "Boolean", rightToC);	
 		
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
-			super.name += String.format("Boolean* %s  = (Boolean*) malloc(sizeof(Boolean));\n"
+			super.name += String.format("Boolean* %s  = (Boolean*) x3malloc(sizeof(Boolean));\n"
 					+ "%s->nrefs = 0;\n"
 					+ "%s->value=", temp, temp, temp);
 			super.name += String.format("((%s*)%s)->value || ((%s*)%s)->value;\n", "Boolean", left.toC(), "Boolean", right.toC());			
@@ -1213,7 +1213,7 @@ class PlusExpr extends CuExpr{
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
+		super.name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value + ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
@@ -1286,7 +1286,7 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 0;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1309,14 +1309,14 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 0;\n",
 							falseTemp, falseTemp, falseTemp);
 					
-					name +=  "Iterable* " + iterTemp + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iterTemp + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iterTemp + "->nref = 1;\n"
 							+ iterTemp + "->value = " + trueTemp + ";\n"
 							+ iterTemp + "->additional = NULL;\n"
 							+ iterTemp + "->next = NULL;\n"
 							+ iterTemp + "->concat = NULL;\n";
 										
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
@@ -1341,7 +1341,7 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 0;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1357,7 +1357,7 @@ class ThroughExpr extends CuExpr{
 				name += left.construct();
 				name += right.construct();
 			
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
@@ -1387,7 +1387,7 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 0;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1401,12 +1401,12 @@ class ThroughExpr extends CuExpr{
 			else {
 				String temp = Helper.getVarName();
 				int i = (Integer.parseInt(left.toString())) + 1;
-				name += "Integer* " + temp + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp + "->value = " + i + ";\n";					
 					
 				name += right.construct();
 				
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
@@ -1436,7 +1436,7 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 0;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1453,11 +1453,11 @@ class ThroughExpr extends CuExpr{
 				name += left.construct();
 								
 				int i = (Integer.parseInt(left.toString())) - 1;
-				name += "Integer* " + temp + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp + "->value = " + i + ";\n";					
 					
 				
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + temp + ";\n"
@@ -1481,15 +1481,15 @@ class ThroughExpr extends CuExpr{
 				//name += left.construct();
 								
 				int i = (Integer.parseInt(left.toString())) + 1;
-				name += "Integer* " + temp1 + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp1 + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp1 + "->value = " + i + ";\n";					
 				
 				i = (Integer.parseInt(left.toString())) - 1;
-				name += "Integer* " + temp2 + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp2 + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp2 + "->value = " + i + ";\n";					
 					
 				
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp1 + ";\n"
 						+ iter + "->additional = " + temp2 + ";\n"
@@ -1529,7 +1529,7 @@ class TimesExpr extends CuExpr{
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
+		super.name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
 				+ "%s->nrefs = 0;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value * ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
@@ -1742,7 +1742,7 @@ Helper.P("VcExp= "+text);
 		temp += ")";
 		
 		String objectName = Helper.getVarName();
-		super.name += String.format("%s* %s = (%s*) malloc(sizeof(%s));\n"
+		super.name += String.format("%s* %s = (%s*) x3malloc(sizeof(%s));\n"
 				+ "(&%s)[0] = %s;	//pointer to vtable\n"
 				+ "((int*) &%s)[1] = 0;		//pointer to nrefs\n",
 				val, objectName, val, val, objectName, Helper.cClassVtablePtr.get(val), objectName);
@@ -1844,18 +1844,20 @@ Helper.P("vvexp return type is " + reType.toString());
 			{
 				String iter = Helper.getVarName(), temp = Helper.getVarName(), len = Helper.getVarName();
 				
-				name += "int " + len + " = next_line_length();\n"
+				name += "int " + len + ";\n"
+						+ "Iterable* " + iter + ";\n" 
+						+ len + " = next_line_length();\n"
 						+ "if(" + len + " == 0) {\n\t"
 						+ iter + " = NULL;\n}\n"
 						+ "else {\n\t";
 				
-				name += "String* " + temp + " = (String*) malloc(sizeof(String));\n\t"
+				name += "String* " + temp + " = (String*) x3malloc(sizeof(String));\n\t"
 						+ temp + "->nrefs = 0;\n\t"
-						+ temp + "->value = (char*) malloc("+ len + " * sizeof(char));\n\t"
+						+ temp + "->value = (char*) x3malloc("+ len + " * sizeof(char));\n\t"
 						+ temp + "->len = " + len + ";\n\t"
 						+ "read_line(" + temp + "->value);\n\t";
 		
-				name += "Iterable* " + iter + " = (Iterable*) malloc(sizeof(Iterable));\n\t"
+				name += iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
 						+ iter + "->nref = 1;\n\t"
 						+ iter + "->value = " + temp + ";\n\t"
 						+ iter + "->additional = NULL;\n\t"
