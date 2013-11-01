@@ -104,11 +104,16 @@ class ForStat extends CuStat{
 		String exp_toC = e.toC();
 		super.ctext +="//                                                  FOR LOOP\n";
 		super.ctext += e.construct();
+		//added for v scoping
+		super.ctext += "{\n";
+		super.ctext += "void * " + var.toString() + "=" + exp_toC + ";\n";
+		Helper.cVarType.put(var.toString(), e.getIterType());
 		String iter_name = Helper.getVarName();
-		super.ctext += "int " + iter_name + ";\n";
-		super.ctext += "for (" + iter_name + "=0; " + iter_name + "<" + exp_toC + ".size;" + iter_name + "++) {\n";
-		Helper.ToDo("change the e.toC to e.getNextElement");
-		super.ctext += "void * " + var.toString() + "=" + exp_toC + ".value[" + iter_name + "];\n";
+		super.ctext += "Iterable * " + iter_name + ";\n";
+		super.ctext += "while (" + var.toString() + "!=NULL) {\n";
+		super.ctext += iter_name + " = (Iterable *)" + var.toString();
+		super.ctext += var.toString() + " = " + var.toString() + "->value;\n";
+		super.ctext += "((int*) &" + var.toString() + ")[1]++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>();
 		super.ctext += s1.toC(localVarsInFor);
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate
@@ -117,6 +122,8 @@ class ForStat extends CuStat{
 				localVarsInFor.remove(cur_str);
 			}
 		}
+		//newly added 
+		localVarsInFor.add(var.toString());
 		//now reference counting/free memory due to scoping
 		for (String cur_str : localVarsInFor) {
 			super.ctext += "//now reference counting/free memory due to scoping\n";
@@ -130,6 +137,10 @@ class ForStat extends CuStat{
 			super.ctext += "}\n";
 			super.ctext += "//Done\n";
 		}
+		super.ctext += "((int*) &" + var.toString() + ")[1]--;\n";
+		super.ctext += var.toString() + " = iterGetNext(" + iter_name + ");\n";
+		super.ctext += "}\n";	
+		//value is null now, so no need for deallocation
 		super.ctext += "}\n";
 		return super.ctext;
 	}
