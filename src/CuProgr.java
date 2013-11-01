@@ -52,7 +52,11 @@ class FullPrg extends CuProgr {
 			}
 		}
 		
-		super.ctext = fnClass_str + "cubex_main() {\n"
+		super.ctext = fnClass_str 
+				+ "#include \"cubex_main.h\"\n"
+				+ "#include \"cubex_external_functions.h\"\n"
+				+ "#include \"cubex_lib.h\"\n\n"
+				+ "cubex_main() {\n"
 				+ "Iterable* ourMain;\n"
 				+ "ourMain = our_main();\n"
 				+ "while(ourMain != NULL) {\n\t"
