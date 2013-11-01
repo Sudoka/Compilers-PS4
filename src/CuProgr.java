@@ -56,14 +56,14 @@ class FullPrg extends CuProgr {
 				+ "#include \"cubex_main.h\"\n"
 				+ "#include \"cubex_external_functions.h\"\n"
 				+ "#include \"cubex_lib.h\"\n\n"
-				+ "cubex_main() {\n"
+				+ "void cubex_main() {\n"
 				+ "Iterable* ourMain;\n"
 				+ "ourMain = our_main();\n"
 				+ "while(ourMain != NULL) {\n\t"
 				+ "print_line(((String*)ourMain->value)->value, ((String*)ourMain->value)->len);\n\t"
 				+ "ourMain = iterGetNext(ourMain);\n}\n"
 				+ "}\n\n"
-				+ "our_main()\n{\n";
+				+ "Iterable* our_main()\n{\n";
 		
     	for (String str : super.newVars) {
     		super.ctext += "void * " + str + " = NULL;\n";
