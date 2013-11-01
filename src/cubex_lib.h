@@ -1,31 +1,33 @@
 #define NULL ((void*)0)
 
+typedef struct top {} Top;
+
 typedef struct integer {
-	int nrefs;
 	int value;
+	int nrefs;
 } Integer;
 
 typedef struct string {
-	int nrefs;
 	char* value;
+	int nrefs;
 	int size;
 } String;
 
 typedef struct boolean {
-	int nrefs;
 	int value;
+	int nrefs;
 } Boolean;
 
 typedef struct character {
-	int nrefs;
 	char value;
+	int nrefs;
 } Character;
 
 //typedef enum {eBoolean, eInteger, eCharacter, eMixed} type_t;
 
 typedef struct iter{
-	int nref;
 	void* value;
+	int nref;
 	void* additional;
 	void* (*next)(void*);
 	struct iter* concat;
@@ -95,6 +97,27 @@ Iterable* integer_through(Iterable* last){
 		this->concat = last->concat;
 		return this;
 	}
+}
+
+Iterable* input_onwards(Iterable* last){
+	int len = next_line_length();
+	Iterable* this = NULL;
+	if (len != 0) {
+		this = malloc(sizeof(Iterable));
+		this->nref=1; 
+		((String*) last->value)->nrefs--;
+		if (((String*) last->value)->nrefs == 1)
+			free((String*) last->value);
+		last->value = malloc(sizeof(String));
+		((String*) last->value)->value = (char*) malloc(len* sizeof(char));
+		read_line(((String*) last->value)->value);
+		((String*) last->value)->nrefs = 0;
+		this->additional=last->additional;
+		this->next=last->next;	
+		this->concat=last->concat;
+	}
+
+	return this;
 }
 
 
