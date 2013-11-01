@@ -99,7 +99,7 @@ Iterable* integer_through(Iterable* last){
 }
 
 Iterable* input_onwards(Iterable* last){
-	int len = next_line_length();
+	int len = next_line_len();
 	Iterable* this = NULL;
 	if (len != 0) {
 		this = x3malloc(sizeof(Iterable));
