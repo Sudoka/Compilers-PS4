@@ -30,12 +30,17 @@ class FullPrg extends CuProgr {
 		this.s = s;
 	}
 	@Override public String toC(ArrayList<String> localVars) {
-		String temp_str = "";
+		String fnClass_str = "", temp_str = "";
 		for (CuProgr cp : elements) {
-			temp_str += cp.toC(localVars);
-			for(String str : cp.newVars) {
-				if (!super.newVars.contains(str)) {
-					super.newVars.add(str);
+			if (cp instanceof ClassPrg || cp instanceof FunPrg) {
+				fnClass_str += cp.toC(localVars);
+			} 
+			else {				
+				temp_str += cp.toC(localVars);
+				for (String str : cp.newVars) {
+					if (!super.newVars.contains(str)) {
+						super.newVars.add(str);
+					}
 				}
 			}
 		}
@@ -46,11 +51,25 @@ class FullPrg extends CuProgr {
 				super.newVars.add(str);
 			}
 		}
+		
+		super.ctext = fnClass_str + "cubex_main() {\n"
+				+ "Iterable* ourMain;\n"
+				+ "ourMain = our_main();\n"
+				+ "while(ourMain != NULL) {\n\t"
+				+ "print_line(((String*)ourMain->value)->value, ((String*)ourMain->value)->len);\n\t"
+				+ "ourMain = iterGetNext(ourMain);\n}\n"
+				+ "}\n\n"
+				+ "our_main()\n{\n";
+		
     	for (String str : super.newVars) {
     		super.ctext += "void * " + str + " = NULL;\n";
     		temp_str = temp_str.replaceAll("void \\* " + str + " = NULL;\n", "");
     	}
+    	
     	super.ctext += temp_str;
+    	
+    	super.ctext += "}\t\t\t\\\\end of our_main()\n";
+    	
 		return super.ctext;
 	}
 	public void calculateType(CuContext context) throws NoSuchTypeException {

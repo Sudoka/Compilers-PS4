@@ -255,7 +255,7 @@ class BrkExpr extends CuExpr {
 			tempNameArr.add(Helper.getVarName());
 			tempDataArr.add(eToC);
 		}
-		tempNameArr.add("null");
+		tempNameArr.add("NULL");
 
 		for (int i = val.size() - 1; i >= 0; i--) {
 			name += "Iterable* " + tempNameArr.get(i) + "=(Iterable*) malloc(sizeof(Iterable));\n"
@@ -1878,7 +1878,7 @@ Helper.P("vvexp return type is " + reType.toString());
 				expToC = exp.toC();
 				tempName = exp.construct();
 				tempCastType = exp.getCastType();
-				if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
+				if(tempCastType == null) tempCastType = Helper.cVarType.get(expToC);
 				temp += "(" + tempCastType + "*)" + expToC + ", ";
 				super.name += tempName;
 			}
