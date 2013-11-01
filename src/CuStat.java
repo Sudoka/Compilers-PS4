@@ -41,16 +41,17 @@ class AssignStat extends CuStat{
 		super.ctext += "void * " + var.toString() +" = NULL;\n";
 		super.ctext += "if (" + var.toString() + "!= NULL) {\n";
 		//check whether it is the last pointer pointing to the object, if yes, free memory
-		super.ctext += "if (((int*) &" + var.toString() + ")[1] == 1)\n";
-		super.ctext += "free(" + var.toString() + ");\n";
-		super.ctext += "else\n";
+		super.ctext += "\tif (((int*) &" + var.toString() + ")[1] == 1)\n";
+		super.ctext += "\t\tfree(" + var.toString() + ");\n";
+		super.ctext += "\telse\n";
 		//decrement the reference count
-		super.ctext += "((int*) &" + var.toString() + ")[1]--;\n";
+		super.ctext += "\t((int*) &" + var.toString() + ")[1]--;\n";
 		super.ctext += "}\n";
 		//((int*) &test)[0]
 		super.ctext += var.toString() + " = " + exp_toC + ";\n";
 		//increase the new reference count
-		super.ctext += "((int*) &" + var.toString() + ")[1]++;\n";
+		super.ctext += "if (" + var.toString() + "!=NULL)\n";
+		super.ctext += "\t((int*) &" + var.toString() + ")[1]++;\n";
 		/*if (ee.isFunCall())
 			super.ctext += var.toString() + " = " + ee.toC() + ";\n";
 		else
@@ -106,16 +107,16 @@ class ForStat extends CuStat{
 		super.ctext += e.construct();
 		//added for v scoping
 		super.ctext += "{\n";
-		super.ctext += "void * " + var.toString() + "=" + exp_toC + ";\n";
+		super.ctext += "\tvoid * " + var.toString() + "=" + exp_toC + ";\n";
 		Helper.cVarType.put(var.toString(), e.getIterType());
 		String iter_name = Helper.getVarName();
-		super.ctext += "Iterable * " + iter_name + ";\n";
-		super.ctext += "while (" + var.toString() + "!=NULL) {\n";
-		super.ctext += iter_name + " = (Iterable *)" + var.toString();
-		super.ctext += var.toString() + " = " + var.toString() + "->value;\n";
-		super.ctext += "((int*) &" + var.toString() + ")[1]++;\n";
+		super.ctext += "\tIterable * " + iter_name + ";\n";
+		super.ctext += "\twhile (" + var.toString() + "!=NULL) {\n";
+		super.ctext += "\t\t" + iter_name + " = (Iterable *)" + var.toString() + ";\n";
+		super.ctext += "\t\t" + var.toString() + " = " + var.toString() + "->value;\n";
+		super.ctext += "\t\t" + "((int*) &" + var.toString() + ")[1]++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>();
-		super.ctext += s1.toC(localVarsInFor);
+		super.ctext += "\t\t" + s1.toC(localVarsInFor);
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate
 		for(String cur_str : localVars) {
 			while (localVarsInFor.contains(cur_str)) {
@@ -126,20 +127,20 @@ class ForStat extends CuStat{
 		localVarsInFor.add(var.toString());
 		//now reference counting/free memory due to scoping
 		for (String cur_str : localVarsInFor) {
-			super.ctext += "//now reference counting/free memory due to scoping\n";
-			super.ctext += "if (" + cur_str + "!= NULL) {\n";
+			super.ctext += "\t\t" + "//now reference counting/free memory due to scoping\n";
+			super.ctext += "\t\t" + "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, free memory
-			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
-			super.ctext += "free(" + cur_str + ");\n";
-			super.ctext += "else\n";
+			super.ctext += "\t\t\t" + "if (((int*) &" + cur_str + ")[1] == 1)\n";
+			super.ctext += "\t\t\t\t" + "free(" + cur_str + ");\n";
+			super.ctext += "\t\t\t" + "else\n";
 			//decrement the reference count
-			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
-			super.ctext += "}\n";
+			super.ctext += "\t\t\t\t" + "((int*) &" + cur_str + ")[1]--;\n";
+			super.ctext += "\t\t" + "}\n";
 			super.ctext += "//Done\n";
 		}
-		super.ctext += "((int*) &" + var.toString() + ")[1]--;\n";
-		super.ctext += var.toString() + " = iterGetNext(" + iter_name + ");\n";
-		super.ctext += "}\n";	
+		super.ctext += "\t\t" + "((int*) &" + var.toString() + ")[1]--;\n";
+		super.ctext += "\t\t" + var.toString() + " = iterGetNext(" + iter_name + ");\n";
+		super.ctext += "\t" + "}\n";	
 		//value is null now, so no need for deallocation
 		super.ctext += "}\n";
 		return super.ctext;
