@@ -29,13 +29,14 @@ public class Cubex {
 		try {
 			ourProgram = parser.program().p;
 			ourProgram.calculateType(context);
+			Helper.ToDo("comment out accept when we submit");
+			System.out.println("accept");
 		} catch (Exception e) {
 			System.out.println("reject");
-			System.exit(-2);
+			//even if rejected, we still generate a 
+			//System.exit(-2);
 		}
 		
-		Helper.ToDo("accept should commented out in final submission");
-		System.out.println("accept");
 		ArrayList<String> localVars = new ArrayList<String>();
 		PrintWriter writer = new PrintWriter("out.c", "UTF-8");
 		writer.println(ourProgram.toC(localVars));

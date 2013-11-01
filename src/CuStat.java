@@ -40,9 +40,9 @@ class AssignStat extends CuStat{
 		//the below sentence can be removed by higher level blocks
 		super.ctext += "void * " + var.toString() +" = NULL;\n";
 		super.ctext += "if (" + var.toString() + "!= NULL) {\n";
-		//check whether it is the last pointer pointing to the object, if yes, free memory
+		//check whether it is the last pointer pointing to the object, if yes, x3free memory
 		super.ctext += "\tif (((int*) &" + var.toString() + ")[1] == 1)\n";
-		super.ctext += "\t\tfree(" + var.toString() + ");\n";
+		super.ctext += "\t\tx3free(" + var.toString() + ");\n";
 		super.ctext += "\telse\n";
 		//decrement the reference count
 		super.ctext += "\t((int*) &" + var.toString() + ")[1]--;\n";
@@ -113,7 +113,7 @@ class ForStat extends CuStat{
 		super.ctext += "\tIterable * " + iter_name + ";\n";
 		super.ctext += "\twhile (" + var.toString() + "!=NULL) {\n";
 		super.ctext += "\t\t" + iter_name + " = (Iterable *)" + var.toString() + ";\n";
-		super.ctext += "\t\t" + var.toString() + " = " + var.toString() + "->value;\n";
+		super.ctext += "\t\t" + var.toString() + " = (Iterable *)" + var.toString() + "->value;\n";
 		super.ctext += "\t\t" + "((int*) &" + var.toString() + ")[1]++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>();
 		super.ctext += "\t\t" + s1.toC(localVarsInFor);
@@ -125,13 +125,13 @@ class ForStat extends CuStat{
 		}
 		//newly added 
 		localVarsInFor.add(var.toString());
-		//now reference counting/free memory due to scoping
+		//now reference counting/x3free memory due to scoping
 		for (String cur_str : localVarsInFor) {
-			super.ctext += "\t\t" + "//now reference counting/free memory due to scoping\n";
+			super.ctext += "\t\t" + "//now reference counting/x3free memory due to scoping\n";
 			super.ctext += "\t\t" + "if (" + cur_str + "!= NULL) {\n";
-			//check whether it is the last pointer pointing to the object, if yes, free memory
+			//check whether it is the last pointer pointing to the object, if yes, x3free memory
 			super.ctext += "\t\t\t" + "if (((int*) &" + cur_str + ")[1] == 1)\n";
-			super.ctext += "\t\t\t\t" + "free(" + cur_str + ");\n";
+			super.ctext += "\t\t\t\t" + "x3free(" + cur_str + ");\n";
 			super.ctext += "\t\t\t" + "else\n";
 			//decrement the reference count
 			super.ctext += "\t\t\t\t" + "((int*) &" + cur_str + ")[1]--;\n";
@@ -238,13 +238,13 @@ class IfStat extends CuStat{
     	}
     	super.ctext += "if (" + exp_toC + ") {\n";
     	super.ctext += temp_s1;
-		//now reference counting/free memory due to scoping
+		//now reference counting/x3free memory due to scoping
 		for (String cur_str : s1_localVars) {
-			super.ctext += "//now reference counting/free memory due to scoping\n";
+			super.ctext += "//now reference counting/x3free memory due to scoping\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
-			//check whether it is the last pointer pointing to the object, if yes, free memory
+			//check whether it is the last pointer pointing to the object, if yes, x3free memory
 			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
-			super.ctext += "free(" + cur_str + ");\n";
+			super.ctext += "x3free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
 			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
@@ -254,13 +254,13 @@ class IfStat extends CuStat{
     	if (s2 != null) {
     		super.ctext += "else {\n";
     		super.ctext += temp_s2;
-    		//now reference counting/free memory due to scoping
+    		//now reference counting/x3free memory due to scoping
     		for (String cur_str : s2_localVars) {
-    			super.ctext += "//now reference counting/free memory due to scoping\n";
+    			super.ctext += "//now reference counting/x3free memory due to scoping\n";
     			super.ctext += "if (" + cur_str + "!= NULL) {\n";
-    			//check whether it is the last pointer pointing to the object, if yes, free memory
+    			//check whether it is the last pointer pointing to the object, if yes, x3free memory
     			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
-    			super.ctext += "free(" + cur_str + ");\n";
+    			super.ctext += "x3free(" + cur_str + ");\n";
     			super.ctext += "else\n";
     			//decrement the reference count
     			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
@@ -324,17 +324,17 @@ class ReturnStat extends CuStat{
 		super.text = "return " + e.toString() + " ;";
 	}
 	@Override public String toC(ArrayList<String> localVars) {
-		//now reference counting/free memory due to scoping
+		//now reference counting/x3free memory due to scoping
 		super.ctext +="//                                                  RETURN\n";
 		String exp_toC = e.toC();
 		for (String cur_str : localVars) {
-			super.ctext += "//now reference counting/free memory due to scoping\n";
+			super.ctext += "//now reference counting/x3free memory due to scoping\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
-			//check whether it is the last pointer pointing to the object, if yes, free memory
+			//check whether it is the last pointer pointing to the object, if yes, x3free memory
 			//special treatment is e is a local variable, we only dereference if so
 			if (!cur_str.equals(exp_toC)) {
 				super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
-				super.ctext += "free(" + cur_str + ");\n";
+				super.ctext += "x3free(" + cur_str + ");\n";
 				super.ctext += "else\n";
 			}
 			//decrement the reference count
@@ -440,13 +440,13 @@ class WhileStat extends CuStat{
 				while_localVars.remove(cur_str);
 			}
 		}
-		//now reference counting/free memory due to scoping
+		//now reference counting/x3free memory due to scoping
 		for (String cur_str : while_localVars) {
-			super.ctext += "//now reference counting/free memory due to scoping\n";
+			super.ctext += "//now reference counting/x3free memory due to scoping\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
-			//check whether it is the last pointer pointing to the object, if yes, free memory
+			//check whether it is the last pointer pointing to the object, if yes, x3free memory
 			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
-			super.ctext += "free(" + cur_str + ");\n";
+			super.ctext += "x3free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
 			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
