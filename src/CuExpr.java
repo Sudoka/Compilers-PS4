@@ -1846,7 +1846,7 @@ Helper.P("vvexp return type is " + reType.toString());
 				
 				name += "int " + len + ";\n"
 						+ "Iterable* " + iter + ";\n" 
-						+ len + " = next_line_length();\n"
+						+ len + " = next_line_len();\n"
 						+ "if(" + len + " == 0) {\n\t"
 						+ iter + " = NULL;\n}\n"
 						+ "else {\n\t";
