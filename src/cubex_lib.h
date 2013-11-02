@@ -1,7 +1,9 @@
 #include "cubex_external_functions.h"
 #define NULL ((void*)0)
 
-typedef struct top {} Top;
+typedef struct top {
+	int value;
+} Top;
 
 typedef struct integer {
 	int value;
@@ -68,8 +70,9 @@ void concatenate(Iterable* fst, Iterable* snd){
 	fst->concat=snd;
 }
 
-Iterable* integer_onwards(Iterable* last){
+Iterable* integer_onwards(void* head){
 	Iterable* this=x3malloc(sizeof(Iterable));
+	Iterable* last = (Iterable*) head;
 	this->nref=1; 
 	(((Integer*)(last->value))->value)++;
 	this->value = last->value;
@@ -81,7 +84,8 @@ Iterable* integer_onwards(Iterable* last){
 	return this;
 }
 
-Iterable* integer_through(Iterable* last){
+Iterable* integer_through(void* head){
+	Iterable* last = (Iterable*) head;
 	if ((((Integer*) last->value)->value) == (((Integer*) last->additional)->value)){
 		return NULL;
 	}
@@ -98,8 +102,10 @@ Iterable* integer_through(Iterable* last){
 	}
 }
 
-Iterable* input_onwards(Iterable* last){
-	int len = next_line_len();
+Iterable* input_onwards(void* head){
+	int len;
+	len = next_line_len();
+	Iterable* last = (Iterable*) head;
 	Iterable* this = NULL;
 	if (len != 0) {
 		this = x3malloc(sizeof(Iterable));

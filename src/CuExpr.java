@@ -241,10 +241,11 @@ class BrkExpr extends CuExpr {
 	
 	@Override
 	public String toC(ArrayList<String> localVars) {
-		String eToC;
+		String eToC = "", typeCast = "";
 		
 		ArrayList<String> tempNameArr=new ArrayList<String>();	
 		ArrayList<String> tempDataArr=new ArrayList<String>();
+		ArrayList<String> typeCastArr=new ArrayList<String>();
 		for (CuExpr e : val) {
 			if(iterType.equals(""))
 				iterType = e.getCastType();
@@ -255,16 +256,19 @@ class BrkExpr extends CuExpr {
 			name += e.construct();
 			tempNameArr.add(Helper.getVarName());
 			tempDataArr.add(eToC);
+			typeCast = e.getCastType();
+			if(typeCast.equals("")) 
+				typeCast = Helper.cVarType.get(eToC);
 		}
 		tempNameArr.add("NULL");
 
 		for (int i = val.size() - 1; i >= 0; i--) {
 			name += "Iterable* " + tempNameArr.get(i) + "=(Iterable*) x3malloc(sizeof(Iterable));\n"
 					+ tempNameArr.get(i) + "->nref=1;\n" 
-					+ tempNameArr.get(i) + "->value=" + tempDataArr.get(i) + ";\n"
-					+ tempNameArr.get(i) + "->additional=" + tempNameArr.get(i + 1) + ";\n" 
-					+ tempNameArr.get(i) + "->next=NULL;\n" 
-					+ tempNameArr.get(i)+ "->concat=NULL;\n";
+					+ tempNameArr.get(i) + "->value = (" + typeCast + "*)" + tempDataArr.get(i) + ";\n"
+					+ tempNameArr.get(i) + "->additional = " + tempNameArr.get(i + 1) + ";\n" 
+					+ tempNameArr.get(i) + "->next = NULL;\n" 
+					+ tempNameArr.get(i)+ "->concat = NULL;\n";
 		}	
 			
 		cText = tempNameArr.get(0);
