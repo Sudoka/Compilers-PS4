@@ -263,8 +263,9 @@ class BrkExpr extends CuExpr {
 		tempNameArr.add("NULL");
 
 		for (int i = val.size() - 1; i >= 0; i--) {
-			name += "Iterable* " + tempNameArr.get(i) + "=(Iterable*) x3malloc(sizeof(Iterable));\n"
-					+ tempNameArr.get(i) + "->nref=1;\n" 
+			name += "Iterable* " + tempNameArr.get(i) + ";\n" 
+					+ tempNameArr.get(i) + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+					+ tempNameArr.get(i) + "->nref = 1;\n" 
 					+ tempNameArr.get(i) + "->value = (" + typeCast + "*)" + tempDataArr.get(i) + ";\n"
 					+ tempNameArr.get(i) + "->additional = " + tempNameArr.get(i + 1) + ";\n" 
 					+ tempNameArr.get(i) + "->next = NULL;\n" 
