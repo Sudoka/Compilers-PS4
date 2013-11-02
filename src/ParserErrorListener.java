@@ -24,7 +24,7 @@ public class ParserErrorListener extends BaseErrorListener
 			System.err.println("rule stack: "+stack);
 			System.err.println("line "+line+":"+charPositionInLine+" at "+ offendingSymbol+": "+msg);
 		}
-		throw new NoSuchTypeException();
+		throw new NoSuchTypeException(Helper.getLineInfo());
 	}
 /*
 	@Override

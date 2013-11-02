@@ -1,0 +1,4 @@
+x := "hello";
+while(true)
+  x := x ++ "!";
+return [x]; 

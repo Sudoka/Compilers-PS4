@@ -69,7 +69,7 @@ Helper.P("assign stat begin " + ee.toString() );
 		//System.out.println("var="+var.toString() + " expr="+ ee.toString());
 		//check var is in immutable, type check fails
 		if (context.inVar(var.toString())) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo()); 
 		}
 		//whenever we calculate expr type, we use a temporary context with merged mutable and
 		//immutable variables
@@ -158,12 +158,12 @@ Helper.P(String.format("FOR %s is %s<%s>", e, eType, eType.map));
 
  		Boolean flag = eType.isIterable();
     	if (flag != true) {
-    		throw new NoSuchTypeException();
+    		throw new NoSuchTypeException(Helper.getLineInfo()); 
     	}
     	//eType.type = Helper.getTypeForIterable(eType.toString());
     	//var can't appear in mutable or immutable variables
     	if (context.inMutVar(this.var.toString()) || context.inVar(this.var.toString())) {
-    		throw new NoSuchTypeException();
+    		throw new NoSuchTypeException(Helper.getLineInfo()); 
     	}
     	//System.out.println("etype is " + eType.toString());
     	CuType iter_type = eType.type;
@@ -283,7 +283,7 @@ Helper.P(tcontext.mVariables.toString());
     	CuType eType = e.calculateType(tcontext);
 Helper.P("e type is " + eType);
     	if (!eType.isBoolean()) {
-    		throw new NoSuchTypeException();
+    		throw new NoSuchTypeException(Helper.getLineInfo()); 
     	}
     	CuContext temp_context1 = new CuContext (context);
     	
@@ -469,7 +469,7 @@ class WhileStat extends CuStat{
     	if (!eType.isBoolean()) {
     		//System.out.println("in while, expr is not boolean");
     		//System.out.println("in while, expr type is " + eType.id);
-    		throw new NoSuchTypeException();
+    		throw new NoSuchTypeException(Helper.getLineInfo()); 
     	} 
     	CuContext s_context = new CuContext(context);
     	HReturn re = s1.calculateType(s_context);   	

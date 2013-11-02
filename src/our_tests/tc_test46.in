@@ -1,0 +1,20 @@
+class Aa() {
+    fun lol() : Aa {
+        a := Aa();
+        return a;
+    }
+
+    fun toString() : String {
+        return "";
+    }
+}
+
+interface Bb {
+    fun lmao() : Aa;
+}
+
+fun lol(ab : Aa&Bb) : String  {
+    return string(ab.lmao().toString() ++ ab.lol().toString());
+}
+
+return [""];

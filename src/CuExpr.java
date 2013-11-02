@@ -47,15 +47,15 @@ public abstract class CuExpr {
 		// get the functions of left class
 		CuClass cur_class = context.mClasses.get(leftId);
 		if (cur_class == null) {
-			//System.out.println("didn't find this class in class context");
-			throw new NoSuchTypeException();
+			Helper.P(" cur_class of %s is null", leftId);
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		Map<String, CuTypeScheme> funcs =  cur_class.mFunctions;
 		// check the method typescheme
 		CuTypeScheme ts = funcs.get(methodId);
 		if (ts == null ) {
-			//System.out.println("didn't find this method in current class");
-			throw new NoSuchTypeException();
+			Helper.P("   ts is null");
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		Helper.ToDo("we know there is only one parameter for now");
 		CuType tR = null;
@@ -64,7 +64,8 @@ public abstract class CuExpr {
 		}
 		/** if this method exists, kindcontext is <>, and type scheme matches with input */
 		if (!rightType.isSubtypeOf(tR)) {
-			throw new NoSuchTypeException();
+			Helper.P("   rightType %s is not subtype of %s", rightType, tR);
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		//System.out.println("in binaryExprType, end");
 		return ts.data_t;
@@ -74,13 +75,13 @@ public abstract class CuExpr {
 		// get the functions of left class
 		CuClass cur_class = context.mClasses.get(id);
 		if (cur_class == null) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		Map<String, CuTypeScheme> funcs = cur_class.mFunctions;
 		// check the method typescheme
 		CuTypeScheme ts = funcs.get(methodId);
 		if (ts==null) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		return ts.data_t;
 	}
@@ -180,7 +181,7 @@ class AppExpr extends CuExpr {
 		CuType t1 = left.calculateType(context);
 		CuType t2 = right.calculateType(context);
 		if (!t1.isIterable() || !t2.isIterable()) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		//added by Yinglei to fix PA3, Iterable can't be extended, so I think we only need to treat string separately
 		if (t1.isString()) {
@@ -287,7 +288,7 @@ class CBoolean extends CuExpr{
 		
 		}
 	@Override protected CuType calculateType(CuContext context) {
-		if (val == null) { throw new NoSuchTypeException();}
+		if (val == null) { throw new NoSuchTypeException(Helper.getLineInfo());}
 		return CuType.bool;
 	}
 	
@@ -344,7 +345,7 @@ class CString extends CuExpr {
 		
 	}
 	@Override protected CuType calculateType(CuContext context) {
-		if (val == null) { throw new NoSuchTypeException();}
+		if (val == null) { throw new NoSuchTypeException(Helper.getLineInfo());}
 		return CuType.string;
 	}
 	
@@ -378,7 +379,7 @@ class DivideExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.integer;
 	}
 	 */
@@ -473,7 +474,7 @@ class EqualExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!left.equals(right))
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.bool;
 	} */
 	
@@ -638,7 +639,7 @@ class GreaterThanExpr extends CuExpr{
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
 		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
 		if ((!b1) && (!b2))
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.bool;
 	}
 	
@@ -716,7 +717,7 @@ class LessThanExpr extends CuExpr{
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
 		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
 		if ((!b1) && (!b2))
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.bool;
 	}
 	
@@ -792,7 +793,7 @@ class MinusExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.integer;
 	}*/
 	
@@ -860,7 +861,7 @@ class ModuloExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.integer;
 	}*/
 	
@@ -940,7 +941,7 @@ class NegateExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!val.getType(context).isBoolean())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.bool;
 	}*/
 	
@@ -990,7 +991,7 @@ class NegativeExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!val.getType(context).isInteger())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.integer;
 	}*/
 	
@@ -1220,6 +1221,12 @@ class PlusExpr extends CuExpr{
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		//System.out.println("in plus expr begin");
+		CuType lt = left.getType(context);
+		Helper.P("PlusExpr: %s is class %b", lt, lt instanceof VClass);
+		if (lt.isClassOrInterface()) {
+			VClass lc = (VClass)lt;
+			Helper.P("PlusExpr: %s mapping %s", lc, lc.map);
+		}
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
 	}
 	
@@ -1285,7 +1292,7 @@ class ThroughExpr extends CuExpr{
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
 		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
 		if ((!b1) && (!b2))
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		if (b1)
 			return new Iter(CuType.integer);
 		else
@@ -1619,15 +1626,15 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 //System.out.println("t_hat is " + tHat.id);
         CuClass cur_class = context.mClasses.get(tHat.id);
         if (cur_class == null) {
-        	throw new NoSuchTypeException();
+        	throw new NoSuchTypeException(Helper.getLineInfo());
         }
         CuTypeScheme ts = cur_class.mFunctions.get(method);
         if (ts == null) {
-        	throw new NoSuchTypeException();
+        	throw new NoSuchTypeException(Helper.getLineInfo());
         }
         //System.out.println("got this function");
         
-        if (ts.data_kc.size() != types.size()) throw new NoSuchTypeException();
+        if (ts.data_kc.size() != types.size()) throw new NoSuchTypeException(Helper.getLineInfo());
         Map<String, CuType> mapping = new HashMap<String, CuType>();
         Helper.P(String.format("kc=%s. types=%s. eMap=%s",ts.data_kc, types,val.calculateType(context).map));
         for (int i = 0; i < types.size(); i++) {
@@ -1635,7 +1642,7 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
         }
         mapping.putAll(val.getType(context).map); // add mapping from the expression that owns this method
         //added by Yinglei
-        if (ts.data_tc.size() != es.size()) throw new NoSuchTypeException();
+        if (ts.data_tc.size() != es.size()) throw new NoSuchTypeException(Helper.getLineInfo());
         List<CuType> tList = new ArrayList<CuType>();
         for (CuType ct : ts.data_tc.values()) {
         	tList.add(ct);
@@ -1643,7 +1650,7 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
         for (int i = 0; i < es.size(); i++) {
         	if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
         		//System.out.println(es.get(i).toString() + " doesnt match " + tList.get(i).toString() );
-        		throw new NoSuchTypeException();
+        		throw new NoSuchTypeException(Helper.getLineInfo());
         	}
         }        	
         //System.out.println("in VarExp, end");
@@ -1728,7 +1735,7 @@ Helper.P("VcExp= "+text);
 			ct.calculateType(context);
 		}      
 		
-        if (context.getFunction(val) == null) throw new NoSuchTypeException();
+        if (context.getFunction(val) == null) throw new NoSuchTypeException(Helper.getLineInfo());
         // check each es 
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
         List<CuType> tList = new ArrayList<CuType>();
@@ -1741,11 +1748,11 @@ Helper.P("VcExp= "+text);
         }
   Helper.P(String.format("mapping=%s. types=%s. data_kc=%s ", mapping, types, cur_ts.data_kc));
   		//added by Yinglei
-        if (es.size() != cur_ts.data_tc.size()) throw new NoSuchTypeException();
+        if (es.size() != cur_ts.data_tc.size()) throw new NoSuchTypeException(Helper.getLineInfo());
         for (int i = 0; i < es.size(); i++) {
             if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
             	//System.out.println(es.get(i).toString() + " doesnt match " + tList.get(i).toString() );
-            	throw new NoSuchTypeException();
+            	throw new NoSuchTypeException(Helper.getLineInfo());
             }	
         }
         //System.out.println("in VcExp, end");
@@ -1835,7 +1842,7 @@ Helper.P("es is not null, es is " + es.toString());
 		//else, it will be the same as in VcExp
         // check tao in scope
 		//System.out.println("not a variable, checking function context");
-        if (context.getFunction(val) == null) throw new NoSuchTypeException();
+        if (context.getFunction(val) == null) throw new NoSuchTypeException(Helper.getLineInfo());
         //System.out.println("got this function from function context");
 		//type check each tao_i // check tao in scope
 		for (CuType ct : types) {
@@ -1855,22 +1862,23 @@ Helper.P("es is not null, es is " + es.toString());
         }
         Helper.P("VvExp MAPPING "+mapping);
 		//added by Yinglei
-		if (cur_ts.data_tc.size() != es.size()) throw new NoSuchTypeException();
+		if (cur_ts.data_tc.size() != es.size()) throw new NoSuchTypeException(Helper.getLineInfo());
         for (int i = 0; i < es.size(); i++) {
         	//System.out.println(es.get(i).toString());
             if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
-Helper.P("type mismatch, " + "es is " + es.get(i).toString() + "tListgeti is " + tList.get(i).toString() );
-                throw new NoSuchTypeException();
+Helper.P(" type mismatch, " + "es is " + es.get(i).toString() + ", tListgeti is " + tList.get(i).toString() + ", mapping is "+ mapping );
+                throw new NoSuchTypeException(Helper.getLineInfo());
             }
 Helper.P(String.format("calculated %s", es.get(i)));
         }
-Helper.P("1mapping is " + mapping.toString());
+Helper.P(" 1mapping is " + mapping.toString());
         //Yinglei: should not change data_t, should make a copy
         CuType reType = cur_ts.data_t.getcopy();
         reType.plugIn(mapping);
-//Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
-        //return cur_ts.data_t;
-Helper.P("vvexp return type is " + reType.toString());
+        Helper.P("   VvExp reType %s isTypePara %b, mapping %s get %s", reType, reType.isTypePara(), mapping, mapping.get(reType.id));
+		if (reType.isTypePara() && mapping.containsKey(reType.id)) {
+			return mapping.get(reType.id);
+		}
 		return reType;
 	}
 	
