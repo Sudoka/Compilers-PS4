@@ -108,10 +108,12 @@ Iterable* input_onwards(Iterable* last){
 		last->value = x3malloc(sizeof(String));
 		((String*) last->value)->value = (char*) x3malloc(len* sizeof(char));
 		read_line(((String*) last->value)->value);
-		((String*) last->value)->nrefs = 0;
-		this->additional=last->additional;
+		((String*) last->value)->nrefs = 1;
+		this->additional=NULL;
 		this->next=last->next;	
 		this->concat=last->concat;
+		last->additional = this;		
+		last->next = NULL;
 	}
 
 	return this;
