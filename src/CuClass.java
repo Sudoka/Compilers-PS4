@@ -177,7 +177,8 @@ class Cls extends CuClass {
 		for (CuType ct : this.fieldTypes.values()) {
 			ct.calculateType(cur_context);
 		}
-		cur_context.mMutVariables = this.fieldTypes;
+		//we should not pass this reference
+		cur_context.mMutVariables = new LinkedHashMap<String,CuType>(this.fieldTypes);
 		for (CuStat s :classStatement) {
 			HReturn re = s.calculateType(cur_context);
 			//class initializing statements can not have returns
