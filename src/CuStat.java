@@ -34,7 +34,7 @@ class AssignStat extends CuStat{
 	}
 	
 	@Override public String toC(ArrayList<String> localVars) {
-		String exp_toC = ee.toC();
+		String exp_toC = ee.toC(localVars);
 		super.ctext ="\n\n\n";
 		super.ctext += ee.construct();
 		//the below sentence can be removed by higher level blocks
@@ -102,7 +102,7 @@ class ForStat extends CuStat{
 	
 	@Override public String toC(ArrayList<String> localVars)
 	{
-		String exp_toC = e.toC();
+		String exp_toC = e.toC(localVars);
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
 		//added for v scoping
@@ -116,7 +116,9 @@ class ForStat extends CuStat{
 		super.ctext += "\t\t" + var.toString() + " = (Iterable *)" + iter_name + "->value;\n";
 		super.ctext += "\t\t" + "((int*) &" + var.toString() + ")[1]++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>();
-		super.ctext += "\t\t" + s1.toC(localVarsInFor);
+		String s1ToC = s1.toC(localVarsInFor);
+		String temp_str = s1ToC.replaceAll("void \\* " + var.toString() + " = NULL;\n", "");
+		super.ctext += "\t\t" + temp_str;
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate
 		for(String cur_str : localVars) {
 			while (localVarsInFor.contains(cur_str)) {
@@ -197,7 +199,7 @@ class IfStat extends CuStat{
     
     //for if statement, ctext is build here
     @Override public String toC(ArrayList<String> localVars) {
-    	String exp_toC = e.toC();
+    	String exp_toC = e.toC(localVars);
 		super.ctext ="\n\n\n";
     	super.ctext += this.e.construct();
     	ArrayList<String> s1_localVars = new ArrayList<String>();
@@ -325,7 +327,7 @@ class ReturnStat extends CuStat{
 	@Override public String toC(ArrayList<String> localVars) {
 		//now reference counting/x3free memory due to scoping
 		super.ctext +="\n\n\n";
-		String exp_toC = e.toC();
+		String exp_toC = e.toC(localVars);
 		for (String cur_str : localVars) {
 			super.ctext += "\n\n\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
@@ -426,7 +428,7 @@ class WhileStat extends CuStat{
 		text = "while ( " + e.toString() + " ) " + s1.toString();
 	}
 	@Override public String toC(ArrayList<String> localVars) {
-		String exp_toC = e.toC();
+		String exp_toC = e.toC(localVars);
 
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
