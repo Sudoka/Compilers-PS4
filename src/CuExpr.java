@@ -1896,13 +1896,14 @@ Helper.P(" 1mapping is " + mapping.toString());
 				if(!initialized) {
 				
 				name += "int " + len + ";\n"
-						+ "Iterable* " + iter + ";\n" 
+						+ "Iterable* " + iter + ";\n"
+						+ "String* " + temp + ";\n" 
 						+ len + " = next_line_len();\n"
 						+ "if(" + len + " == 0) {\n\t"
 						+ iter + " = NULL;\n}\n"
 						+ "else {\n\t";
 				
-				name += "String* " + temp + " = (String*) x3malloc(sizeof(String));\n\t"
+				name +=  temp + " = (String*) x3malloc(sizeof(String));\n\t"
 						+ temp + "->nrefs = 1;\n\t"
 						+ temp + "->value = (char*) x3malloc("+ len + " * sizeof(char));\n\t"
 						+ temp + "->len = " + len + ";\n\t"
