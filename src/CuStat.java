@@ -34,7 +34,7 @@ class AssignStat extends CuStat{
 	}
 	
 	@Override public String toC(ArrayList<String> localVars) {
-		String exp_toC = ee.toC(localVars);
+		String exp_toC = ee.toC();
 		super.ctext ="\n\n\n";
 		super.ctext += ee.construct();
 		//the below sentence can be removed by higher level blocks
@@ -69,7 +69,7 @@ Helper.P("assign stat begin " + ee.toString() );
 		//System.out.println("var="+var.toString() + " expr="+ ee.toString());
 		//check var is in immutable, type check fails
 		if (context.inVar(var.toString())) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo()); 
 		}
 		//whenever we calculate expr type, we use a temporary context with merged mutable and
 		//immutable variables
@@ -102,7 +102,7 @@ class ForStat extends CuStat{
 	
 	@Override public String toC(ArrayList<String> localVars)
 	{
-		String exp_toC = e.toC(localVars);
+		String exp_toC = e.toC();
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
 		//added for v scoping
@@ -116,9 +116,7 @@ class ForStat extends CuStat{
 		super.ctext += "\t\t" + var.toString() + " = (Iterable *)" + iter_name + "->value;\n";
 		super.ctext += "\t\t" + "((int*) &" + var.toString() + ")[1]++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>();
-		String s1ToC = s1.toC(localVarsInFor);
-		String temp_str = s1ToC.replaceAll("void \\* " + var.toString() + " = NULL;\n", "");
-		super.ctext += "\t\t" + temp_str;
+		super.ctext += "\t\t" + s1.toC(localVarsInFor);
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate
 		for(String cur_str : localVars) {
 			while (localVarsInFor.contains(cur_str)) {
@@ -158,12 +156,12 @@ Helper.P(String.format("FOR %s is %s<%s>", e, eType, eType.map));
 
  		Boolean flag = eType.isIterable();
     	if (flag != true) {
-    		throw new NoSuchTypeException();
+    		throw new NoSuchTypeException(Helper.getLineInfo()); 
     	}
     	//eType.type = Helper.getTypeForIterable(eType.toString());
     	//var can't appear in mutable or immutable variables
     	if (context.inMutVar(this.var.toString()) || context.inVar(this.var.toString())) {
-    		throw new NoSuchTypeException();
+    		throw new NoSuchTypeException(Helper.getLineInfo()); 
     	}
     	//System.out.println("etype is " + eType.toString());
     	CuType iter_type = eType.type;
@@ -199,7 +197,7 @@ class IfStat extends CuStat{
     
     //for if statement, ctext is build here
     @Override public String toC(ArrayList<String> localVars) {
-    	String exp_toC = e.toC(localVars);
+    	String exp_toC = e.toC();
 		super.ctext ="\n\n\n";
     	super.ctext += this.e.construct();
     	ArrayList<String> s1_localVars = new ArrayList<String>();
@@ -283,7 +281,7 @@ Helper.P(tcontext.mVariables.toString());
     	CuType eType = e.calculateType(tcontext);
 Helper.P("e type is " + eType);
     	if (!eType.isBoolean()) {
-    		throw new NoSuchTypeException();
+    		throw new NoSuchTypeException(Helper.getLineInfo()); 
     	}
     	CuContext temp_context1 = new CuContext (context);
     	
@@ -327,7 +325,7 @@ class ReturnStat extends CuStat{
 	@Override public String toC(ArrayList<String> localVars) {
 		//now reference counting/x3free memory due to scoping
 		super.ctext +="\n\n\n";
-		String exp_toC = e.toC(localVars);
+		String exp_toC = e.toC();
 		for (String cur_str : localVars) {
 			super.ctext += "\n\n\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
@@ -428,7 +426,7 @@ class WhileStat extends CuStat{
 		text = "while ( " + e.toString() + " ) " + s1.toString();
 	}
 	@Override public String toC(ArrayList<String> localVars) {
-		String exp_toC = e.toC(localVars);
+		String exp_toC = e.toC();
 
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
@@ -469,7 +467,7 @@ class WhileStat extends CuStat{
     	if (!eType.isBoolean()) {
     		//System.out.println("in while, expr is not boolean");
     		//System.out.println("in while, expr type is " + eType.id);
-    		throw new NoSuchTypeException();
+    		throw new NoSuchTypeException(Helper.getLineInfo()); 
     	} 
     	CuContext s_context = new CuContext(context);
     	HReturn re = s1.calculateType(s_context);   	
