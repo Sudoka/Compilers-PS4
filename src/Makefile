@@ -12,4 +12,3 @@ clean: FORCE
 	rm *.o a.out
 
 FORCE:
-
