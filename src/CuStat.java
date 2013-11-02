@@ -116,7 +116,9 @@ class ForStat extends CuStat{
 		super.ctext += "\t\t" + var.toString() + " = (Iterable *)" + iter_name + "->value;\n";
 		super.ctext += "\t\t" + "((int*) &" + var.toString() + ")[1]++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>();
-		super.ctext += "\t\t" + s1.toC(localVarsInFor);
+		String s1ToC = s1.toC(localVarsInFor);
+		String temp_str = s1ToC.replaceAll("void \\* " + var.toString() + " = NULL;\n", "");
+		super.ctext += "\t\t" + temp_str;
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate
 		for(String cur_str : localVars) {
 			while (localVarsInFor.contains(cur_str)) {
