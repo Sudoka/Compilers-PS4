@@ -37,9 +37,9 @@ public class Cubex {
 			//System.exit(-2);
 		}
 
-		ArrayList<String> localVars = new ArrayList<String>();
+	/*	ArrayList<String> localVars = new ArrayList<String>();
 		PrintWriter writer = new PrintWriter("out.c", "UTF-8");
 		writer.println(ourProgram.toC(localVars));
-		writer.close();
+		writer.close();*/
 	}
 }
