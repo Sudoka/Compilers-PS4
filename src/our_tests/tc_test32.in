@@ -1,0 +1,46 @@
+fun matrixize<T> (l : Iterable<T>, maxcol : Integer) : Iterable<Iterable<T>>
+{
+	ret := [];
+	curr := [];
+	i := 0;
+	
+	if (maxcol < 1)
+	{
+		return [];
+	}
+	else
+	{
+		for(e in l)
+		{
+			if (i < maxcol)
+			{
+				curr := curr ++ [e];
+				i := i + 1;
+			}
+			else
+			{
+				i := 0;
+				ret := ret ++ [curr];
+				curr := [e];
+			}
+		}
+		return ret ++ [curr];
+	}
+}
+
+fun flatten<T> (l : Iterable<Iterable<T>>) : Iterable<T>
+{
+	ret := [];
+	
+	for (i in l)
+	{
+		for (e in i)
+		{
+			ret := ret ++ [e];
+		}
+	}
+	
+	return ret;
+}
+
+return [string(flatten<Character>(matrixize<Character>("The X3 Language Specification. Ross Tate. October 11, 2013.", 10)))]; 

@@ -1,0 +1,12 @@
+myVar1 := true;
+myVar2 := false;
+doSomething := false;
+if(myVar1<=myVar2)
+{
+	doSomething:=true;
+}
+if(doSomeThing)
+{
+	myVar2 := doSomeThing;
+}
+return [""]; 

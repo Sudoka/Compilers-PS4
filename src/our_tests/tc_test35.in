@@ -1,0 +1,8 @@
+class Pair<A,B>(a : A, b : B) {
+  fun pi1() : A  = a;
+  fun pi2() : B = b;
+  fun set1(aa : A) : Pair<A,B> = Pair<A,B>(aa, b);
+  fun set2(bb : B) : Pair<A,B> = Pair<A,B>(a, bb);
+}
+x := Pair<String, Integer>("hello", 5);
+return [x.set1("world").pi1()]; 
