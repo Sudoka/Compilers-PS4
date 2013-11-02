@@ -30,7 +30,7 @@ typedef struct iter{
 	void* value;
 	int nref;
 	void* additional;
-	void* (*next)(void*);
+	struct iter* (*next)(void*);
 	struct iter* concat;
 }Iterable;
 

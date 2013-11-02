@@ -246,7 +246,6 @@ class BrkExpr extends CuExpr {
 		
 		ArrayList<String> tempNameArr=new ArrayList<String>();	
 		ArrayList<String> tempDataArr=new ArrayList<String>();
-		ArrayList<String> typeCastArr=new ArrayList<String>();
 		for (CuExpr e : val) {
 			if(iterType.equals(""))
 				iterType = e.getCastType();
@@ -320,7 +319,7 @@ class CInteger extends CuExpr {
 		
 	}
 	@Override protected CuType calculateType(CuContext context) {
-		if (val == null) { throw new NoSuchTypeException();}
+		if (val == null) { throw new NoSuchTypeException(Helper.getLineInfo());}
 		return CuType.integer;
 	}
 	
