@@ -82,11 +82,24 @@ public class Helper {
 		return x.size()==y.size();
 	}
 	
-	protected static void P(String s) {
-		System.out.println(s);
+	protected static void P(Object s) {
+		System.out.println(s.toString());
+	}
+	protected static void P(String s, Object...args) {
+		System.out.println(String.format(s, args));
 	}
 	/* thoughts coming, to implement later on */
 	protected static void ToDo(String comment){
+	}
+	
+	/** Get the current line number.
+	 * @return int - Current line number.
+	 */
+	public static String getLineInfo() {
+        String fullClassName = Thread.currentThread().getStackTrace()[3].getClassName();            
+        String methodName = Thread.currentThread().getStackTrace()[3].getMethodName();
+        int lineNumber = Thread.currentThread().getStackTrace()[3].getLineNumber();
+	    return fullClassName + "." + methodName + "(): line " + lineNumber;
 	}
 	
 	protected static CuType getTypeForIterable(String s){

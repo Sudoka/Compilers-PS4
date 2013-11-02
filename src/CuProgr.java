@@ -92,7 +92,7 @@ class FullPrg extends CuProgr {
 		HReturn re = this.s.calculateType(context);
 Helper.P("program return, type is " + re.tau.toString());
 		if (!re.tau.isSubtypeOf(new Iter(CuType.string)) || (re.b== false)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 	}
 }
@@ -145,7 +145,7 @@ Helper.P("in func program " + name);
 		//update the function context
 		context.mergeVariable();
 		if (context.mFunctions.containsKey(this.name)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		context.updateFunction(this.name, this.typeScheme);
 		//type check typeschemes and statements
@@ -155,16 +155,16 @@ Helper.P("in func program " + name);
 		for(String cur_str : this.typeScheme.data_tc.keySet())
 		{
 			if(context.mVariables.containsKey(cur_str)){
-				throw new NoSuchTypeException();
+				throw new NoSuchTypeException(Helper.getLineInfo());
 			}
 		}
 		temp_context.updateMutType(this.typeScheme.data_tc);
 		HReturn re = this.statement.calculateType(temp_context);
 		if (re.b == false) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		if (!re.tau.isSubtypeOf(this.typeScheme.data_t)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 	}
 	public String toC(ArrayList<String> localVars){
@@ -210,7 +210,7 @@ class StatPrg extends CuProgr {
 		//final tau should be a subtype of iterable string
 		if (!re.tau.isSubtypeOf(dtype)) {
 			//System.out.println("type is not iterable of string");
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 	}
 	
