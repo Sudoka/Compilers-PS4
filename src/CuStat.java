@@ -39,7 +39,8 @@ class AssignStat extends CuStat{
 		super.ctext ="\n\n\n";
 		super.ctext += ee.construct();
 		//the below sentence can be removed by higher level blocks
-		super.ctext += "void * " + var.toString() +" = NULL;\n";
+		if (!Helper.funArgList.contains(var.toString()))
+			super.ctext += "void * " + var.toString() +" = NULL;\n";
 		super.ctext += "if (" + var.toString() + "!= NULL) {\n";
 		//check whether it is the last pointer pointing to the object, if yes, x3free memory
 		super.ctext += "\tif (((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs == 1)\n";
@@ -57,8 +58,9 @@ class AssignStat extends CuStat{
 			super.ctext += var.toString() + " = " + ee.toC() + ";\n";
 		else
 			super.ctext += var.toString() + " = &" + ee.toC() + ";\n";  */
-		super.newVars.add(var.toString());
-		if (!localVars.contains(var.toString()))
+		if (!Helper.funArgList.contains(var.toString()))
+			super.newVars.add(var.toString());
+		if (!localVars.contains(var.toString()) && !Helper.funArgList.contains(var.toString()))
 			localVars.add(var.toString());
 		return super.ctext;
 	}
