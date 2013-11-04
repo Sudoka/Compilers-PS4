@@ -34,7 +34,6 @@ typedef struct iter{
 	struct iter* concat;
 }Iterable;
 
-
 Iterable* iterGetNext(Iterable* last){
 	Iterable* this;
 	this = x3malloc(sizeof(Iterable));
