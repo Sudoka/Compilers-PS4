@@ -393,7 +393,7 @@ class Stats extends CuStat{
 		}
 
 		for(String str : super.newVars) {
-			temp_str = temp_str.replaceAll(("void \\* " + str + "= NULL;\n"), "");
+			temp_str = temp_str.replaceAll(("void \\* " + str + " = NULL;\n"), "");
 		}
 
 		super.ctext += temp_str;
