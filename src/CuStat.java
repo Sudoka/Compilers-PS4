@@ -57,6 +57,7 @@ class AssignStat extends CuStat{
 			super.ctext += var.toString() + " = " + ee.toC() + ";\n";
 		else
 			super.ctext += var.toString() + " = &" + ee.toC() + ";\n";  */
+		if (!Helper.funArgList)
 		super.newVars.add(var.toString());
 		if (!localVars.contains(var.toString()))
 			localVars.add(var.toString());
