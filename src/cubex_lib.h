@@ -27,7 +27,7 @@ typedef struct character {
 } Character;
 
 typedef struct iter{
-	int nref;
+	int nrefs;
 	void* value;
 	void* additional;
 	struct iter* (*next)(void*);
@@ -52,10 +52,10 @@ Iterable* iterGetNext(Iterable* last){
 		this=last->concat;
 	}
 	
-	if (last->nref==1)
+	if (last->nrefs==1)
 		x3free(last);
 	else 
-		(last->nref)--;
+		(last->nrefs)--;
 	
 	return (this);
 }
@@ -76,7 +76,7 @@ Iterable* Integer_onwards(void* head){
 	Iterable* last;
 	last = (Iterable*) head;
 	this = x3malloc(sizeof(Iterable));
-	this->nref=1; 
+	this->nrefs=1; 
 	(((Integer*)(last->value))->value)++;
 	this->value = last->value;
 	(((Integer*)(last->value))->nrefs)++;	
@@ -95,7 +95,7 @@ Iterable* Integer_through(void* head){
 	}
 	else {
 		Iterable* this=x3malloc(sizeof(Iterable));
-		this->nref=1;
+		this->nrefs=1;
 		(((Integer*)(last->value))->value)++; 
 		this->value = last->value; 
 		(((Integer*)(last->value))->nrefs)++;
@@ -115,7 +115,7 @@ Iterable* input_onwards(void* head){
 	last = (Iterable*) head;
 	if (len != 0) {
 		this = x3malloc(sizeof(Iterable));
-		this->nref=1; 
+		this->nrefs=1; 
 		this->value = x3malloc(sizeof(String));
 		((String*) this->value)->value = (char*) x3malloc(len* sizeof(char));
 		read_line(((String*) this->value)->value);
@@ -151,17 +151,17 @@ void mystrcpy(char *dst, const char *src) {
    *dst = '\0';
 }
 
-char* concatChars(Iterable *charIter){
-	char* combined;
+String* concatChars(Iterable *charIter){
+	char* combined = NULL;
 	int count=0;
 	while (charIter!=NULL){
 		const char* prev=(const char* )combined;
-		combined = x3malloc(count+1); 
+		combined = x3malloc((count+1)*sizeof(char)); 
 		mystrcpy(combined,prev);
-		free((char*)prev);
-		const char* newChar=charIter->value;
-		count++;
+		x3free((char*)prev);
+		char newChar=((Character*)charIter->value)->value;
 		combined[count]=newChar;
+		count++;
 		Iterable* temp=iterGetNext(charIter);
 		charIter=temp; 
 	}
@@ -169,4 +169,9 @@ char* concatChars(Iterable *charIter){
 	combined = x3malloc(count+1); 
 	mystrcpy(combined,prev);
 	combined[count]='\0';
+	String* new = (String*) x3malloc(sizeof(String));
+	new->value = (char*) x3malloc(sizeof(char)*count);
+	mystrcpy(new->value, combined);
+	new->len = count;
+	return new;
 }
