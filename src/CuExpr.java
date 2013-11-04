@@ -306,7 +306,7 @@ class CBoolean extends CuExpr{
 		else
 			super.name = String.format("Boolean* %s = (Boolean *) x3malloc(sizeof(Boolean));\n"
 					+ "(%s->nrefs) = 1;\n"
-					+ "%s.value = %d;\n", temp, temp, temp, 0);
+					+ "%s->value = %d;\n", temp, temp, temp, 0);
 	
 		localVars.add(temp);
 		return super.toC(localVars);
@@ -1900,6 +1900,7 @@ Helper.P(" 1mapping is " + mapping.toString());
 			
 			if(val.equals("input"))
 			{
+				castType = "Iterable";
 				String len = Helper.getVarName();
 								
 				if(!initialized) {
@@ -1990,9 +1991,10 @@ Helper.P(" 1mapping is " + mapping.toString());
 			for (CuExpr exp : es) {
 				expToC = exp.toC(localVars);
 				tempName = exp.construct();
-				tempCastType = exp.getCastType();
+				/*tempCastType = exp.getCastType();
 				if(tempCastType == null) tempCastType = Helper.cVarType.get(expToC);
-				temp += "(" + tempCastType + "*)" + expToC + ", ";
+				*/
+				temp += "(void*) " + expToC + ", ";
 				super.name += tempName;
 				if (!tempName.equals(""))
 					localVars.add(expToC);

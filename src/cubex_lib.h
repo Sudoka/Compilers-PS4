@@ -151,17 +151,17 @@ void mystrcpy(char *dst, const char *src) {
    *dst = '\0';
 }
 
-char* concatChars(Iterable *charIter){
-	char* combined;
+String* concatChars(Iterable *charIter){
+	char* combined = NULL;
 	int count=0;
 	while (charIter!=NULL){
 		const char* prev=(const char* )combined;
-		combined = x3malloc(count+1); 
+		combined = x3malloc((count+1)*sizeof(char)); 
 		mystrcpy(combined,prev);
-		free((char*)prev);
-		const char* newChar=charIter->value;
-		count++;
+		x3free((char*)prev);
+		char newChar=((Character*)charIter->value)->value;
 		combined[count]=newChar;
+		count++;
 		Iterable* temp=iterGetNext(charIter);
 		charIter=temp; 
 	}
@@ -169,4 +169,9 @@ char* concatChars(Iterable *charIter){
 	combined = x3malloc(count+1); 
 	mystrcpy(combined,prev);
 	combined[count]='\0';
+	String* new = (String*) x3malloc(sizeof(String));
+	new->value = (char*) x3malloc(sizeof(char)*count);
+	mystrcpy(new->value, combined);
+	new->len = count;
+	return new;
 }
