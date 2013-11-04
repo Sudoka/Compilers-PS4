@@ -2,7 +2,8 @@
 02.
 #java specific
 *.class
-./bin
+./bin/
+bin/
 bin/*
 src/*.class
 #netbeans ignore personal stuff
