@@ -167,13 +167,13 @@ Helper.P("in func program " + name);
 			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 	}
+	@SuppressWarnings("unchecked")
 	public String toC(ArrayList<String> localVars){
 		StringBuilder sb= new StringBuilder();
 		StringBuilder inputs=new StringBuilder();
 		Helper.cFunType.put(name, typeScheme.data_t.id);
 		ArrayList<String> local=new ArrayList<String>();
-		ArrayList<String> clone = (ArrayList<String>) localVars.clone();
-		Helper.funArgList	   =clone;
+		Helper.funArgList	   =(ArrayList<String>) localVars.clone();
 		
 		sb.append("void* "+name.toString()+"(");
 		String delim = "";

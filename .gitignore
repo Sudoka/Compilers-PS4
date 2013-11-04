@@ -5,6 +5,7 @@
 ./bin/
 bin/
 bin/*
+bin/*.class
 src/*.class
 #netbeans ignore personal stuff
 #nbproject/private/

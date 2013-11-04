@@ -10,6 +10,7 @@ public abstract class CuClass {
 	protected StringBuilder def=new StringBuilder();
 	protected StringBuilder fun=new StringBuilder();
 	protected StringBuilder body=new StringBuilder();
+	protected StringBuilder vtable=new StringBuilder();
 	
 	String name;
 	CuType            superType = new Top();	
@@ -55,8 +56,14 @@ class Cls extends CuClass {
 		super.superType = tt;}
 	
 	@Override public void add(String v, CuTypeScheme ts, CuStat s) {
-		super.funList.put(v, new Function(v,ts,s));
+		Function temp=new Function(v,ts,s);
+		super.funList.put(v, temp);
 		super.mFunctions.put(v, ts);
+		
+		//code Gen
+		fun.append(temp.toC(name));
+		vtable.append(String.format("%s_Tbl->%s=&%s; \n", name, v, name+"_"+v));
+		Helper.cFunType.put(name+"_"+v, ts.data_t.id);
 	}
 	
 	@Override public void add(List<CuExpr> s) {
@@ -85,6 +92,7 @@ class Cls extends CuClass {
 			for (Map.Entry<String, CuFun> e : superfunLst.entrySet()){
 				//check signature if already exists
 				if (funList.containsKey(e.getKey())){
+					
 					//check signature, but not here
 					//e.getValue().ts.calculateType(context);
 					//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
@@ -97,12 +105,17 @@ class Cls extends CuClass {
 					//System.out.println("come to specific point 1");
 					if (funList.get(e.getKey()).funBody instanceof EmptyBody) {
 						funList.get(e.getKey()).funBody = e.getValue().funBody;
+						//code Gen
+						vtable.append(String.format("%sTbl->%s=&(%sTable->%s) \n", name, e.getKey(), superType.id,superType.id,e.getKey()));
 					}
+						
 					//System.out.println("come to specific point 2");
 					//in classes, every function declared has a body
 				}else{//add method if it doesn't already exist
 					super.mFunctions.put(e.getKey(),e.getValue().ts);
 					super.funList.put(e.getKey(), e.getValue());
+					//codeGen
+					vtable.append(String.format("%sTbl->%s=&(%sTable->%s) \n", name, e.getKey(), superType.id,superType.id,e.getKey()));
 				}
 			}
 		}
@@ -157,7 +170,6 @@ class Cls extends CuClass {
 		context.updateFunction(super.name, temp_ts);
 		cur_context.updateFunction(super.name, temp_ts);
 		
-			
 		//now type check each typescheme
 		for (CuFun iter : funList_cpy.values()) {
 			iter.ts.calculateType(cur_context);
@@ -251,29 +263,50 @@ class Cls extends CuClass {
 
 	public String toC(){
 		def.append("typedef struct {\n");
-		def.append("		 int  nref;\n");
-		def.append("		void* "+name+"_Tbl;\n");
-		for (Entry<String,CuType> e :fieldTypes.entrySet()){
-			def.append("		void* "+name+"_"+e.getKey()+";\n");
-		}
-		def.append("			} "+name+";");
-
-		StringBuilder vtable=new StringBuilder();
-		int i=0;
-		vtable.append(String.format("void* %s_Tbl = malloc(sizeof(%d*sizeof(void*)));\n", name, funList.size()));
 		for (Entry<String, CuFun> e: funList.entrySet()){
-			if (funList.get(e.getKey()).funBody instanceof EmptyBody){
-				
-			}else {
-				fun.append(e.getValue().toC(name));
-				vtable.append(String.format("%sTbl[%d]=%s \n", name, i, name+"_"+e.getKey()));
+			StringBuilder signature=new StringBuilder();
+			String delim="";
+			for (Entry<String, CuType> e1 : e.getValue().ts.data_tc.entrySet()){
+				signature.append(delim).append("void* "+e1.getKey());
+				delim=",";
 			}
-			i++;
+			def.append("		void* (*"+e.getKey()+")("+signature.toString()+");\n");
 		}
-		//for (super.funList){
-			
-		//}
-		return fun.toString()+vtable.toString()+def.toString();
+		def.append("			} "+name+"Table;\n");
+		
+		def.append("typedef struct {\n");
+		def.append("\tint  nref;\n");
+		def.append("\t"+name+"Table* "+name+"_Tbl;\n");
+		for (Entry<String,CuType> e :fieldTypes.entrySet()){
+			def.append("\tvoid* "+e.getKey()+";\n");
+		}
+		def.append("\t\t} "+name+";\n");
+		
+		
+		//constructor
+		Helper.cFunType.put("new_"+name, name);
+		fun.append("void* "+"new_"+name+"(");
+		String delim="";
+		StringBuilder temp=new StringBuilder();
+		delim="";
+		for (Entry<String, CuType> e : fieldTypes.entrySet()){
+			temp.append(delim).append("void* "+e.getKey());
+			delim=", ";
+			Helper.cVarType.put(e.getKey(), e.getValue().id);
+		}
+		fun.append(temp);
+		fun.append(") {\n");
+		String tempName=Helper.getVarName();
+		fun.append(String.format("%s* %s=x3malloc(sizeof(%s));\n",name,tempName,name));
+		fun.append(tempName+"->"+name+"_Tbl=x3malloc(sizeof("+name+"Table)); \n");
+		String[] lines = vtable.toString().split("\n");
+		for (String s: lines){
+			fun.append(tempName+"->"+s+"\n");
+		}
+
+		fun.append("\t\treturn "+tempName+"; \n");
+		fun.append("}\n");
+		return def.toString()+fun.toString();
 	}
 	
 }

@@ -211,9 +211,9 @@ Helper.P("common parent of types is " + type.toString());
 		String leftToC = left.toC(localVars), rightToC = right.toC(localVars);
 		castType = "Iterable";
 		
-		if(left.getIterType().equals(right.getIterType()))
+		//if(left.getIterType().equals(right.getIterType()))
 			iterType = left.getIterType();
-		else
+		//else
 			iterType = "Top";
 		
 		name += left.construct();
