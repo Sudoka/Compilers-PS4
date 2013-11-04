@@ -11,7 +11,7 @@ public abstract class CuExpr {
 	protected String methodId = null;
 	protected String cText = "";
 	protected String name = "";
-	protected String castType = "", iterType = "";
+	protected String castType = "", iterType = "", helper = "", helperHead = "";
 	private CuType type = null;
 	public void add(List<CuType> pt, List<CuExpr> es) {}
 	public final CuType getType(CuContext context) throws NoSuchTypeException {
@@ -36,6 +36,10 @@ public abstract class CuExpr {
 	
 	public String getIterType(){
 		return iterType;
+	}
+	
+	public String getHelperHead() {
+		return helperHead;
 	}
 	
 	public boolean isFunCall () {
@@ -140,7 +144,8 @@ class AndExpr extends CuExpr{
 				+ "%s->nrefs = 1;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value && ((%s*)%s)->value;\n", "Boolean", leftToC, "Boolean", rightToC);
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Boolean");
 
 		/*if (leftC.equals("") && rightC.equals("")){
@@ -425,9 +430,11 @@ class DivideExpr extends CuExpr{
 		
 		super.name += "}\n";
 		super.cText = temp;
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Iterable");
-		localVars.add(intName);
+		if (!localVars.contains(intName))
+			localVars.add(intName);
 		Helper.cVarType.put(intName, "Integer");
 		
 		/*if (leftC.equals("") && rightC.equals("")){
@@ -831,7 +838,8 @@ class MinusExpr extends CuExpr{
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value - ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Integer");
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -914,9 +922,11 @@ class ModuloExpr extends CuExpr{
 		
 		super.name += "}\n";
 		super.cText = temp;
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Iterable");
-		localVars.add(intName);
+		if (!localVars.contains(intName))
+			localVars.add(intName);
 		Helper.cVarType.put(intName, "Integer");
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -978,7 +988,8 @@ class NegateExpr extends CuExpr{
 				+ "%s->value=", temp, temp, temp);
 		name += String.format("!(((%s*)%s)->value);\n", "Boolean", valToC);
 
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Boolean");
 /*		if(eC.equals(""))
 		{
@@ -1029,7 +1040,8 @@ class NegativeExpr extends CuExpr{
 				+ "%s->value=", temp, temp, temp);
 		name += String.format("-(((%s*)%s)->value);\n", "Integer", valToC);	
 		
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Integer");
 		/*if(eC.equals(""))
 		{
@@ -1068,7 +1080,29 @@ class OnwardsExpr extends CuExpr{
 		{			
 			iterType = "Boolean";
 			if (val.toString().equals("true")) {
-				cText = "NULL";
+				if (inclusive) {
+					String iter = Helper.getVarName();
+					String temp = Helper.getVarName();
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 1;\n"
+							+ "%s->nrefs = 1;\n",
+							temp, temp, temp);
+					
+					name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->nrefs = 1;\n"
+							+ iter + "->value = " + temp + ";\n"
+							+ iter + "->additional = NULL;\n"
+							+ iter + "->next = NULL;\n"
+							+ iter + "->concat = NULL;\n";
+					
+					cText = iter;
+					localVars.add(temp);
+					Helper.cVarType.put(temp, "Boolean");
+					localVars.add(iter);
+					Helper.cVarType.put(iter, "Iterable");
+				}
+				else
+					cText = "NULL";
 			}
 			else {
 				if(inclusive) {
@@ -1098,13 +1132,20 @@ class OnwardsExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					localVars.add(iter);
+					if (!localVars.contains(iter))
+						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
-					localVars.add(iterTemp);
+					
+					if (!localVars.contains(iterTemp))
+						localVars.add(iterTemp);
 					Helper.cVarType.put(iterTemp, "Iterable");
-					localVars.add(trueTemp);
+					
+					if (!localVars.contains(trueTemp))
+						localVars.add(trueTemp);
 					Helper.cVarType.put(trueTemp, "Boolean");
-					localVars.add(falseTemp);
+					
+					if (!localVars.contains(falseTemp))
+						localVars.add(falseTemp);
 					Helper.cVarType.put(falseTemp, "Boolean");
 				}
 				
@@ -1124,9 +1165,12 @@ class OnwardsExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					localVars.add(temp);
+					if (!localVars.contains(temp))
+						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					localVars.add(iter);
+					
+					if (!localVars.contains(iter))
+						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 			}
@@ -1148,7 +1192,8 @@ class OnwardsExpr extends CuExpr{
 						+ iter + "->concat = NULL;\n";
 		
 				cText = iter;
-				localVars.add(iter);
+				if (!localVars.contains(iter))
+					localVars.add(iter);
 				Helper.cVarType.put(iter, "Iterable");
 			}
 			else {
@@ -1168,9 +1213,11 @@ class OnwardsExpr extends CuExpr{
 						+ iter + "->concat = NULL;\n";
 				
 				cText = iter;
-				localVars.add(iter);
+				if (!localVars.contains(iter))
+					localVars.add(iter);
 				Helper.cVarType.put(iter, "Iterable");
-				localVars.add(temp);
+				if (!localVars.contains(temp))
+					localVars.add(temp);
 				Helper.cVarType.put(temp, "Integer");
 			}
 		}
@@ -1210,7 +1257,8 @@ class OrExpr extends CuExpr{
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value || ((%s*)%s)->value;\n", "Boolean", leftToC, "Boolean", rightToC);	
 		
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Boolean");
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -1277,7 +1325,8 @@ class PlusExpr extends CuExpr{
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value + ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 		
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Integer");
 		/*
 		if (leftC.equals("") && rightC.equals("")){
@@ -1355,9 +1404,11 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					localVars.add(temp);
+					if (!localVars.contains(temp))
+						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					localVars.add(iter);
+					if (!localVars.contains(iter))
+						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 				
@@ -1389,13 +1440,20 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					localVars.add(iter);
+					if (!localVars.contains(iter))
+						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
-					localVars.add(iterTemp);
+					
+					if (!localVars.contains(iterTemp))
+						localVars.add(iterTemp);
 					Helper.cVarType.put(iterTemp, "Iterable");
-					localVars.add(trueTemp);
+					
+					if (!localVars.contains(trueTemp))
+						localVars.add(trueTemp);
 					Helper.cVarType.put(trueTemp, "Boolean");
-					localVars.add(falseTemp);			
+					
+					if (!localVars.contains(falseTemp))
+						localVars.add(falseTemp);			
 					Helper.cVarType.put(falseTemp, "Boolean");
 				}
 				
@@ -1422,9 +1480,12 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					localVars.add(temp);
+					if (!localVars.contains(temp))
+						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					localVars.add(iter);
+					if (!localVars.contains(iter))
+						if (!localVars.contains(iter))
+						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 			}
@@ -1472,9 +1533,11 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					localVars.add(temp);
+					if (!localVars.contains(temp))
+						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					localVars.add(iter);
+					if (!localVars.contains(iter))
+						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 			}
@@ -1525,9 +1588,11 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					localVars.add(temp);
+					if (!localVars.contains(temp))
+						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					localVars.add(iter);
+					if (!localVars.contains(iter))
+						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 			}
@@ -1619,7 +1684,8 @@ class TimesExpr extends CuExpr{
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value * ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Integer");
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -1825,7 +1891,8 @@ Helper.P("VcExp= "+text);
 			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
 			temp += "(" + tempCastType + "*)" + expToC + ", ";
 			if (!expConstruct.equals("")) {
-				localVars.add(expToC);
+				if (!localVars.contains(expToC))
+					localVars.add(expToC);
 				Helper.cVarType.put(expToC, tempCastType);
 			}
 			
@@ -1965,9 +2032,12 @@ Helper.P(" 1mapping is " + mapping.toString());
 						+ iter + "->concat = NULL;\n}\n";
 				
 		
-				localVars.add(temp);
+				if (!localVars.contains(temp))
+					localVars.add(temp);
 				Helper.cVarType.put(temp, "String");
-				localVars.add(iter);
+				
+				if (!localVars.contains(iter))
+					localVars.add(iter);
 				Helper.cVarType.put(iter, "Iterable");
 				cText = iter;
 				initialized = true;
@@ -1995,7 +2065,8 @@ Helper.P(" 1mapping is " + mapping.toString());
 				tempCastType = exp.getCastType();
 				if(tempCastType == null) tempCastType = Helper.cVarType.get(expToC);
 				if (!tempName.equals("")) {
-					localVars.add(expToC);
+					if (!localVars.contains(expToC))
+						localVars.add(expToC);
 					Helper.cVarType.put(expToC, tempCastType);
 				}
 				name += "Character* " + varName + " = (Character*) x3malloc(sizeof(Character));\n"
@@ -2014,7 +2085,8 @@ Helper.P(" 1mapping is " + mapping.toString());
 				tempName = exp.construct();
 				name += tempName;
 				if (!tempName.equals("")) {
-					localVars.add(expToC);
+					if (!localVars.contains(expToC))
+						localVars.add(expToC);
 					Helper.cVarType.put(expToC, "Iterable");
 				}
 				name += "void* " + varName + ";\n"
@@ -2040,7 +2112,8 @@ Helper.P(" 1mapping is " + mapping.toString());
 				temp += "(void*) " + expToC + ", ";
 				super.name += tempName;
 				if (!tempName.equals("")) {
-					localVars.add(expToC);
+					if (!localVars.contains(expToC))
+						localVars.add(expToC);
 					Helper.cVarType.put(expToC, tempCastType);
 				}					
 			}
