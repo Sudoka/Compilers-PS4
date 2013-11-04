@@ -12,6 +12,7 @@ public class Helper {
 	//eg. aaa, integer
 	protected static HashMap<String, String> cVarType = new HashMap<String, String>();
 	protected static HashMap<String, String> cFunType = new HashMap<String, String>();
+	protected static ArrayList<String>		 funArgList=new ArrayList<String>();
 	protected static HashMap<String, String> cClassStats = new HashMap<String, String>();
 	protected static HashMap<String, String> cClassVtablePtr = new HashMap<String, String>();
 	

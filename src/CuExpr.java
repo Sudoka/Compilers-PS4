@@ -1761,7 +1761,7 @@ Helper.P("VcExp= "+text);
             if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
             	//System.out.println(es.get(i).toString() + " doesnt match " + tList.get(i).toString() );
             	throw new NoSuchTypeException(Helper.getLineInfo());
-            }	
+            }
         }
         //System.out.println("in VcExp, end");
        /* cur_ts.data_t.plugIn(mapping);

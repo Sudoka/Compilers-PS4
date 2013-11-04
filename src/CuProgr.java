@@ -172,6 +172,8 @@ Helper.P("in func program " + name);
 		StringBuilder inputs=new StringBuilder();
 		Helper.cFunType.put(name, typeScheme.data_t.id);
 		ArrayList<String> local=new ArrayList<String>();
+		ArrayList<String> clone = (ArrayList<String>) localVars.clone();
+		Helper.funArgList	   =clone;
 		
 		sb.append("void* "+name.toString()+"(");
 		String delim = "";
@@ -179,6 +181,7 @@ Helper.P("in func program " + name);
 			inputs.append(delim).append("void *"+e.getKey());
 			delim=" , ";
 			Helper.cVarType.put(e.getKey(), e.getValue().id);
+			Helper.funArgList.add(e.getKey());
 		}
 		sb.append(inputs);
 		sb.append(") {\n");
