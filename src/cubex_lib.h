@@ -71,7 +71,7 @@ void concatenate(Iterable* fst, Iterable* snd){
 	fst->concat=snd;
 }
 
-Iterable* integer_onwards(void* head){
+Iterable* Integer_onwards(void* head){
 	Iterable* this;
 	Iterable* last;
 	last = (Iterable*) head;
@@ -87,7 +87,7 @@ Iterable* integer_onwards(void* head){
 	return this;
 }
 
-Iterable* integer_through(void* head){
+Iterable* Integer_through(void* head){
 	Iterable* last;
 	last = (Iterable*) head;
 	if ((((Integer*) last->value)->value) == (((Integer*) last->additional)->value)){
