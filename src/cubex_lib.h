@@ -116,11 +116,11 @@ Iterable* input_onwards(void* head){
 	if (len != 0) {
 		this = x3malloc(sizeof(Iterable));
 		this->nref=1; 
-		
-		last->value = x3malloc(sizeof(String));
-		((String*) last->value)->value = (char*) x3malloc(len* sizeof(char));
-		read_line(((String*) last->value)->value);
-		((String*) last->value)->nrefs = 1;
+		this->value = x3malloc(sizeof(String));
+		((String*) this->value)->value = (char*) x3malloc(len* sizeof(char));
+		read_line(((String*) this->value)->value);
+		((String*) this->value)->nrefs = 1;
+		((String*) this->value)->len = len;
 		this->additional=NULL;
 		this->next=last->next;	
 		this->concat=last->concat;
