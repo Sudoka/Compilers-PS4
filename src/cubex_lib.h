@@ -46,16 +46,15 @@ Iterable* iterGetNext(Iterable* last){
 	
 	if (this==NULL && last->concat==NULL){
 	  	if (last->nrefs==1) {
-		    if ( (((Integer*)(last->value))->nrefs)== 1) {
-			x3free(((Integer*)(last->value)));
-		    }
-		    else {
-			(((Integer*)(last->value))->nrefs)--;
-		    }
-		    x3free(last);
-		    }
-		    else 
-			    (last->nrefs)--;
+		      if ((last->value) != NULL) {
+			  if ( (this->value == NULL) || (last->value != this->value) ) {
+			      x3free(last->value);
+			  }
+		      }
+		      x3free(last);
+		 }
+		 else 
+		     (last->nrefs)--;
 		
 		return NULL;
 	}
@@ -64,11 +63,10 @@ Iterable* iterGetNext(Iterable* last){
 	}
 	
 	if (last->nrefs==1) {
-		if ( (((Integer*)(last->value))->nrefs)== 1) {
-		    x3free(((Integer*)(last->value)));
-		}
-		else {
-		    (((Integer*)(last->value))->nrefs)--;
+		if ((last->value) != NULL) {
+		    if ( (this->value == NULL) || (last->value != this->value) ) {
+			x3free(last->value);
+		    }
 		}
 		x3free(last);
 	}
