@@ -150,3 +150,24 @@ void mystrcpy(char *dst, const char *src) {
    }
    *dst = '\0';
 }
+
+char* concatChars(iterable* charIter){
+	char* combined;
+	int count=0;
+	while (charIter!=null){
+		const char* prev=combined;
+		combined = x3malloc(count+1); 
+		mystrcpy(combined,prev);
+		free((char*)prev);
+		const char* newChar=charIter->value;
+		count++;
+		combined[count]=newChar;
+		iterable* temp=iterGetNext(charIter);
+		charIter=temp; 
+	}
+	prev=combined;
+	combined = x3malloc(count+1); 
+	mystrcpy(combined,prev);
+	combined[count]='\0';
+	
+}

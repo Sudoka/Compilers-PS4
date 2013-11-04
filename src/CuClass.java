@@ -23,8 +23,6 @@ public abstract class CuClass {
 	public void add(String v, CuTypeScheme ts, CuStat s) {}
 	public void add(String v_name, CuTypeScheme ts) {}
 	public void add(CuVvc v_name, CuTypeScheme ts) {}
-	public void moreCount(){}
-	public void lessCount(){}
 	public boolean isInterface() {return false; }
 	public CuClass calculateType(CuContext context) throws NoSuchTypeException { return this;}
 	public abstract String toC();
@@ -46,14 +44,6 @@ class Cls extends CuClass {
 		super.name=clsintf;
 		super.kindCtxt=kc;
 		this.fieldTypes=tc;
-		
-		def.append("typedef struct {\n");
-		def.append("		void* vtable;\n");
-		def.append("		void* nref;\n");
-		for (Entry<String,CuType> e :fieldTypes.entrySet()){
-			def.append("		void* "+e.getKey()+";\n");
-		}
-		def.append("			} "+name+";");
 	}
 
 
@@ -260,16 +250,32 @@ class Cls extends CuClass {
 	}
 
 	public String toC(){
+		def.append("typedef struct {\n");
+		def.append("		 int  nref;\n");
+		def.append("		void* "+name+"_Tbl;\n");
+		for (Entry<String,CuType> e :fieldTypes.entrySet()){
+			def.append("		void* "+name+"_"+e.getKey()+";\n");
+		}
+		def.append("			} "+name+";");
+
 		StringBuilder vtable=new StringBuilder();
 		int i=0;
-		vtable.append(String.format("void* %sTbl = malloc(sizeof(%d*sizeof(void*)));\n", name, funList.size()));
+		vtable.append(String.format("void* %s_Tbl = malloc(sizeof(%d*sizeof(void*)));\n", name, funList.size()));
 		for (Entry<String, CuFun> e: funList.entrySet()){
+			if (funList.get(e.getKey()).funBody instanceof EmptyBody){
+				
+			}else {
 			fun.append(e.getValue().toC(name));
-			vtable.append(String.format("%sTbl[%d]=%s", name, i, name+"_"+e.getKey()));
+			vtable.append(String.format("%sTbl[%d]=%s \n", name, i, name+"_"+e.getKey()));
+			}
 			i++;
 		}
+		//for (super.funList){
+			
+		//}
 		return fun.toString()+vtable.toString()+def.toString();
 	}
+	
 }
 
 class Intf extends CuClass{
