@@ -35,6 +35,7 @@ class AssignStat extends CuStat{
 	
 	@Override public String toC(ArrayList<String> localVars) {
 		String exp_toC = ee.toC(localVars);
+		Helper.cVarType.put(var.toString(), ee.getCastType());
 		super.ctext ="\n\n\n";
 		super.ctext += ee.construct();
 		//the below sentence can be removed by higher level blocks
@@ -59,7 +60,6 @@ class AssignStat extends CuStat{
 		super.newVars.add(var.toString());
 		if (!localVars.contains(var.toString()))
 			localVars.add(var.toString());
-		Helper.cVarType.put(var.toString(), ee.getCastType());
 		return super.ctext;
 	}
 	
