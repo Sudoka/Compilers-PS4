@@ -6,29 +6,29 @@ typedef struct top {
 } Top;
 
 typedef struct integer {
-	int value;
 	int nrefs;
+	int value;	
 } Integer;
 
 typedef struct string {
-	char* value;
 	int nrefs;
+	char* value;
 	int len;
 } String;
 
 typedef struct boolean {
-	int value;
 	int nrefs;
+	int value;
 } Boolean;
 
 typedef struct character {
-	char value;
 	int nrefs;
+	char value;
 } Character;
 
 typedef struct iter{
-	void* value;
 	int nref;
+	void* value;
 	void* additional;
 	struct iter* (*next)(void*);
 	struct iter* concat;
@@ -36,7 +36,8 @@ typedef struct iter{
 
 
 Iterable* iterGetNext(Iterable* last){
-	Iterable* this=x3malloc(sizeof(Iterable));
+	Iterable* this;
+	this = x3malloc(sizeof(Iterable));
 	if (last->next!= NULL){	
 		this = (last->next)(last);
 	}
@@ -70,9 +71,11 @@ void concatenate(Iterable* fst, Iterable* snd){
 	fst->concat=snd;
 }
 
-Iterable* integer_onwards(void* head){
-	Iterable* this=x3malloc(sizeof(Iterable));
-	Iterable* last = (Iterable*) head;
+Iterable* Integer_onwards(void* head){
+	Iterable* this;
+	Iterable* last;
+	last = (Iterable*) head;
+	this = x3malloc(sizeof(Iterable));
 	this->nref=1; 
 	(((Integer*)(last->value))->value)++;
 	this->value = last->value;
@@ -84,8 +87,9 @@ Iterable* integer_onwards(void* head){
 	return this;
 }
 
-Iterable* integer_through(void* head){
-	Iterable* last = (Iterable*) head;
+Iterable* Integer_through(void* head){
+	Iterable* last;
+	last = (Iterable*) head;
 	if ((((Integer*) last->value)->value) == (((Integer*) last->additional)->value)){
 		return NULL;
 	}
@@ -105,16 +109,18 @@ Iterable* integer_through(void* head){
 Iterable* input_onwards(void* head){
 	int len;
 	len = next_line_len();
-	Iterable* last = (Iterable*) head;
-	Iterable* this = NULL;
+	Iterable* last;
+	Iterable* this;
+	this = NULL;
+	last = (Iterable*) head;
 	if (len != 0) {
 		this = x3malloc(sizeof(Iterable));
 		this->nref=1; 
-		
-		last->value = x3malloc(sizeof(String));
-		((String*) last->value)->value = (char*) x3malloc(len* sizeof(char));
-		read_line(((String*) last->value)->value);
-		((String*) last->value)->nrefs = 1;
+		this->value = x3malloc(sizeof(String));
+		((String*) this->value)->value = (char*) x3malloc(len* sizeof(char));
+		read_line(((String*) this->value)->value);
+		((String*) this->value)->nrefs = 1;
+		((String*) this->value)->len = len;
 		this->additional=NULL;
 		this->next=last->next;	
 		this->concat=last->concat;
@@ -143,4 +149,24 @@ void mystrcpy(char *dst, const char *src) {
       *dst++ = *src++; 
    }
    *dst = '\0';
+}
+
+char* concatChars(Iterable *charIter){
+	char* combined;
+	int count=0;
+	while (charIter!=NULL){
+		const char* prev=(const char* )combined;
+		combined = x3malloc(count+1); 
+		mystrcpy(combined,prev);
+		free((char*)prev);
+		const char* newChar=charIter->value;
+		count++;
+		combined[count]=newChar;
+		Iterable* temp=iterGetNext(charIter);
+		charIter=temp; 
+	}
+	const char* prev=(const char*)combined;
+	combined = x3malloc(count+1); 
+	mystrcpy(combined,prev);
+	combined[count]='\0';
 }

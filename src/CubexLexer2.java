@@ -1,4 +1,4 @@
-// Generated from CubexLexer2.g4 by ANTLR 4.1
+// Generated from src/CubexLexer2.g4 by ANTLR 4.1
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

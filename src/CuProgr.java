@@ -57,14 +57,6 @@ class FullPrg extends CuProgr {
 				+ "#include \"cubex_external_functions.h\"\n"
 				+ "#include \"cubex_lib.h\"\n\n"
 				+  fnClass_str + "\n\n"
-				+ "void* our_main();\n\n" 
-				+ "void cubex_main() {\n"
-				+ "Iterable* ourMain;\n"
-				+ "ourMain = (Iterable*) our_main();\n"
-				+ "while(ourMain != NULL) {\n\t"
-				+ "print_line(((String*)ourMain->value)->value, ((String*)ourMain->value)->len);\n\t"
-				+ "ourMain = iterGetNext(ourMain);\n}\n"
-				+ "}\n\n"
 				+ "void* our_main()\n{\n";
 		
     	for (String str : super.newVars) {
@@ -74,7 +66,15 @@ class FullPrg extends CuProgr {
     	
     	super.ctext += temp_str;
     	
-    	super.ctext += "}\n";
+    	super.ctext += "}\n\n\n"
+    			+ "void cubex_main() {\n"
+				+ "Iterable* ourMain;\n"
+				+ "ourMain = (Iterable*) our_main();\n"
+				+ "while(ourMain != NULL) {\n\t"
+				+ "print_line(((String*)ourMain->value)->value, ((String*)ourMain->value)->len);\n\t"
+				+ "ourMain = iterGetNext(ourMain);\n}\n"
+				+ "}";
+				
     	
 		return super.ctext;
 	}
@@ -114,7 +114,7 @@ class ClassPrg extends CuProgr {
 		//System.out.println("in class program, end");
 	}
 	public String toC(ArrayList<String> localVars) {
-		return "CLASS"+ctext;
+		return c.toC();
 	}
 }
 
@@ -176,7 +176,7 @@ Helper.P("in func program " + name);
 		sb.append("void* "+name.toString()+"(");
 		String delim = "";
 		for (Entry<String, CuType> e : typeScheme.data_tc.entrySet()){
-			inputs.append(delim).append(e.getValue().id +"* "+e.getKey());
+			inputs.append(delim).append("void *"+e.getKey());
 			delim=" , ";
 			Helper.cVarType.put(e.getKey(), e.getValue().id);
 		}

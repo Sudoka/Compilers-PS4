@@ -247,17 +247,18 @@ class BrkExpr extends CuExpr {
 		ArrayList<String> tempNameArr=new ArrayList<String>();	
 		ArrayList<String> tempDataArr=new ArrayList<String>();
 		for (CuExpr e : val) {
+			eToC = e.toC(localVars);
+			name += e.construct();
+			
 			if(iterType.equals(""))
 				iterType = e.getCastType();
 			else if (!iterType.equals(e.getCastType()))
 				iterType = "Top";
 			
-			eToC = e.toC(localVars);
-			name += e.construct();
 			tempNameArr.add(Helper.getVarName());
 			tempDataArr.add(eToC);
 			typeCast = e.getCastType();
-			if(typeCast.equals("")) 
+			if(typeCast == null) 
 				typeCast = Helper.cVarType.get(eToC);
 		}
 		tempNameArr.add("NULL");
@@ -266,7 +267,7 @@ class BrkExpr extends CuExpr {
 			name += "Iterable* " + tempNameArr.get(i) + ";\n" 
 					+ tempNameArr.get(i) + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 					+ tempNameArr.get(i) + "->nref = 1;\n" 
-					+ tempNameArr.get(i) + "->value = (" + typeCast + "*)" + tempDataArr.get(i) + ";\n"
+					+ tempNameArr.get(i) + "->value = " + tempDataArr.get(i) + ";\n"
 					+ tempNameArr.get(i) + "->additional = " + tempNameArr.get(i + 1) + ";\n" 
 					+ tempNameArr.get(i) + "->next = NULL;\n" 
 					+ tempNameArr.get(i)+ "->concat = NULL;\n";
@@ -352,11 +353,12 @@ class CString extends CuExpr {
 	@Override
 	public String toC(ArrayList<String> localVars) {
 		String temp = Helper.getVarName();
-		super.name = String.format(" %s = (String *) x3malloc(sizeof(String));\n"
+		super.name = String.format("String* %s;\n"
+				+ "%s = (String *) x3malloc(sizeof(String));\n"
 				+ "%s->value = (char*) x3malloc(sizeof(%s));\n"
 				+ "(%s->nrefs) = 1;\n"
 				+ "%s->len = sizeof(%s) - 1;\n"
-				+ "mystrcpy(%s->value, %s);\n", temp, temp, val, temp, temp, val, temp, val);	
+				+ "mystrcpy(%s->value, %s);\n", temp, temp, temp, val, temp, temp, val, temp, val);	
 		
 		super.cText = temp;
 		super.castType = "String";
@@ -399,18 +401,19 @@ class DivideExpr extends CuExpr{
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += "Iterable* " + temp + ";\n";
+		super.name += "Iterable* " + temp + ";\n"
+				+ "Integer* " + intName + ";\n";
 		super.name += String.format("if(((%s*)%s)->value == 0) \n\t"
 				+ temp + " = NULL;\n"
 				,  "Integer", rightToC);
 		super.name += "else {\n";
-		super.name += String.format("\tInteger* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
+		super.name += String.format("\t%s  = (Integer*) x3malloc(sizeof(Integer));\n"
 				+ "\t%s->nrefs = 1;\n"
 				+ "\t%s->value=", intName, intName, intName);
 		super.name += String.format("((%s*)%s)->value / ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);	
 		
 		super.name += "\t" + temp + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
-				+ temp + "->nrefs = 1;\n\t"
+				+ temp + "->nref = 1;\n\t"
 				+ temp + "->value = " + intName + ";\n\t"
 				+ temp + "->additional = NULL;\n\t"
 				+ temp + "->next = NULL;\n\t"
@@ -651,13 +654,15 @@ class GreaterThanExpr extends CuExpr{
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
-		String leftCastType = ""; 
-		String rightCastType = "";
+		String leftCastType = "(" + left.getCastType() + "*)"; 
+		String rightCastType = "(" + right.getCastType() + "*)";
 		
 		name += "\n" + leftC + rightC;
 		
-		leftCastType = "(" + Helper.cVarType.get(leftToC) + "*)";
-		rightCastType = "(" + Helper.cVarType.get(rightToC) + "*)";
+		if(leftCastType.equals(""))
+			leftCastType = "(" + Helper.cVarType.get(leftToC) + "*)";
+		if(rightCastType.equals(""))
+			rightCastType = "(" + Helper.cVarType.get(rightToC) + "*)";
 		
 		if (b)
 			super.cText = String.format("(%s %s)->value > (%s %s)->value", leftCastType, leftToC, rightCastType, rightToC);
@@ -729,13 +734,15 @@ class LessThanExpr extends CuExpr{
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
-		String leftCastType = ""; 
-		String rightCastType = "";
+		String leftCastType = "(" + left.getCastType() + "*)"; 
+		String rightCastType = "(" + right.getCastType() + "*)";
 		
 		name += "\n" + leftC + rightC;
 		
-		leftCastType = "(" + Helper.cVarType.get(leftToC) + "*)";
-		rightCastType = "(" + Helper.cVarType.get(rightToC) + "*)";
+		if(leftCastType.equals(""))
+			leftCastType = "(" + Helper.cVarType.get(leftToC) + "*)";
+		if(rightCastType.equals(""))
+			rightCastType = "(" + Helper.cVarType.get(rightToC) + "*)";
 		if (b)
 			super.cText = String.format("(%s %s)->value < (%s %s)->value", leftCastType, leftToC, rightCastType, rightToC);
 		else
@@ -880,18 +887,19 @@ class ModuloExpr extends CuExpr{
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += "Iterable* " + temp + ";\n";
+		super.name += "Iterable* " + temp + ";\n"
+				+ "Integer* " + intName + ";\n";
 		super.name += String.format("if(((%s*)%s)->value == 0) \n\t"
 				+ temp + " = NULL;\n"
 				,  "Integer", rightToC);
 		super.name += "else {\n";
-		super.name += String.format("\tInteger* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
+		super.name += String.format("\t%s  = (Integer*) x3malloc(sizeof(Integer));\n"
 				+ "\t%s->nrefs = 1;\n"
 				+ "\t%s->value=", intName, intName, intName);
 		super.name += String.format("((%s*)%s)->value %% ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);	
 		
 		super.name += "\t" + temp + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
-				+ temp + "->nrefs = 1;\n\t"
+				+ temp + "->nref = 1;\n\t"
 				+ temp + "->value = " + intName + ";\n\t"
 				+ temp + "->additional = NULL;\n\t"
 				+ temp + "->next = NULL;\n\t"
@@ -1071,7 +1079,7 @@ class OnwardsExpr extends CuExpr{
 							+ iterTemp + "->next = NULL;\n"
 							+ iterTemp + "->concat = NULL;\n";
 										
-					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
@@ -1093,7 +1101,7 @@ class OnwardsExpr extends CuExpr{
 							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1134,7 +1142,7 @@ class OnwardsExpr extends CuExpr{
 						+ temp + "->value = " + i + ";\n";					
 					
 				
-				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = NULL;\n"
@@ -1317,7 +1325,7 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1342,14 +1350,14 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 1;\n",
 							falseTemp, falseTemp, falseTemp);
 					
-					name +=  "Iterable* " + iterTemp + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iterTemp + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iterTemp + "->nref = 1;\n"
 							+ iterTemp + "->value = " + trueTemp + ";\n"
 							+ iterTemp + "->additional = NULL;\n"
 							+ iterTemp + "->next = NULL;\n"
 							+ iterTemp + "->concat = NULL;\n";
 										
-					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
@@ -1378,7 +1386,7 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1396,7 +1404,7 @@ class ThroughExpr extends CuExpr{
 				name += left.construct();
 				name += right.construct();
 			
-				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
@@ -1426,7 +1434,7 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1447,7 +1455,7 @@ class ThroughExpr extends CuExpr{
 					
 				name += right.construct();
 				
-				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
@@ -1477,7 +1485,7 @@ class ThroughExpr extends CuExpr{
 							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1500,7 +1508,7 @@ class ThroughExpr extends CuExpr{
 						+ temp + "->value = " + i + ";\n";					
 					
 				
-				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + temp + ";\n"
@@ -1532,7 +1540,7 @@ class ThroughExpr extends CuExpr{
 						+ temp2 + "->value = " + i + ";\n";					
 					
 				
-				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp1 + ";\n"
 						+ iter + "->additional = " + temp2 + ";\n"
@@ -1932,11 +1940,50 @@ Helper.P(" 1mapping is " + mapping.toString());
 		}
 		else
 		{
-			super.castType = Helper.cVarType.get(val);
+			String temp = "", tempName = "", expToC = "";
+			String tempCastType = "", varName = Helper.getVarName();
+			
+			if(val.equals("character")) {
+				super.castType = "Character";
+				super.name += "\n";
+				
+				CuExpr exp = es.get(0);
+				expToC = exp.toC(localVars);
+				tempName = exp.construct();
+				name += tempName;
+				if (!tempName.equals(""))
+					localVars.add(expToC);
+				tempCastType = exp.getCastType();
+				if(tempCastType == null) tempCastType = Helper.cVarType.get(expToC);
+				name += "Character* " + varName + " = (Character*) x3malloc(sizeof(Character));\n"
+						+ varName + "->value = "
+						+ "unichar (((" + tempCastType + "*)" + expToC + ")->value);\n";
+				
+				super.cText = varName;
+				return super.toC(localVars);
+			}
+			
+			if(val.equals("string")) {
+				castType = "String";
+				name += "\n";
+				CuExpr exp = es.get(0);
+				expToC = exp.toC(localVars);
+				tempName = exp.construct();
+				name += tempName;
+				if (!tempName.equals(""))
+					localVars.add(expToC);
+				name += "void* " + varName + ";\n"
+						+ varName + " = concatChars((Iterable*)" + expToC + ");\n"; 
+					
+				super.cText = varName;
+				
+				return super.toC(localVars);
+			}
+				
+			
+			super.castType = Helper.cFunType.get(val);
 			super.name += "\n";
 			
-			String temp = "", tempName = "", expToC = "";
-			String tempCastType = "";
 			if (es == null)
 				temp = "()";
 			temp += "(";
@@ -1953,8 +2000,9 @@ Helper.P(" 1mapping is " + mapping.toString());
 			int j = temp.lastIndexOf(", ");
 			if (j > 1) temp = temp.substring(0, j);
 			temp += ")";
-			
-			super.cText=val.toString()+temp;			
+			name += "void* " + varName + ";\n"
+					+ varName + " = " + val.toString() + temp + ";\n"; 
+			super.cText= varName;			
 		}
 		return super.toC(localVars);
 	}
