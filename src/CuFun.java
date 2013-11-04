@@ -38,7 +38,7 @@ class Function extends CuFun {
 		
 		sb.append("void* "+v.toString()+"(void* this,");
 		for (Entry<String, CuType> e : ts.data_tc.entrySet()){
-			inputs.append(", ").append(e.getValue().id +"* "+e.getKey());
+			inputs.append(", ").append("void* "+e.getKey());
 			Helper.cVarType.put(prepend+e.getKey(), e.getValue().id);
 		}
 		sb.append(inputs);

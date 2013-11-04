@@ -265,8 +265,8 @@ class Cls extends CuClass {
 			if (funList.get(e.getKey()).funBody instanceof EmptyBody){
 				
 			}else {
-			fun.append(e.getValue().toC(name));
-			vtable.append(String.format("%sTbl[%d]=%s \n", name, i, name+"_"+e.getKey()));
+				fun.append(e.getValue().toC(name));
+				vtable.append(String.format("%sTbl[%d]=%s \n", name, i, name+"_"+e.getKey()));
 			}
 			i++;
 		}

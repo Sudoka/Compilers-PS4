@@ -176,7 +176,7 @@ Helper.P("in func program " + name);
 		sb.append("void* "+name.toString()+"(");
 		String delim = "";
 		for (Entry<String, CuType> e : typeScheme.data_tc.entrySet()){
-			inputs.append(delim).append(e.getValue().id +"* "+e.getKey());
+			inputs.append(delim).append("void *"+e.getKey());
 			delim=" , ";
 			Helper.cVarType.put(e.getKey(), e.getValue().id);
 		}
