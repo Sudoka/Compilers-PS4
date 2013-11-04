@@ -1098,7 +1098,8 @@ class OnwardsExpr extends CuExpr{
 					cText = iter;
 					localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					localVars.add(iter);
+					if (!localVars.contains(iter))
+						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 				else
