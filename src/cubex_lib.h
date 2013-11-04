@@ -27,7 +27,7 @@ typedef struct character {
 } Character;
 
 typedef struct iter{
-	int nref;
+	int nrefs;
 	void* value;
 	void* additional;
 	struct iter* (*next)(void*);
@@ -52,10 +52,10 @@ Iterable* iterGetNext(Iterable* last){
 		this=last->concat;
 	}
 	
-	if (last->nref==1)
+	if (last->nrefs==1)
 		x3free(last);
 	else 
-		(last->nref)--;
+		(last->nrefs)--;
 	
 	return (this);
 }
@@ -76,7 +76,7 @@ Iterable* Integer_onwards(void* head){
 	Iterable* last;
 	last = (Iterable*) head;
 	this = x3malloc(sizeof(Iterable));
-	this->nref=1; 
+	this->nrefs=1; 
 	(((Integer*)(last->value))->value)++;
 	this->value = last->value;
 	(((Integer*)(last->value))->nrefs)++;	
@@ -95,7 +95,7 @@ Iterable* Integer_through(void* head){
 	}
 	else {
 		Iterable* this=x3malloc(sizeof(Iterable));
-		this->nref=1;
+		this->nrefs=1;
 		(((Integer*)(last->value))->value)++; 
 		this->value = last->value; 
 		(((Integer*)(last->value))->nrefs)++;
@@ -115,7 +115,7 @@ Iterable* input_onwards(void* head){
 	last = (Iterable*) head;
 	if (len != 0) {
 		this = x3malloc(sizeof(Iterable));
-		this->nref=1; 
+		this->nrefs=1; 
 		this->value = x3malloc(sizeof(String));
 		((String*) this->value)->value = (char*) x3malloc(len* sizeof(char));
 		read_line(((String*) this->value)->value);
