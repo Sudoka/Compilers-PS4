@@ -36,6 +36,7 @@ class AssignStat extends CuStat{
 	@Override public String toC(ArrayList<String> localVars) {
 		String exp_toC = ee.toC(localVars);
 		Helper.cVarType.put(var.toString(), ee.getCastType());
+		Helper.iterType.put(var.toString(), ee.getIterType());
 		if(ee.getCastType().equals("String"))
 			Helper.cStr.put(var.toString(), ee.getHelperHead());
 		super.ctext ="\n\n\n";

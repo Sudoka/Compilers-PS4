@@ -46,11 +46,6 @@ Iterable* iterGetNext(Iterable* last){
 	
 	if (this==NULL && last->concat==NULL){
 	  	if (last->nrefs==1) {
-		      if ((last->value) != NULL) {
-			  if ( (this->value == NULL) || (last->value != this->value) ) {
-			      x3free(last->value);
-			  }
-		      }
 		      x3free(last);
 		 }
 		 else 
@@ -63,11 +58,6 @@ Iterable* iterGetNext(Iterable* last){
 	}
 	
 	if (last->nrefs==1) {
-		if ((last->value) != NULL) {
-		    if ( (this->value == NULL) || (last->value != this->value) ) {
-			x3free(last->value);
-		    }
-		}
 		x3free(last);
 	}
 	else 
