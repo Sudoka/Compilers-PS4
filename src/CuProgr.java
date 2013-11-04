@@ -88,7 +88,7 @@ class ClassPrg extends CuProgr {
 		//System.out.println("in class program, end");
 	}
 	public String toC(ArrayList<String> localVars) {
-		return "CLASS"+ctext;
+		return c.toC();
 	}
 }
 

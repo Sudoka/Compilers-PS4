@@ -39,7 +39,7 @@ class Function extends CuFun {
 		sb.append("void* "+v.toString()+"(");
 		String delim = "";
 		for (Entry<String, CuType> e : ts.data_tc.entrySet()){
-			inputs.append(delim).append(e.getKey() +"* "+e.getValue().toString());
+			inputs.append(delim).append(e.getValue().id +"* "+e.getKey());
 			delim=" , ";
 			Helper.cVarType.put(prepend+e.getKey(), e.getValue().id);
 		}
