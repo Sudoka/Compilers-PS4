@@ -45,14 +45,33 @@ Iterable* iterGetNext(Iterable* last){
 	}
 	
 	if (this==NULL && last->concat==NULL){
+	  	if (last->nrefs==1) {
+		    if ( (((Integer*)(last->value))->nrefs)== 1) {
+			x3free(((Integer*)(last->value)));
+		    }
+		    else {
+			(((Integer*)(last->value))->nrefs)--;
+		    }
+		    x3free(last);
+		    }
+		    else 
+			    (last->nrefs)--;
+		
 		return NULL;
 	}
 	else if (this==NULL){
 		this=last->concat;
 	}
 	
-	if (last->nrefs==1)
+	if (last->nrefs==1) {
+		if ( (((Integer*)(last->value))->nrefs)== 1) {
+		    x3free(((Integer*)(last->value)));
+		}
+		else {
+		    (((Integer*)(last->value))->nrefs)--;
+		}
 		x3free(last);
+	}
 	else 
 		(last->nrefs)--;
 	
@@ -165,12 +184,14 @@ String* concatChars(Iterable *charIter){
 		charIter=temp; 
 	}
 	const char* prev=(const char*)combined;
-	combined = x3malloc(count+1); 
+	combined = x3malloc((count+1)*sizeof(char)); 
 	mystrcpy(combined,prev);
+	x3free((char*)prev);
 	combined[count]='\0';
 	String* new = (String*) x3malloc(sizeof(String));
 	new->value = (char*) x3malloc(sizeof(char)*count);
 	mystrcpy(new->value, combined);
+	x3free(combined);
 	new->len = count;
 	return new;
 }
