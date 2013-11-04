@@ -1,0 +1,5 @@
+fun anyToString<T> (x : T) : String {
+  return "test";
+}
+
+return [anyToString<Integer>(1)];

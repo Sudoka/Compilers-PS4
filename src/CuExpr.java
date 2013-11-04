@@ -11,7 +11,7 @@ public abstract class CuExpr {
 	protected String methodId = null;
 	protected String cText = "";
 	protected String name = "";
-	protected String castType = "";
+	protected String castType = "", iterType = "";
 	private CuType type = null;
 	public void add(List<CuType> pt, List<CuExpr> es) {}
 	public final CuType getType(CuContext context) throws NoSuchTypeException {
@@ -22,7 +22,7 @@ public abstract class CuExpr {
 	protected CuType calculateType(CuContext context) throws NoSuchTypeException { return null;};
 	@Override public String toString() {return text;}
 	
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		return cText;
 	}
 	
@@ -34,6 +34,10 @@ public abstract class CuExpr {
 		return castType;
 	}
 	
+	public String getIterType(){
+		return iterType;
+	}
+	
 	public boolean isFunCall () {
 		return false;
 	}
@@ -43,15 +47,15 @@ public abstract class CuExpr {
 		// get the functions of left class
 		CuClass cur_class = context.mClasses.get(leftId);
 		if (cur_class == null) {
-			//System.out.println("didn't find this class in class context");
-			throw new NoSuchTypeException();
+			Helper.P(" cur_class of %s is null", leftId);
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		Map<String, CuTypeScheme> funcs =  cur_class.mFunctions;
 		// check the method typescheme
 		CuTypeScheme ts = funcs.get(methodId);
 		if (ts == null ) {
-			//System.out.println("didn't find this method in current class");
-			throw new NoSuchTypeException();
+			Helper.P("   ts is null");
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		Helper.ToDo("we know there is only one parameter for now");
 		CuType tR = null;
@@ -60,7 +64,8 @@ public abstract class CuExpr {
 		}
 		/** if this method exists, kindcontext is <>, and type scheme matches with input */
 		if (!rightType.isSubtypeOf(tR)) {
-			throw new NoSuchTypeException();
+			Helper.P("   rightType %s is not subtype of %s", rightType, tR);
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		//System.out.println("in binaryExprType, end");
 		return ts.data_t;
@@ -70,13 +75,13 @@ public abstract class CuExpr {
 		// get the functions of left class
 		CuClass cur_class = context.mClasses.get(id);
 		if (cur_class == null) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		Map<String, CuTypeScheme> funcs = cur_class.mFunctions;
 		// check the method typescheme
 		CuTypeScheme ts = funcs.get(methodId);
 		if (ts==null) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		return ts.data_t;
 	}
@@ -92,6 +97,9 @@ public abstract class CuExpr {
         //System.out.println("in isType of, after type check, type is " + type.toString());
         
         t.plugIn(map);
+        if (t instanceof VTypePara) {
+        	t = map.get(t.id);
+        }
         //System.out.println("t type is " + t.type.toString());
         Helper.P(String.format("this=%s<%s> parent %s, that=%s<%s>, map=%s", type,type.map,type.parentType, t,t.map, map));
         return type.isSubtypeOf(t);
@@ -104,7 +112,7 @@ class AndExpr extends CuExpr{
 		left = e1;
 		right = e2;
 //		super.desiredType = CuType.bool;
-		super.methodId = "add";
+		super.methodId = "and";
 		super.text = String.format("%s . %s < > ( %s )", left.toString(), super.methodId, right.toString());
 		
 		
@@ -116,22 +124,23 @@ class AndExpr extends CuExpr{
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp+".value";
 		super.castType = "Boolean";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Boolean* %s = (Boolean*) malloc(sizeof(Boolean));\n"
-				+ "%s->nrefs = 0;\n"
+		super.name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+				+ "%s->nrefs = 1;\n"
 				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value && ((%s*)%s)->value;\n", "Boolean", leftToC, "Boolean", rightToC);			
+		super.name += String.format("((%s*)%s)->value && ((%s*)%s)->value;\n", "Boolean", leftToC, "Boolean", rightToC);
+		localVars.add(temp);
 
 		/*if (leftC.equals("") && rightC.equals("")){
 		//both are variables
@@ -156,7 +165,7 @@ class AndExpr extends CuExpr{
 		super.name += String.format("%s.value && %s.value;\n", left.toC(), right.toC());
 	}*/
 		
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -172,9 +181,18 @@ class AppExpr extends CuExpr {
 		CuType t1 = left.calculateType(context);
 		CuType t2 = right.calculateType(context);
 		if (!t1.isIterable() || !t2.isIterable()) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
+		//added by Yinglei to fix PA3, Iterable can't be extended, so I think we only need to treat string separately
+		if (t1.isString()) {
+			t1 = new Iter(CuType.character);
+		}
+		if (t2.isString()) {
+			t2 = new Iter(CuType.character);
+		}
+Helper.P("t1 is " + t1.toString() + " t2 is " + t2.toString() + ", t1 type is " + t1.type.toString() + " t2 type is " + t2.type.toString());
 		CuType type = CuType.commonParent(t1.type, t2.type);
+Helper.P("common parent of types is " + type.toString());
 		return new Iter(type);
 		/*CuType type = CuType.commonParent(left.getType(context), right.getType(context));
 		if (type.isIterable()) return type;
@@ -183,16 +201,21 @@ class AppExpr extends CuExpr {
 	}
 	
 	@Override
-	public String toC() {
-		String leftToC = left.toC(), rightToC = right.toC();
+	public String toC(ArrayList<String> localVars) {
+		String leftToC = left.toC(localVars), rightToC = right.toC(localVars);
 		castType = "Iterable";
+		
+		if(left.getIterType().equals(right.getIterType()))
+			iterType = left.getIterType();
+		else
+			iterType = "Top";
 		
 		name += left.construct();
 		name += right.construct();
 		name += "concatenate((Iterable*)" + leftToC + ", (Iterable*) " + rightToC + ");\n";
 		
 		cText = leftToC;
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -218,32 +241,41 @@ class BrkExpr extends CuExpr {
 	}
 	
 	@Override
-	public String toC() {
-		String eToC;
+	public String toC(ArrayList<String> localVars) {
+		String eToC = "", typeCast = "";
 		
 		ArrayList<String> tempNameArr=new ArrayList<String>();	
 		ArrayList<String> tempDataArr=new ArrayList<String>();
 		for (CuExpr e : val) {
-			eToC = e.toC();
+			if(iterType.equals(""))
+				iterType = e.getCastType();
+			else if (!iterType.equals(e.getCastType()))
+				iterType = "Top";
+			
+			eToC = e.toC(localVars);
 			name += e.construct();
 			tempNameArr.add(Helper.getVarName());
 			tempDataArr.add(eToC);
+			typeCast = e.getCastType();
+			if(typeCast.equals("")) 
+				typeCast = Helper.cVarType.get(eToC);
 		}
-		tempNameArr.add("null");
+		tempNameArr.add("NULL");
 
 		for (int i = val.size() - 1; i >= 0; i--) {
-			name += "Iterable* " + tempNameArr.get(i) + "=(Iterable*) malloc(sizeof(Iterable));\n"
-					+ tempNameArr.get(i) + "->nref=1;\n" 
-					+ tempNameArr.get(i) + "->value=" + tempDataArr.get(i) + ";\n"
-					+ tempNameArr.get(i) + "->additional=" + tempNameArr.get(i + 1) + ";\n" 
-					+ tempNameArr.get(i) + "->next=NULL;\n" 
-					+ tempNameArr.get(i)+ "->concat=NULL;\n";
+			name += "Iterable* " + tempNameArr.get(i) + ";\n" 
+					+ tempNameArr.get(i) + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+					+ tempNameArr.get(i) + "->nref = 1;\n" 
+					+ tempNameArr.get(i) + "->value = (" + typeCast + "*)" + tempDataArr.get(i) + ";\n"
+					+ tempNameArr.get(i) + "->additional = " + tempNameArr.get(i + 1) + ";\n" 
+					+ tempNameArr.get(i) + "->next = NULL;\n" 
+					+ tempNameArr.get(i)+ "->concat = NULL;\n";
 		}	
 			
 		cText = tempNameArr.get(0);
 		
 		super.castType = "Iterable";
-		return super.toC();
+		return super.toC(localVars);
 	}
 
 }
@@ -256,26 +288,27 @@ class CBoolean extends CuExpr{
 		
 		}
 	@Override protected CuType calculateType(CuContext context) {
-		if (val == null) { throw new NoSuchTypeException();}
+		if (val == null) { throw new NoSuchTypeException(Helper.getLineInfo());}
 		return CuType.bool;
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		super.castType = "Boolean";
 		String temp = Helper.getVarName();
 		super.cText = temp;
 		
 		if (val)			
-			super.name = String.format("Boolean* %s = (Boolean *) malloc(sizeof(Boolean));\n"
-					+ "(%s->nrefs) = 0;\n"
+			super.name = String.format("Boolean* %s = (Boolean *) x3malloc(sizeof(Boolean));\n"
+					+ "(%s->nrefs) = 1;\n"
 					+ "%s->value = %d;\n", temp, temp, temp, 1);
 		else
-			super.name = String.format("Boolean* %s = (Boolean *) malloc(sizeof(Boolean));\n"
-					+ "(%s->nrefs)++;\n"
+			super.name = String.format("Boolean* %s = (Boolean *) x3malloc(sizeof(Boolean));\n"
+					+ "(%s->nrefs) = 1;\n"
 					+ "%s.value = %d;\n", temp, temp, temp, 0);
 	
-		return super.toC();
+		localVars.add(temp);
+		return super.toC(localVars);
 	}
 }
 
@@ -287,19 +320,20 @@ class CInteger extends CuExpr {
 		
 	}
 	@Override protected CuType calculateType(CuContext context) {
-		if (val == null) { throw new NoSuchTypeException();}
+		if (val == null) { throw new NoSuchTypeException(Helper.getLineInfo());}
 		return CuType.integer;
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		String temp = Helper.getVarName();
-		super.name = String.format("Integer* %s = (Integer*) malloc(sizeof(Integer));\n"
-				+ "(%s->nrefs) = 0;\n"
+		super.name = String.format("Integer* %s = (Integer*) x3malloc(sizeof(Integer));\n"
+				+ "(%s->nrefs) = 1;\n"
 				+ "%s->value = %d;\n", temp, temp, temp, val);		
 		super.cText = temp;
 		super.castType = "Integer";
-		return super.toC();
+		localVars.add(temp);
+		return super.toC(localVars);
 	}
 }
 
@@ -311,22 +345,23 @@ class CString extends CuExpr {
 		
 	}
 	@Override protected CuType calculateType(CuContext context) {
-		if (val == null) { throw new NoSuchTypeException();}
+		if (val == null) { throw new NoSuchTypeException(Helper.getLineInfo());}
 		return CuType.string;
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		String temp = Helper.getVarName();
-		super.name = String.format("String* %s = (String *) malloc(sizeof(String));\n"
-				+ "%s->value = (char*) malloc(sizeof(%s));\n"
-				+ "(%s->nrefs) = 0;\n"
-				+ "mystrcpy(%s->value, %s);\n", temp, temp, val, temp, temp, val);	
+		super.name = String.format(" %s = (String *) x3malloc(sizeof(String));\n"
+				+ "%s->value = (char*) x3malloc(sizeof(%s));\n"
+				+ "(%s->nrefs) = 1;\n"
+				+ "%s->len = sizeof(%s) - 1;\n"
+				+ "mystrcpy(%s->value, %s);\n", temp, temp, val, temp, temp, val, temp, val);	
 		
 		super.cText = temp;
 		super.castType = "String";
-		
-		return super.toC();
+		localVars.add(temp);
+		return super.toC(localVars);
 	}
 }
 
@@ -344,29 +379,48 @@ class DivideExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.integer;
 	}
 	 */
 	
 	@Override
-	public String toC() {
-String temp = Helper.getVarName();
+	public String toC(ArrayList<String> localVars) {
+		String temp = Helper.getVarName();
 		
-		super.cText = temp;
-		super.castType = "Integer";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		super.castType = "Iterable";
+		super.iterType = "Integer";
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
+		String intName = Helper.getVarName();
+		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
-				+ "%s->nrefs = 0;\n"
-				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value / ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
-
+		super.name += "Iterable* " + temp + ";\n";
+		super.name += String.format("if(((%s*)%s)->value == 0) \n\t"
+				+ temp + " = NULL;\n"
+				,  "Integer", rightToC);
+		super.name += "else {\n";
+		super.name += String.format("\tInteger* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
+				+ "\t%s->nrefs = 1;\n"
+				+ "\t%s->value=", intName, intName, intName);
+		super.name += String.format("((%s*)%s)->value / ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);	
+		
+		super.name += "\t" + temp + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
+				+ temp + "->nrefs = 1;\n\t"
+				+ temp + "->value = " + intName + ";\n\t"
+				+ temp + "->additional = NULL;\n\t"
+				+ temp + "->next = NULL;\n\t"
+				+ temp + "->concat = NULL;\n";
+		
+		super.name += "}\n";
+		super.cText = temp;
+		localVars.add(temp);
+		localVars.add(intName);
+		
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
@@ -389,7 +443,7 @@ String temp = Helper.getVarName();
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value / %s.value;\n", left.toC(), right.toC());
 		}*/
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -420,15 +474,15 @@ class EqualExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!left.equals(right))
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.bool;
 	} */
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		castType = "Boolean";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -565,7 +619,7 @@ class EqualExpr extends CuExpr{
 							left.toC(), right.toC());			
 			}
 		}*/
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -585,15 +639,15 @@ class GreaterThanExpr extends CuExpr{
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
 		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
 		if ((!b1) && (!b2))
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.bool;
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		castType = "Boolean";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -643,7 +697,7 @@ class GreaterThanExpr extends CuExpr{
 			else
 				super.cText = String.format("%s.value >= %s.value", left.toC(), right.toC());
 		}*/		
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -663,15 +717,15 @@ class LessThanExpr extends CuExpr{
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
 		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
 		if ((!b1) && (!b2))
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.bool;
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		castType = "Boolean";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -720,7 +774,7 @@ class LessThanExpr extends CuExpr{
 			else
 				super.cText = String.format("%s.value <= %s.value", left.toC(), right.toC());
 		}*/
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -739,18 +793,18 @@ class MinusExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.integer;
 	}*/
 	
 	@Override
-	public String toC() {
-String temp = Helper.getVarName();
+	public String toC(ArrayList<String> localVars) {
+		String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
@@ -759,11 +813,12 @@ String temp = Helper.getVarName();
 		
 		name += "\n" + leftC + rightC;
 
-		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
-				+ "%s->nrefs = 0;\n"
+		super.name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
+				+ "%s->nrefs = 1;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value - ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 
+		localVars.add(temp);
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
@@ -786,7 +841,7 @@ String temp = Helper.getVarName();
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value - %s.value;\n", left.toC(), right.toC());
 		}*/
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -806,28 +861,46 @@ class ModuloExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!left.getType(context).isInteger() || !right.getType(context).isInteger())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.integer;
 	}*/
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		String temp = Helper.getVarName();
 		
-		super.cText = temp;
-		super.castType = "Integer";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		super.castType = "Iterable";
+		super.iterType = "Integer";
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
-		String integer = "Integer";
+		
+		String intName = Helper.getVarName();
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
-				+ "%s->nrefs = 0;\n"
-				+ "%s->value=", temp, temp, temp);
-		super.name += String.format("((%s*)%s)->value %% ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
+		super.name += "Iterable* " + temp + ";\n";
+		super.name += String.format("if(((%s*)%s)->value == 0) \n\t"
+				+ temp + " = NULL;\n"
+				,  "Integer", rightToC);
+		super.name += "else {\n";
+		super.name += String.format("\tInteger* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
+				+ "\t%s->nrefs = 1;\n"
+				+ "\t%s->value=", intName, intName, intName);
+		super.name += String.format("((%s*)%s)->value %% ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);	
+		
+		super.name += "\t" + temp + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
+				+ temp + "->nrefs = 1;\n\t"
+				+ temp + "->value = " + intName + ";\n\t"
+				+ temp + "->additional = NULL;\n\t"
+				+ temp + "->next = NULL;\n\t"
+				+ temp + "->concat = NULL;\n";
+		
+		super.name += "}\n";
+		super.cText = temp;
+		localVars.add(temp);
+		localVars.add(intName);
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
@@ -850,7 +923,7 @@ class ModuloExpr extends CuExpr{
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value % %s.value;\n", left.toC(), right.toC());
 		}*/
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -868,26 +941,27 @@ class NegateExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!val.getType(context).isBoolean())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.bool;
 	}*/
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp+".val";
 		super.castType = "Boolean";
-		String valToC = val.toC();
+		String valToC = val.toC(localVars);
 		String eC = val.construct();		
 		
 		name += "\n" + eC;	
 		
-		name += String.format("Boolean* %s = (Boolean*) malloc(sizeof(Boolean));\n"
-				+ "%s->nrefs = 0;\n"
+		name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+				+ "%s->nrefs = 1;\n"
 				+ "%s->value=", temp, temp, temp);
 		name += String.format("!(((%s*)%s)->value);\n", "Boolean", valToC);
 
+		localVars.add(temp);
 /*		if(eC.equals(""))
 		{
 			name += String.format("Boolean %s;\n%s.value=", temp, temp);
@@ -899,7 +973,7 @@ class NegateExpr extends CuExpr{
 			name += String.format("!(%s.value);\n", e.toC());
 		}*/
 
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -917,29 +991,30 @@ class NegativeExpr extends CuExpr{
 	/*
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!val.getType(context).isInteger())
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		return CuType.integer;
 	}*/
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		String valToC = val.toC();
+		String valToC = val.toC(localVars);
 		String eC = val.construct();		
 		
 		name += "\n" + eC;
 		
-		name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
-				+ "%s->nrefs = 0;\n"
+		name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
+				+ "%s->nrefs = 1;\n"
 				+ "%s->value=", temp, temp, temp);
 		name += String.format("-(((%s*)%s)->value);\n", "Integer", valToC);	
 		
+		localVars.add(temp);
 		/*if(eC.equals(""))
 		{
-			name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
+			name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
 					+ "%s->value=", temp, temp);
 			name += String.format("-(((%s*)%s)->value);\n", "Integer", e.toC());
 		}
@@ -948,7 +1023,7 @@ class NegativeExpr extends CuExpr{
 			name += String.format("Integer %s;\n%s.value=", temp, temp);
 			name += String.format("-(%s.value);\n", e.toC());
 		}*/
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -966,12 +1041,13 @@ class OnwardsExpr extends CuExpr{
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		castType = "Iterable";		
-		String valToC = val.toC();
+		String valToC = val.toC(localVars);
 		
 		if (val.getCastType().equals("Boolean"))
-		{
+		{			
+			iterType = "Boolean";
 			if (val.toString().equals("true")) {
 				cText = "NULL";
 			}
@@ -981,11 +1057,11 @@ class OnwardsExpr extends CuExpr{
 					String iterTemp = Helper.getVarName(), falseTemp = Helper.getVarName(), trueTemp = Helper.getVarName();
 					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 							+ "%s->value = 1;\n"
-							+ "%s->nrefs = 0;\n",
+							+ "%s->nrefs = 1;\n",
 							trueTemp, trueTemp, trueTemp);
 					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 							+ "%s->value = 0;\n"
-							+ "%s->nrefs = 0;\n",
+							+ "%s->nrefs = 1;\n",
 							falseTemp, falseTemp, falseTemp);
 					
 					name +=  "Iterable* " + iterTemp + "(Iterable*) x3malloc(sizeof(Iterable));\n"
@@ -995,7 +1071,7 @@ class OnwardsExpr extends CuExpr{
 							+ iterTemp + "->next = NULL;\n"
 							+ iterTemp + "->concat = NULL;\n";
 										
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
@@ -1003,6 +1079,10 @@ class OnwardsExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
+					localVars.add(iter);
+					localVars.add(iterTemp);
+					localVars.add(trueTemp);
+					localVars.add(falseTemp);
 				}
 				
 				else {
@@ -1010,10 +1090,10 @@ class OnwardsExpr extends CuExpr{
 					String temp = Helper.getVarName();
 					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 							+ "%s->value = 1;\n"
-							+ "%s->nrefs = 0;\n",
+							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1021,6 +1101,8 @@ class OnwardsExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
+					localVars.add(temp);
+					localVars.add(iter);
 				}
 			}
 				
@@ -1028,29 +1110,31 @@ class OnwardsExpr extends CuExpr{
 		}
 		
 		else {
+			iterType = "Integer";
 			if(inclusive) {
 				name += val.construct();
 				String iter = Helper.getVarName();
 		
-				name += "Iterable* " + iter + " = (Iterable*) malloc(sizeof(Iterable));\n"
+				name += "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + valToC + ";\n"
 						+ iter + "->additional = NULL;\n"
 						+ iter + "->next = &" + val.getCastType() + "_onwards;\n"
 						+ iter + "->concat = NULL;\n";
 		
-				cText = valToC;
+				cText = iter;
+				localVars.add(iter);
 			}
 			else {
 				String temp = Helper.getVarName();
 				String iter = Helper.getVarName();
 												
 				int i = (Integer.parseInt(val.toString())) + 1;
-				name += "Integer* " + temp + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp + "->value = " + i + ";\n";					
 					
 				
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = NULL;\n"
@@ -1058,9 +1142,11 @@ class OnwardsExpr extends CuExpr{
 						+ iter + "->concat = NULL;\n";
 				
 				cText = iter;
+				localVars.add(iter);
+				localVars.add(temp);
 			}
 		}
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -1078,27 +1164,28 @@ class OrExpr extends CuExpr{
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 
 		String temp = Helper.getVarName();
 		
 		super.cText = temp+".value";
 		super.castType = "Boolean";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Boolean* %s  = (Boolean*) malloc(sizeof(Boolean));\n"
-				+ "%s->nrefs = 0;\n"
+		super.name += String.format("Boolean* %s  = (Boolean*) x3malloc(sizeof(Boolean));\n"
+				+ "%s->nrefs = 1;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value || ((%s*)%s)->value;\n", "Boolean", leftToC, "Boolean", rightToC);	
 		
+		localVars.add(temp);
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
-			super.name += String.format("Boolean* %s  = (Boolean*) malloc(sizeof(Boolean));\n"
+			super.name += String.format("Boolean* %s  = (Boolean*) x3malloc(sizeof(Boolean));\n"
 					+ "%s->nrefs = 0;\n"
 					+ "%s->value=", temp, temp, temp);
 			super.name += String.format("((%s*)%s)->value || ((%s*)%s)->value;\n", "Boolean", left.toC(), "Boolean", right.toC());			
@@ -1120,7 +1207,7 @@ class OrExpr extends CuExpr{
 			super.name += String.format("Boolean %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value || %s.value;\n", left.toC(), right.toC());
 		}*/
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -1134,27 +1221,34 @@ class PlusExpr extends CuExpr{
 	}
 	@Override protected CuType calculateType(CuContext context) throws NoSuchTypeException {
 		//System.out.println("in plus expr begin");
+		CuType lt = left.getType(context);
+		Helper.P("PlusExpr: %s is class %b", lt, lt instanceof VClass);
+		if (lt.isClassOrInterface()) {
+			VClass lc = (VClass)lt;
+			Helper.P("PlusExpr: %s mapping %s", lc, lc.map);
+		}
 		return binaryExprType(context, left.getType(context).id, super.methodId, right.getType(context));
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
-				+ "%s->nrefs = 0;\n"
+		super.name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
+				+ "%s->nrefs = 1;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value + ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 		
+		localVars.add(temp);
 		/*
 		if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -1178,7 +1272,7 @@ class PlusExpr extends CuExpr{
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value + %s.value;\n", left.toC(), right.toC());
 		}*/
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -1198,7 +1292,7 @@ class ThroughExpr extends CuExpr{
 		boolean b1 = left.isTypeOf(context, CuType.integer) && right.isTypeOf(context, CuType.integer);
 		boolean b2 = left.isTypeOf(context, CuType.bool) && right.isTypeOf(context, CuType.bool);
 		if ((!b1) && (!b2))
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		if (b1)
 			return new Iter(CuType.integer);
 		else
@@ -1206,23 +1300,24 @@ class ThroughExpr extends CuExpr{
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		castType = "Iterable";
-		String leftToC = left.toC(), rightToC = right.toC();
+		String leftToC = left.toC(localVars), rightToC = right.toC(localVars);
 		String iter = Helper.getVarName();
 		
 		if(bLow && bUp)	{
 			if(left.getCastType().equals("Boolean")) {
+				iterType = "Boolean";
 				//true..true
 				if(left.toString().equals("true") && right.toString().equals("true"))
 				{
 					String temp = Helper.getVarName();
 					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 							+ "%s->value = 1;\n"
-							+ "%s->nrefs = 0;\n",
+							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1230,6 +1325,8 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
+					localVars.add(temp);
+					localVars.add(iter);
 				}
 				
 				//false..true
@@ -1238,21 +1335,21 @@ class ThroughExpr extends CuExpr{
 					String iterTemp = Helper.getVarName(), falseTemp = Helper.getVarName(), trueTemp = Helper.getVarName();
 					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 							+ "%s->value = 1;\n"
-							+ "%s->nrefs = 0;\n",
+							+ "%s->nrefs = 1;\n",
 							trueTemp, trueTemp, trueTemp);
 					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 							+ "%s->value = 0;\n"
-							+ "%s->nrefs = 0;\n",
+							+ "%s->nrefs = 1;\n",
 							falseTemp, falseTemp, falseTemp);
 					
-					name +=  "Iterable* " + iterTemp + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iterTemp + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iterTemp + "->nref = 1;\n"
 							+ iterTemp + "->value = " + trueTemp + ";\n"
 							+ iterTemp + "->additional = NULL;\n"
 							+ iterTemp + "->next = NULL;\n"
 							+ iterTemp + "->concat = NULL;\n";
 										
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
@@ -1260,6 +1357,10 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
+					localVars.add(iter);
+					localVars.add(iterTemp);
+					localVars.add(trueTemp);
+					localVars.add(falseTemp);					
 				}
 				
 				//true..false
@@ -1274,10 +1375,10 @@ class ThroughExpr extends CuExpr{
 					String temp = Helper.getVarName();
 					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 							+ "%s->value = 0;\n"
-							+ "%s->nrefs = 0;\n",
+							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1285,14 +1386,17 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
+					localVars.add(temp);
+					localVars.add(iter);
 				}
 			}
 			
 			else {
+				iterType = "Integer";
 				name += left.construct();
 				name += right.construct();
 			
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
@@ -1305,7 +1409,7 @@ class ThroughExpr extends CuExpr{
 		else if (bUp){
 			
 			if(left.getCastType().equals("Boolean")) {
-				
+				iterType = "Boolean";
 				//true<.true; true<.false; false<.false
 				if ((left.toString().equals("True")) 
 					|| (left.toString().equals("false") && right.toString().equals("false")) )
@@ -1319,10 +1423,10 @@ class ThroughExpr extends CuExpr{
 					String temp = Helper.getVarName();
 					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 							+ "%s->value = 1;\n"
-							+ "%s->nrefs = 0;\n",
+							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1330,18 +1434,20 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
+					localVars.add(temp);
+					localVars.add(iter);
 				}
 			}
 			
 			else {
 				String temp = Helper.getVarName();
 				int i = (Integer.parseInt(left.toString())) + 1;
-				name += "Integer* " + temp + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp + "->value = " + i + ";\n";					
 					
 				name += right.construct();
 				
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
@@ -1368,10 +1474,10 @@ class ThroughExpr extends CuExpr{
 					String temp = Helper.getVarName();
 					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
 							+ "%s->value = 0;\n"
-							+ "%s->nrefs = 0;\n",
+							+ "%s->nrefs = 1;\n",
 							temp, temp, temp);
 					
-					name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+					name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 							+ iter + "->nref = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1379,19 +1485,22 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
+					localVars.add(temp);
+					localVars.add(iter);
 				}
 			}
 			
 			else {
+				iterType = "Integer";
 				String temp = Helper.getVarName();
 				name += left.construct();
 								
 				int i = (Integer.parseInt(left.toString())) - 1;
-				name += "Integer* " + temp + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp + "->value = " + i + ";\n";					
 					
 				
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + temp + ";\n"
@@ -1404,24 +1513,26 @@ class ThroughExpr extends CuExpr{
 		else {
 			
 			if(left.getCastType().equals("Boolean")) {
+				iterType = "Boolean";
 				//true<<true; true<<false; false<<false; false<<true
 				cText = "NULL";
 			}
 				
 			else {
+				iterType = "Integer";
 				String temp1 = Helper.getVarName(), temp2 = Helper.getVarName();
 				//name += left.construct();
 								
 				int i = (Integer.parseInt(left.toString())) + 1;
-				name += "Integer* " + temp1 + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp1 + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp1 + "->value = " + i + ";\n";					
 				
 				i = (Integer.parseInt(left.toString())) - 1;
-				name += "Integer* " + temp2 + " = (Integer*) malloc(sizeof(Integer));\n"
+				name += "Integer* " + temp2 + " = (Integer*) x3malloc(sizeof(Integer));\n"
 						+ temp2 + "->value = " + i + ";\n";					
 					
 				
-				name +=  "Iterable* " + iter + "(Iterable*) malloc(sizeof(Iterable));\n"
+				name +=  "Iterable* " + iter + "(Iterable*) x3malloc(sizeof(Iterable));\n"
 						+ iter + "->nref = 1;\n"
 						+ iter + "->value = " + temp1 + ";\n"
 						+ iter + "->additional = " + temp2 + ";\n"
@@ -1431,7 +1542,7 @@ class ThroughExpr extends CuExpr{
 				cText = iter;
 			}
 		}
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -1449,23 +1560,24 @@ class TimesExpr extends CuExpr{
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		String temp = Helper.getVarName();
 		
 		super.cText = temp;
 		super.castType = "Integer";
-		String leftToC = left.toC();
-		String rightToC = right.toC();
+		String leftToC = left.toC(localVars);
+		String rightToC = right.toC(localVars);
 		String leftC = left.construct();
 		String rightC = right.construct();
 		
 		name += "\n" + leftC + rightC;
 		
-		super.name += String.format("Integer* %s  = (Integer*) malloc(sizeof(Integer));\n"
-				+ "%s->nrefs = 0;\n"
+		super.name += String.format("Integer* %s  = (Integer*) x3malloc(sizeof(Integer));\n"
+				+ "%s->nrefs = 1;\n"
 				+ "%s->value=", temp, temp, temp);
 		super.name += String.format("((%s*)%s)->value * ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);			
 
+		localVars.add(temp);
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
@@ -1488,7 +1600,7 @@ class TimesExpr extends CuExpr{
 			super.name += String.format("Integer %s;\n%s.value=", temp, temp);
 			super.name += String.format("%s.value * %s.value;\n", left.toC(), right.toC());
 		}*/
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -1514,15 +1626,15 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 //System.out.println("t_hat is " + tHat.id);
         CuClass cur_class = context.mClasses.get(tHat.id);
         if (cur_class == null) {
-        	throw new NoSuchTypeException();
+        	throw new NoSuchTypeException(Helper.getLineInfo());
         }
         CuTypeScheme ts = cur_class.mFunctions.get(method);
         if (ts == null) {
-        	throw new NoSuchTypeException();
+        	throw new NoSuchTypeException(Helper.getLineInfo());
         }
         //System.out.println("got this function");
         
-        if (ts.data_kc.size() != types.size()) throw new NoSuchTypeException();
+        if (ts.data_kc.size() != types.size()) throw new NoSuchTypeException(Helper.getLineInfo());
         Map<String, CuType> mapping = new HashMap<String, CuType>();
         Helper.P(String.format("kc=%s. types=%s. eMap=%s",ts.data_kc, types,val.calculateType(context).map));
         for (int i = 0; i < types.size(); i++) {
@@ -1530,7 +1642,7 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
         }
         mapping.putAll(val.getType(context).map); // add mapping from the expression that owns this method
         //added by Yinglei
-        if (ts.data_tc.size() != es.size()) throw new NoSuchTypeException();
+        if (ts.data_tc.size() != es.size()) throw new NoSuchTypeException(Helper.getLineInfo());
         List<CuType> tList = new ArrayList<CuType>();
         for (CuType ct : ts.data_tc.values()) {
         	tList.add(ct);
@@ -1538,22 +1650,28 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
         for (int i = 0; i < es.size(); i++) {
         	if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
         		//System.out.println(es.get(i).toString() + " doesnt match " + tList.get(i).toString() );
-        		throw new NoSuchTypeException();
+        		throw new NoSuchTypeException(Helper.getLineInfo());
         	}
         }        	
         //System.out.println("in VarExp, end");
-        ts.data_t.plugIn(mapping);
+        /*ts.data_t.plugIn(mapping);
         Helper.P(String.format("%s returns %s<%s>, mapping %s", this, ts.data_t,ts.data_t.map, mapping));
-        return ts.data_t;
+        return ts.data_t;*/
+        //Yinglei: should not change data_t, should make a copy
+        CuType reType = ts.data_t.getcopy();
+        reType.plugIn(mapping);
+//Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
+        //return cur_ts.data_t;
+		return reType;
 	}
 	
 	@Override
-		public String toC() {
+		public String toC(ArrayList<String> localVars) {
 		castType = Helper.cVarType.get(val+"_"+method);
 		int offset = 0;									//to be modified when class definition becomes clearer
 		String tempName = Helper.getVarName();
 		String fptr = Helper.getVarName(), fptrArg = "", tempCastType = "";
-		String classType = Helper.cVarType.get(val.toC()) + "*";
+		String classType = Helper.cVarType.get(val.toC(localVars)) + "*";
 		name += "\n";
 		name += String.format("%s this%s = (%s) %s;\n", classType, tempName, classType, val);
 		String temp = "", expToC = "";
@@ -1566,7 +1684,7 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 			temp += String.format("((%s) this%s, ", classType, tempName);
 			fptrArg = "(" + classType + ", ";
 			for (CuExpr exp : es) {
-				expToC = exp.toC();
+				expToC = exp.toC(localVars);
 				super.name += exp.construct();
 				tempCastType = exp.getCastType();
 				if (tempCastType.equals(""))
@@ -1589,7 +1707,7 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 								/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
 		super.cText = String.format("(*%s) %s", fptr, temp);
 		
-			return super.toC();
+			return super.toC(localVars);
 		}
 
 }
@@ -1617,7 +1735,7 @@ Helper.P("VcExp= "+text);
 			ct.calculateType(context);
 		}      
 		
-        if (context.getFunction(val) == null) throw new NoSuchTypeException();
+        if (context.getFunction(val) == null) throw new NoSuchTypeException(Helper.getLineInfo());
         // check each es 
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
         List<CuType> tList = new ArrayList<CuType>();
@@ -1630,39 +1748,48 @@ Helper.P("VcExp= "+text);
         }
   Helper.P(String.format("mapping=%s. types=%s. data_kc=%s ", mapping, types, cur_ts.data_kc));
   		//added by Yinglei
-        if (es.size() != cur_ts.data_tc.size()) throw new NoSuchTypeException();
+        if (es.size() != cur_ts.data_tc.size()) throw new NoSuchTypeException(Helper.getLineInfo());
         for (int i = 0; i < es.size(); i++) {
             if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
             	//System.out.println(es.get(i).toString() + " doesnt match " + tList.get(i).toString() );
-            	throw new NoSuchTypeException();
+            	throw new NoSuchTypeException(Helper.getLineInfo());
             }	
         }
         //System.out.println("in VcExp, end");
-        cur_ts.data_t.plugIn(mapping);
+       /* cur_ts.data_t.plugIn(mapping);
  Helper.P(String.format("VcExp return %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
-        return cur_ts.data_t;
+        return cur_ts.data_t;*/
+        //Yinglei: should not change data_t, should make a copy
+        CuType reType = cur_ts.data_t.getcopy();
+        reType.plugIn(mapping);
+//Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
+        //return cur_ts.data_t;
+		return reType;
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		castType = Helper.cVarType.get(val);
-		String temp = "", tempCastType = "", expToC = "";
+		String temp = "", tempCastType = "", expToC = "", expConstruct = "";
 		if (es == null)
 			temp = "()";
 		temp += "(";
 		for (CuExpr exp : es) {
-			expToC = exp.toC();
-			super.name += exp.construct();
+			expToC = exp.toC(localVars);
+			 expConstruct = exp.construct();
+			 super.name += expConstruct;
 			tempCastType = exp.getCastType();
 			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
 			temp += "(" + tempCastType + "*)" + expToC + ", ";
+			if (!expConstruct.equals(""))
+				localVars.add(expToC);
 		}
 		int j = temp.lastIndexOf(", ");
 		if (j > 1) temp = temp.substring(0, j);
 		temp += ")";
 		
 		String objectName = Helper.getVarName();
-		super.name += String.format("%s* %s = (%s*) malloc(sizeof(%s));\n"
+		super.name += String.format("%s* %s = (%s*) x3malloc(sizeof(%s));\n"
 				+ "(&%s)[0] = %s;	//pointer to vtable\n"
 				+ "((int*) &%s)[1] = 0;		//pointer to nrefs\n",
 				val, objectName, val, val, objectName, Helper.cClassVtablePtr.get(val), objectName);
@@ -1670,7 +1797,7 @@ Helper.P("VcExp= "+text);
 		j = 2;
 		
 		for (CuExpr exp : es) {
-			expToC = exp.toC();
+			expToC = exp.toC(localVars);
 			tempCastType = exp.getCastType();
 			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
 			super.name += String.format("((" + tempCastType + "*) &%s)[%d] = " + expToC + ";\n", objectName, j++);
@@ -1678,7 +1805,7 @@ Helper.P("VcExp= "+text);
 		
 		super.name += "\n"+Helper.cClassStats.get(val) + "\n";
 		super.cText= objectName;
-		return super.toC();
+		return super.toC(localVars);
 	}
 }
 
@@ -1686,6 +1813,8 @@ class VvExp extends CuExpr{
 	private String val;
 	private List<CuType> types = new ArrayList<CuType>();
 	private List<CuExpr> es = null;
+	static private boolean initialized = false;
+	static String  iter = Helper.getVarName(), temp = Helper.getVarName();
 	
 	public VvExp(String str){
 		val = str;
@@ -1706,12 +1835,14 @@ class VvExp extends CuExpr{
 	}
 
 	@Override protected CuType calculateType(CuContext context) {
+Helper.P("in VvExp typechecker, var is " + val.toString());
 		//System.out.println(String.format("in VvExp %s, begin %s", text, val));
 		if (es == null) return context.getVariable(val);
+Helper.P("es is not null, es is " + es.toString());
 		//else, it will be the same as in VcExp
         // check tao in scope
 		//System.out.println("not a variable, checking function context");
-        if (context.getFunction(val) == null) throw new NoSuchTypeException();
+        if (context.getFunction(val) == null) throw new NoSuchTypeException(Helper.getLineInfo());
         //System.out.println("got this function from function context");
 		//type check each tao_i // check tao in scope
 		for (CuType ct : types) {
@@ -1721,8 +1852,8 @@ class VvExp extends CuExpr{
         TypeScheme cur_ts = (TypeScheme) context.getFunction(val);
         List<CuType> tList = new ArrayList<CuType>();
         for (CuType cur_type : cur_ts.data_tc.values()) {
-        	if(cur_type.id.equals("Iterable"))
-        		cur_type.type = Helper.getTypeForIterable(cur_type.text);
+        	//if(cur_type.id.equals("Iterable"))
+        	//	cur_type.type = Helper.getTypeForIterable(cur_type.text);
             tList.add(cur_type);
         }
         Map<String, CuType> mapping = new HashMap<String, CuType>();
@@ -1731,26 +1862,73 @@ class VvExp extends CuExpr{
         }
         Helper.P("VvExp MAPPING "+mapping);
 		//added by Yinglei
-		if (cur_ts.data_tc.size() != es.size()) throw new NoSuchTypeException();
+		if (cur_ts.data_tc.size() != es.size()) throw new NoSuchTypeException(Helper.getLineInfo());
         for (int i = 0; i < es.size(); i++) {
         	//System.out.println(es.get(i).toString());
             if (!es.get(i).isTypeOf(context, tList.get(i), mapping)) {
-            	//System.out.println("type mismatch, " + "es is " + es.get(i).toString() + "tListgeti is " + tList.get(i).toString() );
-                throw new NoSuchTypeException();
+Helper.P(" type mismatch, " + "es is " + es.get(i).toString() + ", tListgeti is " + tList.get(i).toString() + ", mapping is "+ mapping );
+                throw new NoSuchTypeException(Helper.getLineInfo());
             }
 Helper.P(String.format("calculated %s", es.get(i)));
         }
-        cur_ts.data_t.plugIn(mapping);
-Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map));
-        return cur_ts.data_t;
+Helper.P(" 1mapping is " + mapping.toString());
+        //Yinglei: should not change data_t, should make a copy
+        CuType reType = cur_ts.data_t.getcopy();
+        reType.plugIn(mapping);
+        Helper.P("   VvExp reType %s isTypePara %b, mapping %s get %s", reType, reType.isTypePara(), mapping, mapping.get(reType.id));
+		if (reType.isTypePara() && mapping.containsKey(reType.id)) {
+			return mapping.get(reType.id);
+		}
+		return reType;
 	}
 	
 	@Override
-	public String toC() {
+	public String toC(ArrayList<String> localVars) {
 		if(es==null)
 		{
 			super.cText = val;
 			super.castType = Helper.cVarType.get(val);
+			iterType = "String";
+			
+			if(val.equals("input"))
+			{
+				String len = Helper.getVarName();
+								
+				if(!initialized) {
+				
+				name += "int " + len + ";\n"
+						+ "Iterable* " + iter + ";\n"
+						+ "String* " + temp + ";\n" 
+						+ len + " = next_line_len();\n"
+						+ "if(" + len + " == 0) {\n\t"
+						+ iter + " = NULL;\n}\n"
+						+ "else {\n\t";
+				
+				name +=  temp + " = (String*) x3malloc(sizeof(String));\n\t"
+						+ temp + "->nrefs = 1;\n\t"
+						+ temp + "->value = (char*) x3malloc("+ len + " * sizeof(char));\n\t"
+						+ temp + "->len = " + len + ";\n\t"
+						+ "read_line(" + temp + "->value);\n\t";
+		
+				name += iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
+						+ iter + "->nref = 1;\n\t"
+						+ iter + "->value = " + temp + ";\n\t"
+						+ iter + "->additional = NULL;\n\t"
+						+ iter + "->next = &input_onwards;\n\t"
+						+ iter + "->concat = NULL;\n}\n";
+				
+		
+				localVars.add(temp);
+				localVars.add(iter);
+				cText = iter;
+				initialized = true;
+				}
+				else {
+					name = iter + "->value = " + temp + ";\n\t"
+							+ iter + "->concat = NULL;\n";					
+					cText = iter;
+				}
+			}
 		}
 		else
 		{
@@ -1763,12 +1941,14 @@ Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map)
 				temp = "()";
 			temp += "(";
 			for (CuExpr exp : es) {
-				expToC = exp.toC();
+				expToC = exp.toC(localVars);
 				tempName = exp.construct();
 				tempCastType = exp.getCastType();
-				if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
+				if(tempCastType == null) tempCastType = Helper.cVarType.get(expToC);
 				temp += "(" + tempCastType + "*)" + expToC + ", ";
 				super.name += tempName;
+				if (!tempName.equals(""))
+					localVars.add(expToC);
 			}
 			int j = temp.lastIndexOf(", ");
 			if (j > 1) temp = temp.substring(0, j);
@@ -1776,7 +1956,7 @@ Helper.P(String.format("VvExp returns %s<%s>", cur_ts.data_t, cur_ts.data_t.map)
 			
 			super.cText=val.toString()+temp;			
 		}
-		return super.toC();
+		return super.toC(localVars);
 	}
 	
 }

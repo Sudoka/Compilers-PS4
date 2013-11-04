@@ -1,0 +1,16 @@
+class Foo<A>(a : A) {
+  fun get() : A { return a; }
+}
+
+class Bar<A>(a : A) extends Foo<A> { 
+  super(a);
+}
+
+x := Bar<String>("hello");
+y := Foo<String>("world");
+lst := [x, y];
+ret := [];
+for (z in lst) {
+  ret := ret ++ [z.get()];
+}
+return ret;

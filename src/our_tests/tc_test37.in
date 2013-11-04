@@ -1,0 +1,11 @@
+class Pizza<A>(topping : A) {
+  x := 5;
+  y := topping;
+
+  fun makeItADouble() : Pizza<Pizza<A>> = Pizza<Pizza<A>>(Pizza<A>(y));
+  fun justTheTopping() : A = topping;
+}
+
+x := Pizza<String>("anchovies");
+y := x.makeItADouble();
+return [y.justTheTopping().justTheTopping()]; 

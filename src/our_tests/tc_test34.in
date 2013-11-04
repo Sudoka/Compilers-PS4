@@ -1,0 +1,5 @@
+class Singleton<A>(a : A) {
+  fun get() : A { return a; }
+}
+x := Singleton<String>("hello");
+return [x.get()]; 

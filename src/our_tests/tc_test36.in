@@ -1,0 +1,16 @@
+class Multiplier<A>(a : A, n : Integer) {
+  fun getLst() : Iterable<A> {
+    ret := [];
+    for (nn in 1..n) {
+      ret := [a] ++ ret;
+    }
+    return ret;
+  }
+
+  fun getOtherLst<B>(b : B) : Iterable<B> {
+    x := Multiplier<B>(b, n);
+    return x.getLst();
+  }
+}
+
+return Multiplier<Integer>(100, 10).getOtherLst<String>("hello"); 

@@ -1,0 +1,36 @@
+interface MyInterface<T>
+{
+	fun getRandom() : Integer = 4; #Chosen by fair dice roll
+	fun getT() : T;
+}
+class MyClass<T>(t : T) extends MyInterface<T>
+{
+	fun getT() : T = t;
+}
+class MyClass2() extends MyInterface<Integer>
+{
+	fun getT() : Integer = getRandom();
+}
+class MyClass3() extends MyInterface<String>
+{
+	fun getT() : String = "Hello World!";
+}
+
+m1:=MyClass<String>("Hello");
+m2:=MyClass<String>("World!");
+m3:=MyClass2();
+m4:=MyClass3();
+l:=[m1,m2,m4];
+if(m3.getT() == 4)
+{
+	ret := [];
+	for(e in l)
+	{
+		ret := ret ++ [e.getT()];
+	}
+	return ret;
+}
+else
+{
+	return [""];
+}

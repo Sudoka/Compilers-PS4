@@ -30,12 +30,17 @@ class FullPrg extends CuProgr {
 		this.s = s;
 	}
 	@Override public String toC(ArrayList<String> localVars) {
-		String temp_str = "";
+		String fnClass_str = "", temp_str = "";
 		for (CuProgr cp : elements) {
-			temp_str += cp.toC(localVars);
-			for(String str : cp.newVars) {
-				if (!super.newVars.contains(str)) {
-					super.newVars.add(str);
+			if (cp instanceof ClassPrg || cp instanceof FunPrg) {
+				fnClass_str += cp.toC(localVars);
+			} 
+			else {				
+				temp_str += cp.toC(localVars);
+				for (String str : cp.newVars) {
+					if (!super.newVars.contains(str)) {
+						super.newVars.add(str);
+					}
 				}
 			}
 		}
@@ -46,11 +51,31 @@ class FullPrg extends CuProgr {
 				super.newVars.add(str);
 			}
 		}
+		
+		super.ctext = 
+				  "#include \"cubex_main.h\"\n"
+				+ "#include \"cubex_external_functions.h\"\n"
+				+ "#include \"cubex_lib.h\"\n\n"
+				+  fnClass_str + "\n\n"
+				+ "void* our_main();\n\n" 
+				+ "void cubex_main() {\n"
+				+ "Iterable* ourMain;\n"
+				+ "ourMain = (Iterable*) our_main();\n"
+				+ "while(ourMain != NULL) {\n\t"
+				+ "print_line(((String*)ourMain->value)->value, ((String*)ourMain->value)->len);\n\t"
+				+ "ourMain = iterGetNext(ourMain);\n}\n"
+				+ "}\n\n"
+				+ "void* our_main()\n{\n";
+		
     	for (String str : super.newVars) {
     		super.ctext += "void * " + str + " = NULL;\n";
     		temp_str = temp_str.replaceAll("void \\* " + str + " = NULL;\n", "");
     	}
+    	
     	super.ctext += temp_str;
+    	
+    	super.ctext += "}\n";
+    	
 		return super.ctext;
 	}
 	public void calculateType(CuContext context) throws NoSuchTypeException {
@@ -65,8 +90,9 @@ class FullPrg extends CuProgr {
 			//System.out.println("finished one");
 		}
 		HReturn re = this.s.calculateType(context);
+Helper.P("program return, type is " + re.tau.toString());
 		if (!re.tau.isSubtypeOf(new Iter(CuType.string)) || (re.b== false)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 	}
 }
@@ -114,12 +140,12 @@ class FunPrg extends CuProgr {
 		return Helper.printList("", fun, "", "");
 	}
 	@Override  public void calculateType(CuContext context) throws NoSuchTypeException {
-		//System.out.println("in func program");
+Helper.P("in func program " + name);
 		//System.out.println(this.statement.toString());
 		//update the function context
 		context.mergeVariable();
 		if (context.mFunctions.containsKey(this.name)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		context.updateFunction(this.name, this.typeScheme);
 		//type check typeschemes and statements
@@ -129,16 +155,16 @@ class FunPrg extends CuProgr {
 		for(String cur_str : this.typeScheme.data_tc.keySet())
 		{
 			if(context.mVariables.containsKey(cur_str)){
-				throw new NoSuchTypeException();
+				throw new NoSuchTypeException(Helper.getLineInfo());
 			}
 		}
 		temp_context.updateMutType(this.typeScheme.data_tc);
 		HReturn re = this.statement.calculateType(temp_context);
 		if (re.b == false) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		if (!re.tau.isSubtypeOf(this.typeScheme.data_t)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 	}
 	public String toC(ArrayList<String> localVars){
@@ -158,7 +184,6 @@ class FunPrg extends CuProgr {
 		sb.append(") {\n");
 		sb.append(statement.toC(local));
 		sb.append("}\n");
-		sb.append("//										END OF PROG_FUN\n");
 		return sb.toString();
 	}
 
@@ -185,7 +210,7 @@ class StatPrg extends CuProgr {
 		//final tau should be a subtype of iterable string
 		if (!re.tau.isSubtypeOf(dtype)) {
 			//System.out.println("type is not iterable of string");
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 	}
 	

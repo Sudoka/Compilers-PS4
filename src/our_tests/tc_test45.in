@@ -1,0 +1,11 @@
+fun lol<T> (x : T) : String {
+    return "";
+}
+
+if (true) {
+    x := 1;
+} else {
+    x := true;
+}
+
+return [lol<Thing>(x)];

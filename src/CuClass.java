@@ -84,7 +84,7 @@ class Cls extends CuClass {
 		//System.out.println("after super type check " + superType.toString() + " tau_hat is " + tau_hat.toString());
 		
 		if (!(superType instanceof Top) && !(superType instanceof VClass) && !(superType instanceof VTypeInter)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		//make a copy of current function list, because we only need to type check these functions
 		Map<String, CuFun> funList_cpy = new HashMap<String, CuFun>();
@@ -102,7 +102,7 @@ class Cls extends CuClass {
 					////I don't think we should check here because you can not check two tyscheme equivalence with generic parames
 					if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context)){
 						//System.out.println("typescheme doesn't match " + e.getValue().ts.toString());
-						throw new NoSuchTypeException();
+						throw new NoSuchTypeException(Helper.getLineInfo());
 					}
 					//System.out.println("come to specific point 1");
 					if (funList.get(e.getKey()).funBody instanceof EmptyBody) {
@@ -127,7 +127,7 @@ class Cls extends CuClass {
 						//e.getValue().ts.calculateType(context);
 						//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
 						if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context)){
-							throw new NoSuchTypeException();
+							throw new NoSuchTypeException(Helper.getLineInfo());
 						}
 						//use the first method implementation
 						if (funList.get(e.getKey()).funBody instanceof EmptyBody) {
@@ -144,12 +144,12 @@ class Cls extends CuClass {
 		
 		//here, we check all the function names, they should not appear in context's mfunctions
 		if (cur_context.mFunctions.containsKey(super.name)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		
 		for (String method_name : super.mFunctions.keySet()) {
 			if (cur_context.mFunctions.containsKey(method_name)) {
-				throw new NoSuchTypeException();
+				throw new NoSuchTypeException(Helper.getLineInfo());
 			}
 		}
 		
@@ -177,12 +177,13 @@ class Cls extends CuClass {
 		for (CuType ct : this.fieldTypes.values()) {
 			ct.calculateType(cur_context);
 		}
-		cur_context.mMutVariables = this.fieldTypes;
+		//we should not pass this reference
+		cur_context.mMutVariables = new LinkedHashMap<String,CuType>(this.fieldTypes);
 		for (CuStat s :classStatement) {
 			HReturn re = s.calculateType(cur_context);
 			//class initializing statements can not have returns
 			if (!re.tau.isBottom()) {
-				throw new NoSuchTypeException();
+				throw new NoSuchTypeException(Helper.getLineInfo());
 			}
 		}
 			
@@ -193,7 +194,7 @@ class Cls extends CuClass {
 			CuExpr temp_expr = new VcExp(tau_hat.id, tau_hat.iniArgs, this.superArg);
 			CuType retype = temp_expr.calculateType(cur_context);
 			if (!retype.equals(tau_hat)) {
-				throw new NoSuchTypeException();
+				throw new NoSuchTypeException(Helper.getLineInfo());
 			}
 		}
 		//System.out.println("in CuClass cls " + super.name + " point x");
@@ -202,7 +203,7 @@ class Cls extends CuClass {
 			List<String> theta_bar = iter.ts.data_kc;
 			for (String str_iter : theta_bar) {
 				if (super.kindCtxt.contains(str_iter)) {
-					throw new NoSuchTypeException();
+					throw new NoSuchTypeException(Helper.getLineInfo());
 				}
 			}
 		}
@@ -211,7 +212,7 @@ class Cls extends CuClass {
 		for (CuStat s :classStatement) {
 			if (!s.calculateType(context).b
 					||s.calculateType(context).tau.isSubtypeOf(s.calculateType(context).tau)) 
-				throw new NoSuchTypeException();}
+				throw new NoSuchTypeException(Helper.getLineInfo());}
 		*/
 		
 		cur_context.mFunctions.putAll(mFunctions);
@@ -221,7 +222,7 @@ class Cls extends CuClass {
 			temp.mKind.addAll(ts.data_kc);
 			for (String cur_str : ts.data_tc.keySet()) {
 				if (temp.inVar(cur_str)) {
-					throw new NoSuchTypeException();
+					throw new NoSuchTypeException(Helper.getLineInfo());
 				}
 			}
 			temp.mMutVariables = new HashMap<String,CuType>(ts.data_tc);
@@ -232,7 +233,7 @@ class Cls extends CuClass {
 				//re.tau.calculateType(cur_context);
 				//System.out.println("return type doesn't match, b is " + re.b + re.tau.toString());
 				//System.out.println(re.tau.parentType.toString());
-				throw new NoSuchTypeException();
+				throw new NoSuchTypeException(Helper.getLineInfo());
 			}
 			//System.out.println("succeed " + iter.toString());
 		}
@@ -240,7 +241,7 @@ class Cls extends CuClass {
 		//check every function has an implemention
 		for (CuFun iter_fun : super.funList.values()) {
 			if (iter_fun.funBody == null || iter_fun.funBody instanceof EmptyBody) {
-				throw new NoSuchTypeException();
+				throw new NoSuchTypeException(Helper.getLineInfo());
 			}
 		}
 		
@@ -301,11 +302,11 @@ class Intf extends CuClass{
 		//we need to type check tau 
 		CuType tau_hat = super.superType.calculateType(cur_context);
 		if (!tau_hat.id.equals(CuVvc.TOP)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		
 		if (!(superType instanceof Top) && !(superType instanceof VClass) && !(superType instanceof VTypeInter)) {
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo());
 		}
 		//make a copy of current function list, because we only need to type check these functions
 		Map<String, CuFun> funList_cpy = new HashMap<String, CuFun>();
@@ -321,7 +322,7 @@ class Intf extends CuClass{
 					//if (!e.getValue().ts.equals(context.mFunctions.containsKey(e.getKey()))){
 					//I don't think we should check here because you can not check two tyscheme equivalence with generic parames
 					if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context)){
-						throw new NoSuchTypeException();
+						throw new NoSuchTypeException(Helper.getLineInfo());
 					}
 					//if this method doesn't have an implementation, but super interface has an implementation,
 					//grab it
@@ -348,7 +349,7 @@ class Intf extends CuClass{
 						//check whether the 
 						//I don't think we should check here because you can not check two tyscheme equivalence with generic parames
 						if (!e.getValue().ts.sameAs(e.getValue().ts, cur_context )){
-							throw new NoSuchTypeException();
+							throw new NoSuchTypeException(Helper.getLineInfo());
 						}
 						//use the first implementation of inherited interfaces
 						if (funList.get(e.getKey()).funBody instanceof EmptyBody) {
@@ -365,7 +366,7 @@ class Intf extends CuClass{
 		//here, we check all the function names, they should not appear in context's mfunctions		
 		for (String method_name : super.mFunctions.keySet()) {
 			if (cur_context.mFunctions.containsKey(method_name)) {
-				throw new NoSuchTypeException();
+				throw new NoSuchTypeException(Helper.getLineInfo());
 			}
 		}
 		
@@ -381,7 +382,7 @@ class Intf extends CuClass{
 			List<String> theta_bar = iter.ts.data_kc;
 			for (String str_iter : theta_bar) {
 				if (super.kindCtxt.contains(str_iter)) {
-					throw new NoSuchTypeException();
+					throw new NoSuchTypeException(Helper.getLineInfo());
 				}
 			}
 		}
@@ -390,7 +391,7 @@ class Intf extends CuClass{
 		for (CuStat s :classStatement) {
 			if (!s.calculateType(context).b
 					||s.calculateType(context).tau.isSubtypeOf(s.calculateType(context).tau)) 
-				throw new NoSuchTypeException();}
+				throw new NoSuchTypeException(Helper.getLineInfo());}
 		*/
 		
 		cur_context.mFunctions.putAll(mFunctions);
@@ -402,13 +403,13 @@ class Intf extends CuClass{
 				temp.mKind.addAll(ts.data_kc);
 				for (String cur_str : ts.data_tc.keySet()) {
 					if (temp.inVar(cur_str)) {
-						throw new NoSuchTypeException();
+						throw new NoSuchTypeException(Helper.getLineInfo());
 					}
 				}
 				temp.mMutVariables = ts.data_tc;
 				HReturn re = iter.funBody.calculateType(temp);
 				if (re.b == false || !re.tau.isSubtypeOf(ts.data_t)) {
-					throw new NoSuchTypeException();
+					throw new NoSuchTypeException(Helper.getLineInfo());
 				}
 			}
 		}
@@ -439,7 +440,7 @@ class VBoolean extends Cls {
 	public VBoolean() {
 		super("Boolean", new ArrayList<String>(), new LinkedHashMap<String, CuType>());
 		//if (val instanceof Boolean) { v=val; }
-		//else { throw new NoSuchTypeException();}
+		//else { throw new NoSuchTypeException(Helper.getLineInfo());}
 		//Just one example, we also need to add other methods
 		CuTypeScheme ts;
 		ts = new TypeScheme(new ArrayList<String>(), new LinkedHashMap<String, CuType>(), CuType.bool);
@@ -479,7 +480,7 @@ class VInteger extends Cls {
 	public VInteger() {
 		super("Integer", new ArrayList<String>(), new LinkedHashMap<String, CuType>());
 		//if (val instanceof Integer) { v=val; }
-		//else { throw new NoSuchTypeException();}
+		//else { throw new NoSuchTypeException(Helper.getLineInfo());}
 		CuTypeScheme ts;
 		ts = new TypeScheme(new ArrayList<String>(), new LinkedHashMap<String, CuType>(), CuType.integer);
 		super.mFunctions.put("negative", ts);
@@ -522,7 +523,7 @@ class VCharacter extends Cls {
 	public VCharacter() {
 		super("Character", new ArrayList<String>(), new LinkedHashMap<String, CuType>());
 		//if (val instanceof Character) { c=val; }
-		//else { throw new NoSuchTypeException();}
+		//else { throw new NoSuchTypeException(Helper.getLineInfo());}
 		CuTypeScheme ts;
 		ts = new TypeScheme(new ArrayList<String>(), new LinkedHashMap<String, CuType>(), CuType.integer);
 		super.mFunctions.put("unicode", ts);
@@ -541,7 +542,7 @@ class VString extends Cls {
 		super("String", new ArrayList<String>(), new LinkedHashMap<String, CuType>());
 		this.addSuper(new Iter(CuType.character));
 		//if (val instanceof String) { v=val; }
-		//else { throw new NoSuchTypeException();}
+		//else { throw new NoSuchTypeException(Helper.getLineInfo());}
 		HashMap<String, CuType> arg = new LinkedHashMap<String, CuType>();
 		arg.put("that", CuType.string);
 		CuTypeScheme ts = new TypeScheme(new ArrayList<String>(), arg, CuType.bool);
@@ -557,7 +558,7 @@ class VIterable extends Cls {
 	public VIterable(List<String> kc) {
 		super("Iterable", kc, new LinkedHashMap<String, CuType>());
 		//if (val instanceof List<CuType>) { v=val; }
-		//else { throw new NoSuchTypeException();}
+		//else { throw new NoSuchTypeException(Helper.getLineInfo());}
 	}
 	public VIterable calculateType() { return this; }
 }

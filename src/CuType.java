@@ -11,12 +11,16 @@ public abstract class CuType {
 	protected static CuType string = new VClass("String", new ArrayList<CuType>());
 	protected static CuType iterable(ArrayList<CuType> arg) {return new Iter(arg);}
 	protected List<CuType> parentType = new ArrayList<CuType>();
-	List<CuType> iniArgs;
+	List<CuType> iniArgs = new ArrayList<CuType>();
 	protected String id;
 	protected String text = "";
 	protected Map<String, CuType> map = new LinkedHashMap<String, CuType>();// typeParameter->non-generic type arguments
 	protected CuType type = CuType.bottom; // for Iterable<E>
 	CuType(){ changeParent(top); }
+	//copy Constructor, added by Yinglei
+	CuType getcopy() {
+		return this;
+	}
 
 	/** methods in its subtypes */
 	public void changeParents(List<CuType> t) {parentType = t;}
@@ -55,6 +59,9 @@ public abstract class CuType {
 		//System.out.println("t2 is " + t2.toString());
 		if(t1.isIterable() && t2.isIterable())
 		{
+			if (t1.isString() && t2.isString()) {
+				return CuType.string;
+			}
 			//System.out.println("common parent of " + t1.type + " " + t2.type);
 			return new Iter(CuType.commonParent(t1.type, t2.type));
 		}
@@ -108,28 +115,47 @@ class VClass extends CuType {
 	public VClass(String s, List<CuType> args){
 		super.id = s;
 		iniArgs = args; // the <tao1, tao2 ...> when it is constructed
-Helper.P(String.format("VClass %s<%s>", s, args.toString()));
+//Helper.P(String.format("VClass %s<%s>", s, args.toString()));
 /*		for (CuType t : args) {
 			map.put(t, CuType.bottom); // type parameter is mapped to bottom initially
 		}
 */
-		if (s.equals("String")) parentType.add(new Iter(CuType.character)); // String<> extends Iterable<Character<>>
+		if (s.equals("String")) {
+			//newly added by Yinglei, should not not do harm
+			super.type = CuType.character;
+			parentType.add(new Iter(CuType.character)); // String<> extends Iterable<Character<>>
+		}
 		super.text=super.id+ " "+ Helper.printList("<", args, ">", ",");
 		// TODO: merge to Iter(), no need anymore
 		if (super.id.equals("Iterable")) {
-			if (args.size()>1) throw new NoSuchTypeException(); // Iterable<E>, E cannot have 2 or more elements
+			if (args.size()>1) throw new NoSuchTypeException(Helper.getLineInfo());  // Iterable<E>, E cannot have 2 or more elements
 		}
 	}
+	//added by Yinglei
+	//copy Constructor, added by Yinglei
+	@Override CuType getcopy() {
+		CuType re = new VClass(super.id, iniArgs);
+		re.parentType = new ArrayList<CuType>(this.parentType);
+		re.iniArgs = new ArrayList<CuType> (this.iniArgs);
+		re.id = new String (this.id);
+		re.text = new String(this.text);
+		re.map = new LinkedHashMap<String, CuType>(this.map);
+		//change of reference should not change the value it is pointing to, ie re.type = Bottom doesn't make the 
+		//this.type to be bottom
+		re.type = this.type;
+		return re;
+	}
+
 	@Override public CuType calculateType(CuContext context) {
 		//System.out.println("in Vclass type check " + this.toString());
 		// check if class or interface
 		CuClass c = context.mClasses.get(id);
-		if (c == null) throw new NoSuchTypeException(); 
+		if (c == null) throw new NoSuchTypeException(Helper.getLineInfo()); 
 		// get its parent types, for isSubtypeOf()
 		super.changeParent(context.mClasses.get(id).superType);
 		// get the generic types when declared
 		List<String> typePara = c.kindCtxt;
-		if (typePara.size() != iniArgs.size()) throw new NoSuchTypeException();
+		if (typePara.size() != iniArgs.size()) throw new NoSuchTypeException(Helper.getLineInfo()); 
 		for (int i = 0; i < iniArgs.size(); i++) {
 			iniArgs.get(i).calculateType(context);
 			map.put(typePara.get(i), iniArgs.get(i));
@@ -161,7 +187,7 @@ Helper.P(String.format("VClass %s<%s>", s, args.toString()));
 			}
 			p.getValue().plugIn(t);
 		}
-		Helper.P(String.format("PLUGIN VClass map ori=%s, t=%s", this.map,t));
+		//Helper.P(String.format("PLUGIN VClass map ori=%s, t=%s", this.map,t));
 		return this.map;
 	}
 	public Map<String, CuType> flattenMap(Map<String, CuType> t) {
@@ -245,9 +271,26 @@ class VTypeInter extends CuType {
 		parentType.add(t1);
 		super.text=t1.toString();
 	}
+	public VTypeInter() {
+		
+	}
 	@Override public void add(CuType t) {
 		parentType.add(t);
 		super.text += " \u222A "+t.toString();
+	}
+	//added by Yinglei
+	//copy Constructor, added by Yinglei
+	@Override CuType getcopy() {
+		CuType re = new VTypeInter();
+		re.parentType = new ArrayList<CuType>(this.parentType);
+		re.iniArgs = new ArrayList<CuType> (this.iniArgs);
+		re.id = new String (this.id);
+		re.text = new String(this.text);
+		re.map = new LinkedHashMap<String, CuType>(this.map);
+		//change of reference should not change the value it is pointing to, ie re.type = Bottom doesn't make the 
+		//this.type to be bottom
+		re.type = this.type;
+		return re;
 	}
 	@Override public CuType calculateType(CuContext context) throws NoSuchTypeException {
 Helper.P("VTypeInter calc : "+text);
@@ -259,21 +302,21 @@ Helper.P("VTypeInter calc : "+text);
 			//System.out.println( String.valueOf(i)+ " &&& " + t.id + " " + t.toString());
 			if (!t.isTop() && (!t.isClassOrInterface())) {
 				//System.out.println(t.id + " can not be extended");
-				throw new NoSuchTypeException();
+				throw new NoSuchTypeException(Helper.getLineInfo()); 
 			}
 			CuType tt = t.calculateType(context);
 	    	// A & B & C..., only the first could be a class
-			if ((i > 0) && !tt.isTop()) throw new NoSuchTypeException();
+			if ((i > 0) && !tt.isTop()) throw new NoSuchTypeException(Helper.getLineInfo()); 
 			// all parents are distinct except top
 			List<CuType> temp = t.parentType;
 			temp.remove(CuType.top);
             if (temp.size() > 0) {
-				if(!pAll.addAll(temp)) throw new NoSuchTypeException();
+				if(!pAll.addAll(temp)) throw new NoSuchTypeException(Helper.getLineInfo()); 
             }
 			// all method names are distinct
 			Set<String> temp2 = context.mClasses.get(t.id).mFunctions.keySet();
             if (temp2.size() > 0 ) {
-				if(!vAll.addAll(temp2)) throw new NoSuchTypeException();
+				if(!vAll.addAll(temp2)) throw new NoSuchTypeException(Helper.getLineInfo()); 
             }
 		}
 		//System.out.println("itersection type check succeeded");
@@ -304,9 +347,23 @@ class VTypePara extends CuType {
 	@Override public boolean equals(CuType that) {
 		return that.isTypePara(); // id is not important since it is generic type
 	}
+
+	//copy Constructor, added by Yinglei
+	@Override CuType getcopy() {
+		CuType re = new VTypePara(super.id);
+		re.parentType = new ArrayList<CuType>(this.parentType);
+		re.iniArgs = new ArrayList<CuType> (this.iniArgs);
+		re.id = new String (this.id);
+		re.text = new String(this.text);
+		re.map = new LinkedHashMap<String, CuType>(this.map);
+		//change of reference should not change the value it is pointing to, ie re.type = Bottom doesn't make the 
+		//this.type to be bottom
+		re.type = this.type;
+		return re;
+	}
 	public CuType calculateType(CuContext context) throws NoSuchTypeException {
 		if (!context.hasVTypePara(super.id)){
-			throw new NoSuchTypeException();
+			throw new NoSuchTypeException(Helper.getLineInfo()); 
 		}
 		return null;
 	}
@@ -316,7 +373,8 @@ class Iter extends VClass {
 	CuType iniArg;// is not null
 	public Iter(CuType args) {
 		super(CuVvc.ITERABLE, new ArrayList<CuType> ()); // id is "Iterable"
-		if (args == null) throw new NoSuchTypeException();
+		Helper.P("inside Iter, arg type is " + args.toString());
+		if (args == null) throw new NoSuchTypeException(Helper.getLineInfo()); 
 		iniArg = args;
 		init();
 	}
@@ -342,29 +400,55 @@ class Iter extends VClass {
 		type = this.iniArg;
 		//System.out.println("in iter end");
 	}
+	//added by Yinglei
+	//copy Constructor, added by Yinglei
+	@Override CuType getcopy() {
+		CuType re = new Iter(this.iniArg);
+		re.parentType = new ArrayList<CuType>(this.parentType);
+		re.iniArgs = new ArrayList<CuType> (this.iniArgs);
+		re.id = new String (this.id);
+		re.text = new String(this.text);
+		re.map = new LinkedHashMap<String, CuType>(this.map);
+		//change of reference should not change the value it is pointing to, ie re.type = Bottom doesn't make the 
+		//this.type to be bottom
+		re.type = this.type;
+		return re;
+	}
 	@Override public boolean isIterable() {return true;}
 	@Override public boolean equals(CuType that) {
+//Helper.P("inside Iter equals function, this is " + this.toString() + " that is " + that.toString());
 		if (!that.isIterable()) return false;
+		//added by Yinglei to fix PA3
+		if (this.isString() && !that.isString()) return false;
+		//added by Yinglei to fix PA3
+		if (that.isString() && !this.isString()) return false;
+//Helper.P("inside Iter equals function, this type is " + this.type.toString() + " that type is " + that.type.toString());
 		if (this.type.isTypePara() && that.type.isTypePara()) return true;
 		return this.type.equals(((VClass)that).type);
 	}
 	@Override public CuType calculateType(CuContext context) {
 		// check if class or interface
 		CuClass c = context.mClasses.get(id);
-		if (c == null) throw new NoSuchTypeException(); 
+		if (c == null) throw new NoSuchTypeException(Helper.getLineInfo()); 
 		// get the generic types when declared
 		List<String> typePara = c.kindCtxt;
-		if (typePara.size() != 1) throw new NoSuchTypeException();
+		if (typePara.size() != 1) throw new NoSuchTypeException(Helper.getLineInfo()); 
 Helper.P(String.format("typePara %s, initArg %s", typePara, iniArg));
 		if(!iniArg.isTypePara()) iniArg.calculateType(context);
-		map.put(typePara.get(0), iniArg);
+		map.put(typePara.get(0), iniArg);	// add E=T
+		map.put(iniArg.id, CuType.bottom); // add T=bottom, otherwise T will disappear next time E is mapped to non-generic
 Helper.P(String.format("map %s", map));
 		return this;
 	}
 	@Override public boolean isSubtypeOf(CuType that) {
+Helper.P("Iterable subtyping begin: this type is " + this.type + " that type is" + that.type);
+		//added by Yinglei to fix PA3, String is iterable, but only string is subtype of string
+		if (that.isString() && !this.isString()) return false;
+		if (that.isString() && this.isString()) return true;
 		// TODO: make sure calculateType is called already
 		if (this.equals(that) || that.isTop()) return true;
 		if (that.isIterable() && this.type.isSubtypeOf(that.type)) {
+Helper.P("Interable subtyping return true 2: this type is " + this.type + " that type is" + that.type);
 			return true;
 		}
 		return false;
@@ -389,7 +473,7 @@ Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));
 				return this.map;
 			}
 		}
-Helper.P(String.format("PLUGIN Iter map ori=%s, t=%s", this.map,t));
+Helper.P(String.format("PLUGIN Iter<%s> map ori=%s, t=%s", this.iniArg, this.map,t));
 		return this.map;
 	}
 }

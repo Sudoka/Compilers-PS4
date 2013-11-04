@@ -1,54 +1,53 @@
+#include "cubex_external_functions.h"
 #define NULL ((void*)0)
 
-typedef struct integer {
-	int nrefs;
+typedef struct top {
 	int value;
+} Top;
+
+typedef struct integer {
+	int value;
+	int nrefs;
 } Integer;
 
 typedef struct string {
-	int nrefs;
 	char* value;
-	int size;
+	int nrefs;
+	int len;
 } String;
 
 typedef struct boolean {
-	int nrefs;
 	int value;
+	int nrefs;
 } Boolean;
 
 typedef struct character {
-	int nrefs;
 	char value;
+	int nrefs;
 } Character;
 
-//typedef enum {eBoolean, eInteger, eCharacter, eMixed} type_t;
-
 typedef struct iter{
-	int nref;
 	void* value;
+	int nref;
 	void* additional;
-	void* (*next)(void*);
+	struct iter* (*next)(void*);
 	struct iter* concat;
 }Iterable;
 
 
 Iterable* iterGetNext(Iterable* last){
-	Iterable* this=malloc(sizeof(Iterable));
+	Iterable* this=x3malloc(sizeof(Iterable));
 	if (last->next!= NULL){	
-		//onwards&thru
 		this = (last->next)(last);
 	}
 	else {
-		//enumerable
 		this = (Iterable*) last->additional;
 	}
-	//end of first Iterable
 	
 	if (this==NULL && last->concat==NULL){
 		return NULL;
 	}
 	else if (this==NULL){
-		//concatenation
 		this=last->concat;
 	}
 	
@@ -61,14 +60,19 @@ Iterable* iterGetNext(Iterable* last){
 }
 
 void concatenate(Iterable* fst, Iterable* snd){
-	while(fst->concat!=NULL){
+	if (fst == NULL) {
+		fst = snd;
+		return;
+	}
+	while(fst->concat!=NULL) {
 		fst=fst->concat;
 	}
 	fst->concat=snd;
 }
 
-Iterable* integer_onwards(Iterable* last){
-	Iterable* this=malloc(sizeof(Iterable));
+Iterable* integer_onwards(void* head){
+	Iterable* this=x3malloc(sizeof(Iterable));
+	Iterable* last = (Iterable*) head;
 	this->nref=1; 
 	(((Integer*)(last->value))->value)++;
 	this->value = last->value;
@@ -80,12 +84,13 @@ Iterable* integer_onwards(Iterable* last){
 	return this;
 }
 
-Iterable* integer_through(Iterable* last){
+Iterable* integer_through(void* head){
+	Iterable* last = (Iterable*) head;
 	if ((((Integer*) last->value)->value) == (((Integer*) last->additional)->value)){
 		return NULL;
 	}
 	else {
-		Iterable* this=malloc(sizeof(Iterable));
+		Iterable* this=x3malloc(sizeof(Iterable));
 		this->nref=1;
 		(((Integer*)(last->value))->value)++; 
 		this->value = last->value; 
@@ -95,6 +100,29 @@ Iterable* integer_through(Iterable* last){
 		this->concat = last->concat;
 		return this;
 	}
+}
+
+Iterable* input_onwards(void* head){
+	int len;
+	len = next_line_len();
+	Iterable* last = (Iterable*) head;
+	Iterable* this = NULL;
+	if (len != 0) {
+		this = x3malloc(sizeof(Iterable));
+		this->nref=1; 
+		
+		last->value = x3malloc(sizeof(String));
+		((String*) last->value)->value = (char*) x3malloc(len* sizeof(char));
+		read_line(((String*) last->value)->value);
+		((String*) last->value)->nrefs = 1;
+		this->additional=NULL;
+		this->next=last->next;	
+		this->concat=last->concat;
+		last->additional = this;		
+		last->next = NULL;
+	}
+
+	return this;
 }
 
 
@@ -116,5 +144,3 @@ void mystrcpy(char *dst, const char *src) {
    }
    *dst = '\0';
 }
-
-typedef void (*generic_fp)(void);
