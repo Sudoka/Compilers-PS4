@@ -1068,7 +1068,29 @@ class OnwardsExpr extends CuExpr{
 		{			
 			iterType = "Boolean";
 			if (val.toString().equals("true")) {
-				cText = "NULL";
+				if (inclusive) {
+					String iter = Helper.getVarName();
+					String temp = Helper.getVarName();
+					name += String.format("Boolean* %s = (Boolean*) x3malloc(sizeof(Boolean));\n"
+							+ "%s->value = 1;\n"
+							+ "%s->nrefs = 1;\n",
+							temp, temp, temp);
+					
+					name +=  "Iterable* " + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->nrefs = 1;\n"
+							+ iter + "->value = " + temp + ";\n"
+							+ iter + "->additional = NULL;\n"
+							+ iter + "->next = NULL;\n"
+							+ iter + "->concat = NULL;\n";
+					
+					cText = iter;
+					localVars.add(temp);
+					Helper.cVarType.put(temp, "Boolean");
+					localVars.add(iter);
+					Helper.cVarType.put(iter, "Iterable");
+				}
+				else
+					cText = "NULL";
 			}
 			else {
 				if(inclusive) {
