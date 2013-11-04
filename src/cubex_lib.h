@@ -6,29 +6,29 @@ typedef struct top {
 } Top;
 
 typedef struct integer {
-	int value;
 	int nrefs;
+	int value;	
 } Integer;
 
 typedef struct string {
-	char* value;
 	int nrefs;
+	char* value;
 	int len;
 } String;
 
 typedef struct boolean {
-	int value;
 	int nrefs;
+	int value;
 } Boolean;
 
 typedef struct character {
-	char value;
 	int nrefs;
+	char value;
 } Character;
 
 typedef struct iter{
-	void* value;
 	int nref;
+	void* value;
 	void* additional;
 	struct iter* (*next)(void*);
 	struct iter* concat;
@@ -36,7 +36,8 @@ typedef struct iter{
 
 
 Iterable* iterGetNext(Iterable* last){
-	Iterable* this=x3malloc(sizeof(Iterable));
+	Iterable* this;
+	this = x3malloc(sizeof(Iterable));
 	if (last->next!= NULL){	
 		this = (last->next)(last);
 	}
@@ -71,8 +72,10 @@ void concatenate(Iterable* fst, Iterable* snd){
 }
 
 Iterable* integer_onwards(void* head){
-	Iterable* this=x3malloc(sizeof(Iterable));
-	Iterable* last = (Iterable*) head;
+	Iterable* this;
+	Iterable* last;
+	last = (Iterable*) head;
+	this = x3malloc(sizeof(Iterable));
 	this->nref=1; 
 	(((Integer*)(last->value))->value)++;
 	this->value = last->value;
@@ -85,7 +88,8 @@ Iterable* integer_onwards(void* head){
 }
 
 Iterable* integer_through(void* head){
-	Iterable* last = (Iterable*) head;
+	Iterable* last;
+	last = (Iterable*) head;
 	if ((((Integer*) last->value)->value) == (((Integer*) last->additional)->value)){
 		return NULL;
 	}
@@ -105,8 +109,10 @@ Iterable* integer_through(void* head){
 Iterable* input_onwards(void* head){
 	int len;
 	len = next_line_len();
-	Iterable* last = (Iterable*) head;
-	Iterable* this = NULL;
+	Iterable* last;
+	Iterable* this;
+	this = NULL;
+	last = (Iterable*) head;
 	if (len != 0) {
 		this = x3malloc(sizeof(Iterable));
 		this->nref=1; 
