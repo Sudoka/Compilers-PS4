@@ -42,17 +42,17 @@ class AssignStat extends CuStat{
 		super.ctext += "void * " + var.toString() +" = NULL;\n";
 		super.ctext += "if (" + var.toString() + "!= NULL) {\n";
 		//check whether it is the last pointer pointing to the object, if yes, x3free memory
-		super.ctext += "\tif (((int*) &" + var.toString() + ")[1] == 1)\n";
+		super.ctext += "\tif (((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs == 1)\n";
 		super.ctext += "\t\tx3free(" + var.toString() + ");\n";
 		super.ctext += "\telse\n";
 		//decrement the reference count
-		super.ctext += "\t((int*) &" + var.toString() + ")[1]--;\n";
+		super.ctext += "\t((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs--;\n";
 		super.ctext += "}\n";
 		//((int*) &test)[0]
 		super.ctext += var.toString() + " = " + exp_toC + ";\n";
 		//increase the new reference count
 		super.ctext += "if (" + var.toString() + "!=NULL)\n";
-		super.ctext += "\t((int*) &" + var.toString() + ")[1]++;\n";
+		super.ctext += "\t((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs++;\n";
 		/*if (ee.isFunCall())
 			super.ctext += var.toString() + " = " + ee.toC() + ";\n";
 		else
@@ -114,7 +114,7 @@ class ForStat extends CuStat{
 		super.ctext += "\twhile (" + var.toString() + "!=NULL) {\n";
 		super.ctext += "\t\t" + iter_name + " = (Iterable *)" + var.toString() + ";\n";
 		super.ctext += "\t\t" + var.toString() + " = (Iterable *)" + iter_name + "->value;\n";
-		super.ctext += "\t\t" + "((int*) &" + var.toString() + ")[1]++;\n";
+		super.ctext += "\t\t" + "((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>();
 		String s1ToC = s1.toC(localVarsInFor);
 		String temp_str = s1ToC.replaceAll("void \\* " + var.toString() + " = NULL;\n", "");
@@ -132,14 +132,14 @@ class ForStat extends CuStat{
 			super.ctext += "\t\t" + "\n\n\n";
 			super.ctext += "\t\t" + "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, x3free memory
-			super.ctext += "\t\t\t" + "if (((int*) &" + cur_str + ")[1] == 1)\n";
+			super.ctext += "\t\t\t" + "if (((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs == 1)\n";
 			super.ctext += "\t\t\t\t" + "x3free(" + cur_str + ");\n";
 			super.ctext += "\t\t\t" + "else\n";
 			//decrement the reference count
-			super.ctext += "\t\t\t\t" + "((int*) &" + cur_str + ")[1]--;\n";
+			super.ctext += "\t\t\t\t" + "((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs--;\n";
 			super.ctext += "\t\t" + "}\n";
 		}
-		super.ctext += "\t\t" + "((int*) &" + var.toString() + ")[1]--;\n";
+		super.ctext += "\t\t" + "((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs--;\n";
 		super.ctext += "\t\t" + var.toString() + " = iterGetNext(" + iter_name + ");\n";
 		super.ctext += "\t" + "}\n";	
 		//value is null now, so no need for deallocation
@@ -244,11 +244,11 @@ class IfStat extends CuStat{
 			super.ctext += "\n\n\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, x3free memory
-			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
+			super.ctext += "if (((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs == 1)\n";
 			super.ctext += "x3free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
-			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
+			super.ctext += "((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs--;\n";
 			super.ctext += "}\n";
 		}
     	super.ctext += "}\n";
@@ -260,11 +260,11 @@ class IfStat extends CuStat{
     			super.ctext += "\n\n\n";
     			super.ctext += "if (" + cur_str + "!= NULL) {\n";
     			//check whether it is the last pointer pointing to the object, if yes, x3free memory
-    			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
+    			super.ctext += "if (((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs == 1)\n";
     			super.ctext += "x3free(" + cur_str + ");\n";
     			super.ctext += "else\n";
     			//decrement the reference count
-    			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
+    			super.ctext += "((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs--;\n";
     			super.ctext += "}\n";
     		}   		
     		super.ctext += "}\n";
@@ -328,21 +328,21 @@ class ReturnStat extends CuStat{
 		//now reference counting/x3free memory due to scoping
 		super.ctext +="\n\n\n";
 		String exp_toC = e.toC(localVars);
+		super.ctext += e.construct();
 		for (String cur_str : localVars) {
 			super.ctext += "\n\n\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, x3free memory
 			//special treatment is e is a local variable, we only dereference if so
 			if (!cur_str.equals(exp_toC)) {
-				super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
+				super.ctext += "if (((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs == 1)\n";
 				super.ctext += "x3free(" + cur_str + ");\n";
 				super.ctext += "else\n";
 			}
 			//decrement the reference count
-			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
+			super.ctext += "((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs--;\n";
 			super.ctext += "}\n";
 		}
-		super.ctext += e.construct();
 		super.ctext += "return " + exp_toC + ";\n";
 		/*if (e.isFunCall())
 			super.ctext += "return " + e.toC() + ";\n";
@@ -446,11 +446,11 @@ class WhileStat extends CuStat{
 			super.ctext += "\n\n\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, x3free memory
-			super.ctext += "if (((int*) &" + cur_str + ")[1] == 1)\n";
+			super.ctext += "if (((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs == 1)\n";
 			super.ctext += "x3free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
-			super.ctext += "((int*) &" + cur_str + ")[1]--;\n";
+			super.ctext += "((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs--;\n";
 			super.ctext += "}\n";
 		}
 		super.ctext += "}\n";
