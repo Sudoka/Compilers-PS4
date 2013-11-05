@@ -11,7 +11,7 @@ public abstract class CuExpr {
 	protected String methodId = null;
 	protected String cText = "";
 	protected String name = "";
-	protected String castType = "", iterType = "", helper = "", helperHead = "";
+	protected String castType = "", iterType = "";
 	private CuType type = null;
 	public void add(List<CuType> pt, List<CuExpr> es) {}
 	public final CuType getType(CuContext context) throws NoSuchTypeException {
@@ -36,10 +36,6 @@ public abstract class CuExpr {
 	
 	public String getIterType(){
 		return iterType;
-	}
-	
-	public String getHelperHead() {
-		return helperHead;
 	}
 	
 	public boolean isFunCall () {
