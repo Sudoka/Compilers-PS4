@@ -44,33 +44,7 @@ class Cls extends CuClass {
 		super.name=clsintf;
 		super.kindCtxt=kc;
 		this.fieldTypes=tc;
-	}
 
-
-	@Override public void add (CuStat s) {
-		classStatement.add(s);}
-
-	//TODO: grab all the methods here
-	@Override public void addSuper (CuType tt) {
-		super.superType = tt;}
-	
-	@Override public void add(String v, CuTypeScheme ts, CuStat s) {
-		Function temp=new Function(v,ts,s);
-		super.funList.put(v, temp);
-		super.mFunctions.put(v, ts);
-		
-		//code Gen
-		fun.append(temp.toC(name));
-		vtable.append(String.format("%s_Tbl->%s=&%s; \n", name, v, name+"_"+v));
-		StringBuilder tempSB=new StringBuilder().append("void* this");
-		for (Entry<String, CuType> e : fieldTypes.entrySet()){
-			tempSB.append(", ").append("void* "+e.getKey());
-			Helper.cVarType.put(e.getKey(), e.getValue().id);
-		}
-		fun.append(tempSB);
-		fun.append(") {\n");
-		Helper.cFunType.put(name+"_"+v, ts.data_t.id);
-		
 		//initializor super field
 		Helper.cFunType.put("init_"+name, "void");
 		fun.append("void* "+"init_"+name+"(void* subclass){");
@@ -114,7 +88,35 @@ class Cls extends CuClass {
 
 		fun.append("\t\treturn "+tempName+"; \n");
 		fun.append("}\n");
+	}
+
+
+	@Override public void add (CuStat s) {
+		classStatement.add(s);}
+
+	//TODO: grab all the methods here
+	@Override public void addSuper (CuType tt) {
+		super.superType = tt;}
+	
+	@Override public void add(String v, CuTypeScheme ts, CuStat s) {
+		Function temp=new Function(v,ts,s);
+		super.funList.put(v, temp);
+		super.mFunctions.put(v, ts);
 		
+		//code Gen
+		fun.append(temp.toC(name));
+		vtable.append(String.format("%s_Tbl->%s=&%s; \n", name, v, name+"_"+v));
+		StringBuilder tempSB=new StringBuilder().append("void* this");
+		for (Entry<String, CuType> e : fieldTypes.entrySet()){
+			tempSB.append(", ").append("void* "+e.getKey());
+			Helper.cVarType.put(e.getKey(), e.getValue().id);
+		}
+		fun.append(tempSB);
+		fun.append(") {\n");
+		Helper.cFunType.put(name+"_"+v, ts.data_t.id);
+		if (ts.data_t.id.equals("Iterable")){
+			Helper.iterType.put(name+"_"+v, ts.data_kc.get(0));
+		}
 	}
 	
 	@Override public void add(List<CuExpr> s) {
@@ -159,6 +161,10 @@ class Cls extends CuClass {
 						funList.get(e.getKey()).funBody = e.getValue().funBody;
 						//code Gen
 						vtable.append(String.format("%sTbl->%s=&(%sTable->%s) \n", name, e.getKey(), superType.id,superType.id,e.getKey()));
+						Helper.cFunType.put(name+"_"+e.getKey(), e.getValue().ts.data_t.id);
+						if (e.getValue().ts.data_t.id.equals("Iterable")){
+							Helper.iterType.put(name+"_"+e.getKey(), e.getValue().ts.data_kc.get(0));
+						}
 					}
 						
 					//System.out.println("come to specific point 2");
@@ -168,6 +174,10 @@ class Cls extends CuClass {
 					super.funList.put(e.getKey(), e.getValue());
 					//codeGen
 					vtable.append(String.format("%sTbl->%s=&(%sTable->%s) \n", name, e.getKey(), superType.id,superType.id,e.getKey()));
+					Helper.cFunType.put(name+"_"+e.getKey(), e.getValue().ts.data_t.id);
+					if (e.getValue().ts.data_t.id.equals("Iterable")){
+						Helper.iterType.put(name+"_"+e.getKey(), e.getValue().ts.data_kc.get(0));
+					}
 				}
 			}
 			Helper.cClassSuper.put(name, superType.id);
