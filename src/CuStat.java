@@ -36,6 +36,7 @@ class AssignStat extends CuStat{
 	@Override public String toC(ArrayList<String> localVars) {
 		String exp_toC = ee.toC(localVars);
 		Helper.cVarType.put(var.toString(), ee.getCastType());
+		Helper.iterType.put(var.toString(), ee.getIterType());
 		if(ee.getCastType().equals("String"))
 			Helper.cStr.put(var.toString(), ee.getHelperHead());
 		super.ctext ="\n\n\n";
@@ -45,17 +46,17 @@ class AssignStat extends CuStat{
 			super.ctext += "void * " + var.toString() +" = NULL;\n";
 		super.ctext += "if (" + var.toString() + "!= NULL) {\n";
 		//check whether it is the last pointer pointing to the object, if yes, x3free memory
-		super.ctext += "\tif (((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs == 1)\n";
+		super.ctext += "\tif ((*(int *)" + var.toString() + ") == 1)\n";
 		super.ctext += "\t\tx3free(" + var.toString() + ");\n";
 		super.ctext += "\telse\n";
 		//decrement the reference count
-		super.ctext += "\t((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs--;\n";
+		super.ctext += "\t(*(int *)" + var.toString() + ")--;\n";
 		super.ctext += "}\n";
 		//((int*) &test)[0]
 		super.ctext += var.toString() + " = " + exp_toC + ";\n";
 		//increase the new reference count
 		super.ctext += "if (" + var.toString() + "!=NULL)\n";
-		super.ctext += "\t((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs++;\n";
+		super.ctext += "\t(*(int *)" + var.toString() + ")++;\n";
 		/*if (ee.isFunCall())
 			super.ctext += var.toString() + " = " + ee.toC() + ";\n";
 		else
@@ -109,17 +110,27 @@ class ForStat extends CuStat{
 		String exp_toC = e.toC(localVars);
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
+		String itype = e.getIterType();
+		if (e.getCastType().equals("String")) {
+			String iter_name = Helper.getVarName();
+			super.ctext += "Iterable *" + iter_name + ";\n";
+			super.ctext += iter_name + " = strToIter( ((String *)" + exp_toC + ")->value, ((String *)" + exp_toC + ")->len);\n";
+			exp_toC = iter_name;
+			Helper.cVarType.put(iter_name, "Iterable");
+			itype = "Character";
+		}
+		
 		//added for v scoping
 		super.ctext += "{\n";
-		super.ctext += "\tvoid * " + var.toString() + "=checkIter(" + exp_toC + ");\n";
-		Helper.cVarType.put(var.toString(), e.getIterType());
+		super.ctext += "\tvoid * " + var.toString() + "=" + exp_toC + ";\n";
+		Helper.cVarType.put(var.toString(), itype);
 		String iter_name = Helper.getVarName();
 		super.ctext += "\tIterable * " + iter_name + ";\n";
 		super.ctext += "\twhile (" + var.toString() + "!=NULL) {\n";
 		super.ctext += "\t\t" + iter_name + " = (Iterable *)" + var.toString() + ";\n";
 		super.ctext += "\t\t" + var.toString() + " = (Iterable *)" + iter_name + "->value;\n";
-		super.ctext += "\t\t" + "((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs++;\n";
-		ArrayList<String> localVarsInFor = new ArrayList<String>();
+		super.ctext += "\t\t" + "(*(int *)" + var.toString() + ")++;\n";
+		ArrayList<String> localVarsInFor = new ArrayList<String>(localVars);
 		String s1ToC = s1.toC(localVarsInFor);
 		String temp_str = s1ToC.replaceAll("void \\* " + var.toString() + " = NULL;\n", "");
 		super.ctext += "\t\t" + temp_str;
@@ -136,14 +147,14 @@ class ForStat extends CuStat{
 			super.ctext += "\t\t" + "\n\n\n";
 			super.ctext += "\t\t" + "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, x3free memory
-			super.ctext += "\t\t\t" + "if (((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs == 1)\n";
+			super.ctext += "\t\t\t" + "if ((*(int *)" + cur_str + ") == 1)\n";
 			super.ctext += "\t\t\t\t" + "x3free(" + cur_str + ");\n";
 			super.ctext += "\t\t\t" + "else\n";
 			//decrement the reference count
-			super.ctext += "\t\t\t\t" + "((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs--;\n";
+			super.ctext += "\t\t\t\t" + "(*(int *)" + cur_str + ")--;\n";
 			super.ctext += "\t\t" + "}\n";
 		}
-		super.ctext += "\t\t" + "((" + Helper.cVarType.get(var.toString()) +"*) " + var.toString() + ")->nrefs--;\n";
+		super.ctext += "\t\t" + "(*(int *)" + var.toString() + ")--;\n";
 		super.ctext += "\t\t" + var.toString() + " = iterGetNext(" + iter_name + ");\n";
 		super.ctext += "\t" + "}\n";	
 		//value is null now, so no need for deallocation
@@ -206,8 +217,8 @@ class IfStat extends CuStat{
     	String exp_toC = e.toC(localVars);
 		super.ctext ="\n\n\n";
     	super.ctext += this.e.construct();
-    	ArrayList<String> s1_localVars = new ArrayList<String>();
-    	ArrayList<String> s2_localVars = new ArrayList<String>();
+    	ArrayList<String> s1_localVars = new ArrayList<String>(localVars);
+    	ArrayList<String> s2_localVars = new ArrayList<String>(localVars);
     	String temp_s1 = s1.toC(s1_localVars);
     	String temp_s2 = "";
     	if (s2 != null) {
@@ -230,9 +241,9 @@ class IfStat extends CuStat{
     		}
     	}
     	for (String str : localVars) {
-    		if (s1_localVars.contains(str))
+    		while (s1_localVars.contains(str))
     			s1_localVars.remove(str);
-    		if (s2_localVars.contains(str))
+    		while (s2_localVars.contains(str))
     			s2_localVars.remove(str);  		
     	}
     	//dealing with scoping
@@ -241,18 +252,21 @@ class IfStat extends CuStat{
     		temp_s2 = temp_s2.replaceAll("void \\* " + str + " = NULL;\n", "");
     		super.ctext += "void * " + str + " = NULL;\n";
     	}
-    	super.ctext += "if (" + exp_toC + ") {\n";
+    	if (e instanceof VvExp)
+    		super.ctext += "if ( ((Boolean *)" + exp_toC + ")->value) {\n";
+    	else
+    		super.ctext += "if (" + exp_toC + ") {\n";
     	super.ctext += temp_s1;
 		//now reference counting/x3free memory due to scoping
 		for (String cur_str : s1_localVars) {
 			super.ctext += "\n\n\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, x3free memory
-			super.ctext += "if (((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs == 1)\n";
+			super.ctext += "if ((*(int *)" + cur_str + ") == 1)\n";
 			super.ctext += "x3free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
-			super.ctext += "((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs--;\n";
+			super.ctext += "(*(int *)" + cur_str + ")--;\n";
 			super.ctext += "}\n";
 		}
     	super.ctext += "}\n";
@@ -264,11 +278,11 @@ class IfStat extends CuStat{
     			super.ctext += "\n\n\n";
     			super.ctext += "if (" + cur_str + "!= NULL) {\n";
     			//check whether it is the last pointer pointing to the object, if yes, x3free memory
-    			super.ctext += "if (((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs == 1)\n";
+    			super.ctext += "if ((*(int *)" + cur_str + ") == 1)\n";
     			super.ctext += "x3free(" + cur_str + ");\n";
     			super.ctext += "else\n";
     			//decrement the reference count
-    			super.ctext += "((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs--;\n";
+    			super.ctext += "(*(int *)" + cur_str + ")--;\n";
     			super.ctext += "}\n";
     		}   		
     		super.ctext += "}\n";
@@ -339,12 +353,12 @@ class ReturnStat extends CuStat{
 			//check whether it is the last pointer pointing to the object, if yes, x3free memory
 			//special treatment is e is a local variable, we only dereference if so
 			if (!cur_str.equals(exp_toC)) {
-				super.ctext += "if (((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs == 1)\n";
+				super.ctext += "if ((*(int *)" + cur_str + ") == 1)\n";
 				super.ctext += "x3free(" + cur_str + ");\n";
 				super.ctext += "else\n";
 			}
 			//decrement the reference count
-			super.ctext += "((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs--;\n";
+			super.ctext += "(*(int *)" + cur_str + ")--;\n";
 			super.ctext += "}\n";
 		}
 		super.ctext += "return " + exp_toC + ";\n";
@@ -437,7 +451,7 @@ class WhileStat extends CuStat{
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
 		super.ctext += "while (" + exp_toC + ") {\n";
-		ArrayList<String> while_localVars = new ArrayList<String>();
+		ArrayList<String> while_localVars = new ArrayList<String>(localVars);
 		super.ctext += s1.toC(while_localVars);
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate
 		for(String cur_str : localVars) {
@@ -450,11 +464,11 @@ class WhileStat extends CuStat{
 			super.ctext += "\n\n\n";
 			super.ctext += "if (" + cur_str + "!= NULL) {\n";
 			//check whether it is the last pointer pointing to the object, if yes, x3free memory
-			super.ctext += "if (((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs == 1)\n";
+			super.ctext += "if ((*(int *)" + cur_str + ") == 1)\n";
 			super.ctext += "x3free(" + cur_str + ");\n";
 			super.ctext += "else\n";
 			//decrement the reference count
-			super.ctext += "((" + Helper.cVarType.get(cur_str) +"*) " + cur_str + ")->nrefs--;\n";
+			super.ctext += "(*(int *)" + cur_str + ")--;\n";
 			super.ctext += "}\n";
 		}
 		super.ctext += "}\n";

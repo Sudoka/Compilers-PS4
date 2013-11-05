@@ -15,13 +15,13 @@ fun rest<T>(l : Iterable<T>) : Iterable<T>
 	return ret;
 }
 
-fun last<T>(l : Iterable<T>, default : T) : T
+fun last<T>(l : Iterable<T>, default1 : T) : T
 {
 	for(e in l)
 	{
 		return last<T>(rest<T>(l),e);
 	}
-	return default;
+	return default1;
 }
 
 fun length(l : Iterable<Thing>) : Integer

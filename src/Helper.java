@@ -11,6 +11,7 @@ import java.util.regex.*;
 public class Helper {
 	//eg. aaa, integer
 	protected static HashMap<String, String> cVarType = new HashMap<String, String>();
+	protected static HashMap<String, String> iterType = new HashMap<String, String>();
 	protected static HashMap<String, String> cFunType = new HashMap<String, String>();
 	protected static ArrayList<String>		 funArgList=new ArrayList<String>();
 	protected static HashMap<String, String> cClassSuper=new HashMap<String, String>();

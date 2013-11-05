@@ -210,17 +210,68 @@ Helper.P("common parent of types is " + type.toString());
 	public String toC(ArrayList<String> localVars) {
 		String leftToC = left.toC(localVars), rightToC = right.toC(localVars);
 		castType = "Iterable";
+		String tempLeft = Helper.getVarName(), tempRight = Helper.getVarName();
+		String iter = Helper.getVarName();
 		
-		//if(left.getIterType().equals(right.getIterType()))
-			iterType = left.getIterType();
-		//else
-			iterType = "Top";
 		
+		/*temp += "char* " charVal + " = ((String*) " + leftToC + ")->value;\n" 
+				+ "int " + len + " = ((String*) " + leftToC + ")->len;\n"
+				+ "Iterable* " + rand1 + ";\n"
+				+ "int " + flag + "= 0;\n"
+				+ "for(" + i + "=" + len + "; " + i + ">=0; " + i +"--) {\n"
+				+ "Character* " + temp1 + "= (Character*) malloc (sizeof(Character));\n"
+				+ temp1 + "->value = " + "temp1" + "[" + len + "];\n"
+				+ temp1 + "->nrefs = 1;\n";
+			
+		temp += "if(" + flag + "== 0) {\n"
+				+ "Iterable* " + (rand = Helper.getVarName()) + "(Iterable*) malloc (sizeof(Iterable));\n"
+				+
+			rand->value = temp1;
+			rand->nrefs = 1;
+			rand->next = NULL;
+			rand->concat = NULL;
+			rand->additional = NULL;
+			rand1 = rand;
+			flag = 1;
+			}
+			else {
+				Iterable* rand = (Iterable*) malloc (sizeof(Iterable));
+				rand->value = temp1;
+				rand->nrefs = 1;
+				rand->next = NULL;
+				rand->concat = NULL;
+				rand->additional = rand1;
+				rand1 = rand;				
+			}
+		}*/
+		
+
 		name += left.construct();
 		name += right.construct();
-		name += "concatenate((Iterable*)" + leftToC + ", (Iterable*) " + rightToC + ");\n";
 		
-		cText = leftToC;
+		if(left.getCastType().equals("String")) {
+			name += "Iterable* " + tempLeft + ";\n"
+					+ tempLeft + " = strToIter (((String*) " + leftToC + ")->value, "
+					+ "((String*) " + leftToC + ")->len);\n";		
+			leftToC = tempLeft;
+		}
+		
+		if(right.getCastType().equals("String")) {
+			name += "Iterable* " + tempRight + ";\n"
+					+ tempRight + " = strToIter (((String*) " + leftToC + ")->value, "
+					+ "((String*) " + leftToC + ")->len);\n";		
+			rightToC = tempRight;
+		}			
+		
+		if(left.getIterType().equals(right.getIterType()))
+			iterType = left.getIterType();
+		else
+			iterType = "Top";
+		
+		
+		name +=  "Iterable* " + iter + " = concatenate((Iterable*)" + leftToC + ", (Iterable*) " + rightToC + ");\n";
+		
+		cText = iter;
 		return super.toC(localVars);
 	}
 }
@@ -314,7 +365,8 @@ class CBoolean extends CuExpr{
 					+ "(%s->nrefs) = 1;\n"
 					+ "%s->value = %d;\n", temp, temp, temp, 0);
 	
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Boolean");
 		return super.toC(localVars);
 	}
@@ -340,7 +392,8 @@ class CInteger extends CuExpr {
 				+ "%s->value = %d;\n", temp, temp, temp, val);		
 		super.cText = temp;
 		super.castType = "Integer";
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "Integer");
 		return super.toC(localVars);
 	}
@@ -360,7 +413,8 @@ class CString extends CuExpr {
 	
 	@Override
 	public String toC(ArrayList<String> localVars) {
-		String temp = Helper.getVarName();
+		String temp = Helper.getVarName(), typeCast ="";
+		iterType = "Character";
 		super.name = String.format("String* %s;\n"
 				+ "%s = (String *) x3malloc(sizeof(String));\n"
 				+ "%s->value = (char*) x3malloc(sizeof(%s));\n"
@@ -370,8 +424,44 @@ class CString extends CuExpr {
 		
 		super.cText = temp;
 		super.castType = "String";
-		localVars.add(temp);
+		if (!localVars.contains(temp))
+			localVars.add(temp);
 		Helper.cVarType.put(temp, "String");
+		
+		/*ArrayList<String> tempNameArr=new ArrayList<String>();	
+		ArrayList<String> tempDataArr=new ArrayList<String>();
+		for (int i=(val.length()-1); i>=0; i--) {
+			
+			String tempName = Helper.getVarName();
+			helper += "Character* " + tempName + " = (Character*) malloc(sizeof(Character));\n"
+					+ tempName + "->value = " + val.substring(i, i+1) + ";\n"
+					+ tempName + "->nrefs = 1;\n";			
+					
+			tempNameArr.add(Helper.getVarName());
+			tempDataArr.add(tempName);
+			typeCast = "Character";
+			
+		}
+		tempNameArr.add("NULL");
+
+		for (int i = val.length() - 1; i >= 0; i--) {
+			helper += "Iterable* " + tempNameArr.get(i) + ";\n" 
+					+ tempNameArr.get(i) + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+					+ tempNameArr.get(i) + "->nrefs = 1;\n" 
+					+ tempNameArr.get(i) + "->value = " + tempDataArr.get(i) + ";\n"
+					+ tempNameArr.get(i) + "->additional = " + tempNameArr.get(i + 1) + ";\n" 
+					+ tempNameArr.get(i) + "->next = NULL;\n" 
+					+ tempNameArr.get(i)+ "->concat = NULL;\n";
+		}	
+			
+		helperHead = tempNameArr.get(0);
+		if (val.equals("\"\"")) {
+			helperHead = "NULL";
+			helper = "";
+		}
+		
+		name += helper;*/
+		
 		return super.toC(localVars);
 	}
 }
@@ -430,11 +520,7 @@ class DivideExpr extends CuExpr{
 		
 		super.name += "}\n";
 		super.cText = temp;
-		if (!localVars.contains(temp))
-			localVars.add(temp);
 		Helper.cVarType.put(temp, "Iterable");
-		if (!localVars.contains(intName))
-			localVars.add(intName);
 		Helper.cVarType.put(intName, "Integer");
 		
 		/*if (leftC.equals("") && rightC.equals("")){
@@ -922,11 +1008,7 @@ class ModuloExpr extends CuExpr{
 		
 		super.name += "}\n";
 		super.cText = temp;
-		if (!localVars.contains(temp))
-			localVars.add(temp);
 		Helper.cVarType.put(temp, "Iterable");
-		if (!localVars.contains(intName))
-			localVars.add(intName);
 		Helper.cVarType.put(intName, "Integer");
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
@@ -1096,9 +1178,7 @@ class OnwardsExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 				else
@@ -1132,20 +1212,12 @@ class OnwardsExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					if (!localVars.contains(iter))
-						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 					
-					if (!localVars.contains(iterTemp))
-						localVars.add(iterTemp);
 					Helper.cVarType.put(iterTemp, "Iterable");
 					
-					if (!localVars.contains(trueTemp))
-						localVars.add(trueTemp);
 					Helper.cVarType.put(trueTemp, "Boolean");
 					
-					if (!localVars.contains(falseTemp))
-						localVars.add(falseTemp);
 					Helper.cVarType.put(falseTemp, "Boolean");
 				}
 				
@@ -1165,12 +1237,8 @@ class OnwardsExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					if (!localVars.contains(temp))
-						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
 					
-					if (!localVars.contains(iter))
-						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 			}
@@ -1192,8 +1260,6 @@ class OnwardsExpr extends CuExpr{
 						+ iter + "->concat = NULL;\n";
 		
 				cText = iter;
-				if (!localVars.contains(iter))
-					localVars.add(iter);
 				Helper.cVarType.put(iter, "Iterable");
 			}
 			else {
@@ -1213,11 +1279,7 @@ class OnwardsExpr extends CuExpr{
 						+ iter + "->concat = NULL;\n";
 				
 				cText = iter;
-				if (!localVars.contains(iter))
-					localVars.add(iter);
 				Helper.cVarType.put(iter, "Iterable");
-				if (!localVars.contains(temp))
-					localVars.add(temp);
 				Helper.cVarType.put(temp, "Integer");
 			}
 		}
@@ -1404,11 +1466,7 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					if (!localVars.contains(temp))
-						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					if (!localVars.contains(iter))
-						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 				
@@ -1440,20 +1498,11 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					if (!localVars.contains(iter))
-						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 					
-					if (!localVars.contains(iterTemp))
-						localVars.add(iterTemp);
 					Helper.cVarType.put(iterTemp, "Iterable");
 					
-					if (!localVars.contains(trueTemp))
-						localVars.add(trueTemp);
 					Helper.cVarType.put(trueTemp, "Boolean");
-					
-					if (!localVars.contains(falseTemp))
-						localVars.add(falseTemp);			
 					Helper.cVarType.put(falseTemp, "Boolean");
 				}
 				
@@ -1480,12 +1529,7 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					if (!localVars.contains(temp))
-						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					if (!localVars.contains(iter))
-						if (!localVars.contains(iter))
-						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 			}
@@ -1533,11 +1577,7 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					if (!localVars.contains(temp))
-						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					if (!localVars.contains(iter))
-						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 			}
@@ -1588,11 +1628,7 @@ class ThroughExpr extends CuExpr{
 							+ iter + "->concat = NULL;\n";
 					
 					cText = iter;
-					if (!localVars.contains(temp))
-						localVars.add(temp);
 					Helper.cVarType.put(temp, "Boolean");
-					if (!localVars.contains(iter))
-						localVars.add(iter);
 					Helper.cVarType.put(iter, "Iterable");
 				}
 			}
@@ -1891,8 +1927,6 @@ Helper.P("VcExp= "+text);
 			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
 			temp += "(" + tempCastType + "*)" + expToC + ", ";
 			if (!expConstruct.equals("")) {
-				if (!localVars.contains(expToC))
-					localVars.add(expToC);
 				Helper.cVarType.put(expToC, tempCastType);
 			}
 			
@@ -2000,10 +2034,11 @@ Helper.P(" 1mapping is " + mapping.toString());
 		{
 			super.cText = val;
 			super.castType = Helper.cVarType.get(val);
-			iterType = "String";
+			super.iterType = Helper.iterType.get(val);
 			
 			if(val.equals("input"))
 			{
+				iterType = "String";				
 				castType = "Iterable";
 				String len = Helper.getVarName();
 								
@@ -2031,12 +2066,8 @@ Helper.P(" 1mapping is " + mapping.toString());
 						+ iter + "->concat = NULL;\n}\n";
 				
 		
-				if (!localVars.contains(temp))
-					localVars.add(temp);
 				Helper.cVarType.put(temp, "String");
 				
-				if (!localVars.contains(iter))
-					localVars.add(iter);
 				Helper.cVarType.put(iter, "Iterable");
 				cText = iter;
 				initialized = true;
@@ -2064,8 +2095,6 @@ Helper.P(" 1mapping is " + mapping.toString());
 				tempCastType = exp.getCastType();
 				if(tempCastType == null) tempCastType = Helper.cVarType.get(expToC);
 				if (!tempName.equals("")) {
-					if (!localVars.contains(expToC))
-						localVars.add(expToC);
 					Helper.cVarType.put(expToC, tempCastType);
 				}
 				name += "Character* " + varName + " = (Character*) x3malloc(sizeof(Character));\n"
@@ -2084,8 +2113,6 @@ Helper.P(" 1mapping is " + mapping.toString());
 				tempName = exp.construct();
 				name += tempName;
 				if (!tempName.equals("")) {
-					if (!localVars.contains(expToC))
-						localVars.add(expToC);
 					Helper.cVarType.put(expToC, "Iterable");
 				}
 				name += "void* " + varName + ";\n"
@@ -2111,8 +2138,6 @@ Helper.P(" 1mapping is " + mapping.toString());
 				temp += "(void*) " + expToC + ", ";
 				super.name += tempName;
 				if (!tempName.equals("")) {
-					if (!localVars.contains(expToC))
-						localVars.add(expToC);
 					Helper.cVarType.put(expToC, tempCastType);
 				}					
 			}
