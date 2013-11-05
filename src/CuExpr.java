@@ -1921,7 +1921,7 @@ Helper.P("VcExp= "+text);
 	
 	@Override
 	public String toC(ArrayList<String> localVars) {
-		castType = Helper.cFunType.get(val);
+		castType = Helper.cFunType.get("new_" + val);
 		String temp = "", tempCastType = "", expToC = "", expConstruct = "";
 		if (es == null)
 			temp = "()";
