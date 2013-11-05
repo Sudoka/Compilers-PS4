@@ -109,18 +109,31 @@ class ForStat extends CuStat{
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
 		String itype = e.getIterType();
-		if (e.getCastType().equals("String")) {
+		/*if (e.getCastType().equals("String")) {
 			String iter_name = Helper.getVarName();
 			super.ctext += "Iterable *" + iter_name + ";\n";
 			super.ctext += iter_name + " = strToIter( ((String *)" + exp_toC + ")->value, ((String *)" + exp_toC + ")->len);\n";
 			exp_toC = iter_name;
 			Helper.cVarType.put(iter_name, "Iterable");
 			itype = "Character";
-		}
+		}*/
+		
+		String iter_name1 = Helper.getVarName();
+		super.ctext += "Iterable *" + iter_name1 + ";\n";
+		super.ctext += iter_name1 + " = (Iterable *)" + exp_toC + ";\n";
+		super.ctext += "(*(int *)" + iter_name1 + ")++;\n";
+		super.ctext += "if (" + "(*(int *)(" + exp_toC +"+1)) == 0) {\n";
+		super.ctext += "(*(int *)" + iter_name1 + ")--;\n";
+		super.ctext += iter_name1+ " = strToIter( ((String *)" + exp_toC + ")->value, ((String *)" + exp_toC + ")->len);\n";
+		super.ctext += "}\n";
+		
+		//exp_toC = iter_name1;
+		Helper.cVarType.put(iter_name1, "Iterable");
+		//itype = "Character";
 		
 		//added for v scoping
 		super.ctext += "{\n";
-		super.ctext += "\tvoid * " + var.toString() + "=" + exp_toC + ";\n";
+		super.ctext += "\tvoid * " + var.toString() + "=" + iter_name1 + ";\n";
 		Helper.cVarType.put(var.toString(), itype);
 		String iter_name = Helper.getVarName();
 		super.ctext += "\tIterable * " + iter_name + ";\n";

@@ -323,6 +323,7 @@ class BrkExpr extends CuExpr {
 		for (int i = val.size() - 1; i >= 0; i--) {
 			name += "Iterable* " + tempNameArr.get(i) + ";\n" 
 					+ tempNameArr.get(i) + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+					+ tempNameArr.get(i) + "->isIter = 1;\n"
 					+ tempNameArr.get(i) + "->nrefs = 1;\n" 
 					+ tempNameArr.get(i) + "->value = " + tempDataArr.get(i) + ";\n"
 					+ tempNameArr.get(i) + "->additional = " + tempNameArr.get(i + 1) + ";\n" 
@@ -420,10 +421,11 @@ class CString extends CuExpr {
 		iterType = "Character";
 		super.name = String.format("String* %s;\n"
 				+ "%s = (String *) x3malloc(sizeof(String));\n"
+				+ "(%s->isIter) = 0;\n"
 				+ "%s->value = (char*) x3malloc(sizeof(%s));\n"
 				+ "(%s->nrefs) = 1;\n"
 				+ "%s->len = sizeof(%s) - 1;\n"
-				+ "mystrcpy(%s->value, %s);\n", temp, temp, temp, val, temp, temp, val, temp, val);	
+				+ "mystrcpy(%s->value, %s);\n", temp, temp, temp, temp, val, temp, temp, val, temp, val);	
 		
 		super.cText = temp;
 		super.castType = "String";
@@ -450,6 +452,7 @@ class CString extends CuExpr {
 		for (int i = val.length() - 1; i >= 0; i--) {
 			helper += "Iterable* " + tempNameArr.get(i) + ";\n" 
 					+ tempNameArr.get(i) + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+					+ tempNameArr.get(i) + "->isIter = 1;\n"
 					+ tempNameArr.get(i) + "->nrefs = 1;\n" 
 					+ tempNameArr.get(i) + "->value = " + tempDataArr.get(i) + ";\n"
 					+ tempNameArr.get(i) + "->additional = " + tempNameArr.get(i + 1) + ";\n" 
@@ -515,6 +518,7 @@ class DivideExpr extends CuExpr{
 		super.name += String.format("((%s*)%s)->value / ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);	
 		
 		super.name += "\t" + temp + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
+				+ temp + "->isIter = 1;\n"
 				+ temp + "->nrefs = 1;\n\t"
 				+ temp + "->value = " + intName + ";\n\t"
 				+ temp + "->additional = NULL;\n\t"
@@ -1003,6 +1007,7 @@ class ModuloExpr extends CuExpr{
 		super.name += String.format("((%s*)%s)->value %% ((%s*)%s)->value;\n", "Integer", leftToC, "Integer", rightToC);	
 		
 		super.name += "\t" + temp + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
+				+ temp + "->isIter = 1;\n"
 				+ temp + "->nrefs = 1;\n\t"
 				+ temp + "->value = " + intName + ";\n\t"
 				+ temp + "->additional = NULL;\n\t"
@@ -1174,6 +1179,7 @@ class OnwardsExpr extends CuExpr{
 							temp, temp, temp, temp);
 					
 					name +=  "Iterable* " + iter + ";\n" + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->isIter = 1;\n"
 							+ iter + "->nrefs = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1201,6 +1207,7 @@ class OnwardsExpr extends CuExpr{
 							falseTemp, falseTemp, falseTemp, falseTemp);
 					
 					name +=  "Iterable* " + iterTemp + ";\n" + iterTemp+ " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iterTemp + "->isIter = 1;\n"
 							+ iterTemp + "->nrefs = 1;\n"
 							+ iterTemp + "->value = " + trueTemp + ";\n"
 							+ iterTemp + "->additional = NULL;\n"
@@ -1208,6 +1215,7 @@ class OnwardsExpr extends CuExpr{
 							+ iterTemp + "->concat = NULL;\n";
 										
 					name +=  "Iterable* " + iter + ";\n" + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->isIter = 1;\n"
 							+ iter + "->nrefs = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
@@ -1233,6 +1241,7 @@ class OnwardsExpr extends CuExpr{
 							temp, temp, temp, temp);
 					
 					name +=  "Iterable* " + iter + ";\n" + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->isIter = 1;\n"
 							+ iter + "->nrefs = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1256,6 +1265,7 @@ class OnwardsExpr extends CuExpr{
 				String iter = Helper.getVarName();
 		
 				name += "Iterable* " + iter + ";\n" + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+						+ iter + "->isIter = 1;\n"
 						+ iter + "->nrefs = 1;\n"
 						+ iter + "->value = " + valToC + ";\n"
 						+ iter + "->additional = NULL;\n"
@@ -1275,6 +1285,7 @@ class OnwardsExpr extends CuExpr{
 					
 				
 				name +=  "Iterable* " + iter + ";\n" +iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+						+ iter + "->isIter = 1;\n"
 						+ iter + "->nrefs = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = NULL;\n"
@@ -1462,6 +1473,7 @@ class ThroughExpr extends CuExpr{
 							temp, temp, temp, temp);
 					
 					name +=  "Iterable* " + iter + ";\n" + iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->isIter = 1;\n"
 							+ iter + "->nrefs = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1487,6 +1499,7 @@ class ThroughExpr extends CuExpr{
 							falseTemp, falseTemp, falseTemp, falseTemp);
 					
 					name +=  "Iterable* " + iterTemp + ";\n" + iterTemp +  " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iterTemp + "->isIter = 1;\n"
 							+ iterTemp + "->nrefs = 1;\n"
 							+ iterTemp + "->value = " + trueTemp + ";\n"
 							+ iterTemp + "->additional = NULL;\n"
@@ -1494,6 +1507,7 @@ class ThroughExpr extends CuExpr{
 							+ iterTemp + "->concat = NULL;\n";
 										
 					name +=  "Iterable* " + iter + ";\n" + iter +  " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->isIter = 1;\n"
 							+ iter + "->nrefs = 1;\n"
 							+ iter + "->value = " + falseTemp + ";\n"
 							+ iter + "->additional =" + iterTemp + ";\n"
@@ -1525,6 +1539,7 @@ class ThroughExpr extends CuExpr{
 							temp, temp, temp);
 					
 					name +=  "Iterable* " + iter + ";\n" + iter +  " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->isIter = 1;\n"
 							+ iter + "->nrefs = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1543,6 +1558,7 @@ class ThroughExpr extends CuExpr{
 				name += right.construct();
 			
 				name +=  "Iterable* " + iter + ";\n" + iter +  " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+						+ iter + "->isIter = 1;\n"
 						+ iter + "->nrefs = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
@@ -1573,6 +1589,7 @@ class ThroughExpr extends CuExpr{
 							temp, temp, temp, temp);
 					
 					name +=  "Iterable* " + iter + ";\n" + iter +  " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->isIter = 1;\n"
 							+ iter + "->nrefs = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1594,6 +1611,7 @@ class ThroughExpr extends CuExpr{
 				name += right.construct();
 				
 				name +=  "Iterable* " + iter + ";\n" + iter +  " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+						+ iter + "->isIter = 1;\n"
 						+ iter + "->nrefs = 1;\n"
 						+ iter + "->value = " + temp + ";\n"
 						+ iter + "->additional = " + rightToC + ";\n"
@@ -1624,6 +1642,7 @@ class ThroughExpr extends CuExpr{
 							temp, temp, temp, temp);
 					
 					name +=  "Iterable* " + iter + ";\n" + iter +  " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iter + "->isIter = 1;\n"
 							+ iter + "->nrefs = 1;\n"
 							+ iter + "->value = " + temp + ";\n"
 							+ iter + "->additional = NULL;\n"
@@ -1647,6 +1666,7 @@ class ThroughExpr extends CuExpr{
 					
 				
 				name +=  "Iterable* " + iter + ";\n" + iter +  " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+						+ iter + "->isIter = 1;\n"
 						+ iter + "->nrefs = 1;\n"
 						+ iter + "->value = " + leftToC + ";\n"
 						+ iter + "->additional = " + temp + ";\n"
@@ -1679,6 +1699,7 @@ class ThroughExpr extends CuExpr{
 					
 				
 				name +=  "Iterable* " + iter + ";\n" + iter +  " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+						+ iter + "->isIter = 1;\n"
 						+ iter + "->nrefs = 1;\n"
 						+ iter + "->value = " + temp1 + ";\n"
 						+ iter + "->additional = " + temp2 + ";\n"
@@ -2059,12 +2080,14 @@ Helper.P(" 1mapping is " + mapping.toString());
 						+ "else {\n\t";
 				
 					name +=  temp + " = (String*) x3malloc(sizeof(String));\n\t"
+						+ temp + "->isIter = 0;\n\t"
 						+ temp + "->nrefs = 1;\n\t"
 						+ temp + "->value = (char*) x3malloc("+ len + " * sizeof(char));\n\t"
 						+ temp + "->len = " + len + ";\n\t"
 						+ "read_line(" + temp + "->value);\n\t";
 		
 					name += iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
+						+ iter + "->isIter = 1;\n"
 						+ iter + "->nrefs = 1;\n\t"
 						+ iter + "->value = " + temp + ";\n\t"
 						+ iter + "->additional = NULL;\n\t"
@@ -2081,6 +2104,7 @@ Helper.P(" 1mapping is " + mapping.toString());
 				else {
 					name = "Iterable* " + iterNew + ";\n"
 							+ iterNew + " = (Iterable*) x3malloc(sizeof(Iterable));\n"
+							+ iterNew + "->isIter = 1;\n"
 							+ iterNew + "->nrefs = 1;\n"
 							+ iterNew + "->value = " + temp + ";\n"
 							+ iterNew + "->additional = ((Iterable*)" + iter + ")->additional;\n"
