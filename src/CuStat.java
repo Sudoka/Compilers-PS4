@@ -139,7 +139,8 @@ class ForStat extends CuStat{
 			}
 		}
 		//newly added 
-		//localVarsInFor.add(var.toString());
+		if (localVarsInFor.contains(var.toString()))
+			localVarsInFor.remove(var.toString());
 		//now reference counting/x3free memory due to scoping
 		for (String cur_str : localVarsInFor) {
 			super.ctext += "\t\t" + "\n\n\n";
