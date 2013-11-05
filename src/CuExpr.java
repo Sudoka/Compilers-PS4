@@ -1808,7 +1808,8 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 	
 	@Override
 		public String toC(ArrayList<String> localVars) {
-		castType = Helper.cVarType.get(val+"_"+method);
+		
+		castType = Helper.cFunType.get(Helper.cVarType.get(val)+"_"+method);
 		int offset = 0;									//to be modified when class definition becomes clearer
 		String tempName = Helper.getVarName();
 		String fptr = Helper.getVarName(), fptrArg = "", tempCastType = "";
@@ -1910,7 +1911,7 @@ Helper.P("VcExp= "+text);
 	
 	@Override
 	public String toC(ArrayList<String> localVars) {
-		castType = Helper.cVarType.get(val);
+		castType = Helper.cFunType.get(val);
 		String temp = "", tempCastType = "", expToC = "", expConstruct = "";
 		if (es == null)
 			temp = "()";

@@ -297,10 +297,12 @@ class Cls extends CuClass {
 		String delim="";
 		StringBuilder temp2=new StringBuilder();
 		int idx=0;
-		for (Entry<String, CuType> e : fieldTypes.entrySet()){
-			temp2.append(String.format("subclass->"+e.getKey()+"="+superArg.get(idx)+";\n"));
-			Helper.cVarType.put(e.getKey(), e.getValue().id);
-			idx++;
+		if (!superArg.isEmpty()){
+			for (Entry<String, CuType> e : fieldTypes.entrySet()){
+				temp2.append(String.format("subclass->"+e.getKey()+"="+superArg.get(idx)+";\n"));
+				Helper.cVarType.put(e.getKey(), e.getValue().id);
+				idx++;
+			}
 		}
 		fun.append("}\n");
 		
@@ -320,7 +322,7 @@ class Cls extends CuClass {
 		fun.append(String.format("%s* %s=x3malloc(sizeof(%s));\n",name,tempName,name));
 		fun.append(String.format("init_%s(%s);\n",name,tempName));
 		String tempClass=Helper.cClassSuper.get(name);
-		while (tempClass!="Top"){
+		while (tempClass!=null&&!tempClass.equals("Top")){
 			tempClass=Helper.cClassSuper.get(tempClass);
 			fun.append(String.format("init_%s(%s);\n",name,tempName));
 		}
