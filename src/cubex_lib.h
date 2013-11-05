@@ -98,7 +98,7 @@ Iterable* Integer_onwards(void* head){
 Iterable* Integer_through(void* head){
 	Iterable* last;
 	last = (Iterable*) head;
-	if ((((Integer*) last->value)->value) == (((Integer*) last->additional)->value) || (((Integer*) last->value)->value) > (((Integer*) last->additional)->value)){
+	if ((((Integer*) last->value)->value) == (((Integer*) last->additional)->value)){
 		return NULL;
 	}
 	else {

@@ -85,10 +85,10 @@ public class Helper {
 	}
 	
 	protected static void P(Object s) {
-		System.out.println(s.toString());
+		//System.out.println(s.toString());
 	}
 	protected static void P(String s, Object...args) {
-		System.out.println(String.format(s, args));
+		//System.out.println(String.format(s, args));
 	}
 	/* thoughts coming, to implement later on */
 	protected static void ToDo(String comment){
