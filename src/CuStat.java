@@ -380,7 +380,7 @@ class Stats extends CuStat{
 	@Override public String toC(ArrayList<String> localVars) {
 		String temp_str = "";
 
-		super.ctext ="\n\n\n";
+		super.ctext ="\n\n\n{\n";
 		for(CuStat cs : al) {
 			temp_str += cs.toC(localVars);
 			//newVars are generated after toC call
@@ -400,6 +400,7 @@ class Stats extends CuStat{
 		}
 
 		super.ctext += temp_str;
+		super.ctext += "}\n";
 		return super.ctext;
 	}
 	
