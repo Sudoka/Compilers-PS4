@@ -126,7 +126,7 @@ class ForStat extends CuStat{
 		super.ctext += "\tIterable * " + iter_name + ";\n";
 		super.ctext += "\twhile (" + var.toString() + "!=NULL) {\n";
 		super.ctext += "\t\t" + iter_name + " = (Iterable *)" + var.toString() + ";\n";
-		super.ctext += "\t\t" + var.toString() + " = (Iterable *)" + iter_name + "->value;\n";
+		super.ctext += "\t\t" + var.toString() + " = " + iter_name + "->value;\n";
 		super.ctext += "\t\t" + "(*(int *)" + var.toString() + ")++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>(localVars);
 		String s1ToC = s1.toC(localVarsInFor);
@@ -139,7 +139,8 @@ class ForStat extends CuStat{
 			}
 		}
 		//newly added 
-		//localVarsInFor.add(var.toString());
+		if (localVarsInFor.contains(var.toString()))
+			localVarsInFor.remove(var.toString());
 		//now reference counting/x3free memory due to scoping
 		for (String cur_str : localVarsInFor) {
 			super.ctext += "\t\t" + "\n\n\n";
@@ -448,7 +449,11 @@ class WhileStat extends CuStat{
 
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
-		super.ctext += "while (" + exp_toC + ") {\n";
+    	if (e instanceof VvExp)
+    		super.ctext += "while (((Boolean *)" + exp_toC + ")->value) {\n";
+    	else
+    		super.ctext += "while (" + exp_toC + ") {\n";
+		
 		ArrayList<String> while_localVars = new ArrayList<String>(localVars);
 		super.ctext += s1.toC(while_localVars);
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate

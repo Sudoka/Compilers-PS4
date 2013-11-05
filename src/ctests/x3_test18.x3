@@ -1,0 +1,8 @@
+var := 5;
+continue := true;
+while(continue)
+{
+	var := continue;
+	continue:=false&var;
+}
+return [""]; 

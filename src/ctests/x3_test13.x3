@@ -1,0 +1,19 @@
+a := 5;
+b := 3;
+while(b==a)
+{
+	a:=a/b;
+	b:=b-1;
+}
+
+for (v in input)
+{
+	l := [v];
+}
+
+for(h in input)
+{
+	b := h;
+}
+
+return ["hello"];
