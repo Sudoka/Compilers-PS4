@@ -244,14 +244,22 @@ Helper.P("common parent of types is " + type.toString());
 
 		name += left.construct();
 		name += right.construct();
-		if(left.getCastType().equals("String")) {
+		String leftCast = left.getCastType();
+		String rightCast = right.getCastType();
+		
+		if (leftCast == null)
+			leftCast = Helper.cVarType.get(left.toString());
+		if (rightCast == null)
+			rightCast = Helper.cVarType.get(right.toString());
+		
+		if(leftCast.equals("String")) {
 			name += "Iterable* " + tempLeft + ";\n"
 					+ tempLeft + " = strToIter (((String*) " + leftToC + ")->value, "
 					+ "((String*) " + leftToC + ")->len);\n";		
 			leftToC = tempLeft;
 		}
 		
-		if(right.getCastType().equals("String")) {
+		if(rightCast.equals("String")) {
 			name += "Iterable* " + tempRight + ";\n"
 					+ tempRight + " = strToIter (((String*) " + leftToC + ")->value, "
 					+ "((String*) " + leftToC + ")->len);\n";		
@@ -306,9 +314,13 @@ class BrkExpr extends CuExpr {
 			eToC = e.toC(localVars);
 			name += e.construct();
 			
-			if(iterType.equals(""))
-				iterType = e.getCastType();
-			else if (!iterType.equals(e.getCastType()))
+			String eCastType = e.getCastType();
+			if (eCastType.equals(""))
+				eCastType = Helper.cVarType.get(e.toString());
+			
+			if(iterType.equals("")) 
+				iterType = eCastType;
+			else if (!iterType.equals(eCastType))
 				iterType = "Top";
 			
 			if(iterType == null)
@@ -1818,7 +1830,9 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 	@Override
 		public String toC(ArrayList<String> localVars) {
 		
-		castType = Helper.cFunType.get(Helper.cVarType.get(val)+"_"+method);
+		String newTemp = Helper.cVarType.get(val.toString())+"_"+method;
+		castType = Helper.cFunType.get(newTemp);
+		iterType = Helper.iterType.get(newTemp);
 		int offset = 0;									//to be modified when class definition becomes clearer
 		String tempName = Helper.getVarName();
 		String fptr = Helper.getVarName(), fptrArg = "", tempCastType = "";
@@ -2039,8 +2053,8 @@ Helper.P(" 1mapping is " + mapping.toString());
 		if(es==null)
 		{
 			super.cText = val;
-			super.castType = Helper.cVarType.get(val);
-			super.iterType = Helper.iterType.get(val);
+			super.castType = Helper.cVarType.get(val.toString());
+			super.iterType = Helper.iterType.get(val.toString());
 			
 			if(castType == null)
 				castType = "";
