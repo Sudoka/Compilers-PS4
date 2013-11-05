@@ -139,7 +139,7 @@ class ForStat extends CuStat{
 		super.ctext += "\tIterable * " + iter_name + ";\n";
 		super.ctext += "\twhile (" + var.toString() + "!=NULL) {\n";
 		super.ctext += "\t\t" + iter_name + " = (Iterable *)" + var.toString() + ";\n";
-		super.ctext += "\t\t" + var.toString() + " = (Iterable *)" + iter_name + "->value;\n";
+		super.ctext += "\t\t" + var.toString() + " = " + iter_name + "->value;\n";
 		super.ctext += "\t\t" + "(*(int *)" + var.toString() + ")++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>(localVars);
 		String s1ToC = s1.toC(localVarsInFor);
