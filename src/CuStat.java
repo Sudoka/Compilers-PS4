@@ -110,10 +110,20 @@ class ForStat extends CuStat{
 		String exp_toC = e.toC(localVars);
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
+		String itype = e.getIterType();
+		if (e.getCastType().equals("String")) {
+			String iter_name = Helper.getVarName();
+			super.ctext += "Iterable *" + iter_name + ";\n";
+			super.ctext += iter_name + " = strToIter( ((String *)" + exp_toC + ")->value, ((String *)" + exp_toC + ")->len);\n";
+			exp_toC = iter_name;
+			Helper.cVarType.put(iter_name, "Iterable");
+			itype = "Character";
+		}
+		
 		//added for v scoping
 		super.ctext += "{\n";
 		super.ctext += "\tvoid * " + var.toString() + "=" + exp_toC + ";\n";
-		Helper.cVarType.put(var.toString(), e.getIterType());
+		Helper.cVarType.put(var.toString(), itype);
 		String iter_name = Helper.getVarName();
 		super.ctext += "\tIterable * " + iter_name + ";\n";
 		super.ctext += "\twhile (" + var.toString() + "!=NULL) {\n";
