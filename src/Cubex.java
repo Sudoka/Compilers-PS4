@@ -28,6 +28,7 @@ public class Cubex {
 		CuProgr ourProgram = null;
 		try {
 			ourProgram = parser.program().p;
+			Helper.P("parser succeeded");
 			ourProgram.calculateType(context);
 			Helper.ToDo("comment out accept when we submit");
 			System.out.println("accept");
