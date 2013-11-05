@@ -35,6 +35,13 @@ typedef struct iter{
 }Iterable;
 
 
+
+Iterable *checkIter(void* test){
+	if (next!=null&&additional!=null){
+		if ((int)additional)
+	}
+}
+
 Iterable* iterGetNext(Iterable* last){
 	Iterable* this;
 	this = x3malloc(sizeof(Iterable));

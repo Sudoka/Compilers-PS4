@@ -1903,9 +1903,8 @@ Helper.P("VcExp= "+text);
 		
 		String objectName = Helper.getVarName();
 		super.name += String.format("%s* %s = (%s*) x3malloc(sizeof(%s));\n"
-				+ "(&%s)[0] = %s;	//pointer to vtable\n"
-				+ "((int*) &%s)[1] = 0;		//pointer to nrefs\n",
-				val, objectName, val, val, objectName, Helper.cClassVtablePtr.get(val), objectName);
+				+ "*(int *)%s = 0; //pointer to nrefs\n",
+				val, objectName, val, val, objectName, objectName);
 		
 		j = 2;
 		
@@ -1916,7 +1915,7 @@ Helper.P("VcExp= "+text);
 			super.name += String.format("((" + tempCastType + "*) &%s)[%d] = " + expToC + ";\n", objectName, j++);
 		}
 		
-		super.name += "\n"+Helper.cClassStats.get(val) + "\n";
+		//super.name += "\n"+Helper.cClassStats.get(val) + "\n";
 		super.cText= objectName;
 		return super.toC(localVars);
 	}

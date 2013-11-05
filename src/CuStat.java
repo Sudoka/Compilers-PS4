@@ -111,7 +111,7 @@ class ForStat extends CuStat{
 		super.ctext += e.construct();
 		//added for v scoping
 		super.ctext += "{\n";
-		super.ctext += "\tvoid * " + var.toString() + "=" + exp_toC + ";\n";
+		super.ctext += "\tvoid * " + var.toString() + "=checkIter(" + exp_toC + ");\n";
 		Helper.cVarType.put(var.toString(), e.getIterType());
 		String iter_name = Helper.getVarName();
 		super.ctext += "\tIterable * " + iter_name + ";\n";

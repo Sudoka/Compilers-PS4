@@ -10,6 +10,8 @@ public abstract class CuClass {
 	protected StringBuilder def=new StringBuilder();
 	protected StringBuilder fun=new StringBuilder();
 	protected StringBuilder body=new StringBuilder();
+	Map<String, CuType> fieldTypes=new LinkedHashMap<String,CuType>();
+	List<CuExpr>        superArg = new ArrayList<CuExpr>();
 	protected StringBuilder vtable=new StringBuilder();
 	
 	String name;
@@ -34,12 +36,9 @@ public abstract class CuClass {
 }
 
 class Cls extends CuClass {
-	Map<String, CuType> fieldTypes=new LinkedHashMap<String,CuType>();
-	
 	//List<CuType> appliedTypePara=new ArrayList<CuType>();
 	List<CuStat> classStatement = new ArrayList<CuStat>();
 	//private static final Exception NoSuchTypeExpression() = null;
-	List<CuExpr>        superArg = new ArrayList<CuExpr>();
 
 	public Cls(String clsintf, List<String> kc, LinkedHashMap<String, CuType> tc) {
 		super.name=clsintf;
@@ -63,6 +62,13 @@ class Cls extends CuClass {
 		//code Gen
 		fun.append(temp.toC(name));
 		vtable.append(String.format("%s_Tbl->%s=&%s; \n", name, v, name+"_"+v));
+		StringBuilder tempSB=new StringBuilder().append("void* this");
+		for (Entry<String, CuType> e : fieldTypes.entrySet()){
+			tempSB.append(", ").append("void* "+e.getKey());
+			Helper.cVarType.put(e.getKey(), e.getValue().id);
+		}
+		fun.append(tempSB);
+		fun.append(") {\n");
 		Helper.cFunType.put(name+"_"+v, ts.data_t.id);
 	}
 	
@@ -86,6 +92,7 @@ class Cls extends CuClass {
 		//make a copy of current function list, because we only need to type check these functions
 		Map<String, CuFun> funList_cpy = new HashMap<String, CuFun>();
 		funList_cpy.putAll(funList);
+		
 		
 		if (superType instanceof VClass){
 			Map<String, CuFun> superfunLst = cur_context.mClasses.get(superType.id).funList;
@@ -118,6 +125,7 @@ class Cls extends CuClass {
 					vtable.append(String.format("%sTbl->%s=&(%sTable->%s) \n", name, e.getKey(), superType.id,superType.id,e.getKey()));
 				}
 			}
+			Helper.cClassSuper.put(name, superType.id);
 		}
 		else if (superType instanceof VTypeInter) {
 			//System.out.println("merging functions, super type is inter " + superType.toString());
@@ -142,6 +150,7 @@ class Cls extends CuClass {
 					}
 				}
 			}
+			Helper.cClassSuper.put(name, superType.parentType.get(0).id);
 		}
 		//System.out.println("succeeded merging functions");
 		
@@ -282,13 +291,24 @@ class Cls extends CuClass {
 		}
 		def.append("\t\t} "+name+";\n");
 		
+		//initializor super field
+		Helper.cFunType.put("init_"+name, "void");
+		fun.append("void* "+"init_"+name+"(void* subclass){");
+		String delim="";
+		StringBuilder temp2=new StringBuilder();
+		int idx=0;
+		for (Entry<String, CuType> e : fieldTypes.entrySet()){
+			temp2.append(String.format("subclass->"+e.getKey()+"="+superArg.get(idx)+";\n"));
+			Helper.cVarType.put(e.getKey(), e.getValue().id);
+			idx++;
+		}
+		fun.append("}\n");
 		
 		//constructor
 		Helper.cFunType.put("new_"+name, name);
 		fun.append("void* "+"new_"+name+"(");
-		String delim="";
-		StringBuilder temp=new StringBuilder();
 		delim="";
+		StringBuilder temp=new StringBuilder();
 		for (Entry<String, CuType> e : fieldTypes.entrySet()){
 			temp.append(delim).append("void* "+e.getKey());
 			delim=", ";
@@ -298,6 +318,12 @@ class Cls extends CuClass {
 		fun.append(") {\n");
 		String tempName=Helper.getVarName();
 		fun.append(String.format("%s* %s=x3malloc(sizeof(%s));\n",name,tempName,name));
+		fun.append(String.format("init_%s(%s);\n",name,tempName));
+		String tempClass=Helper.cClassSuper.get(name);
+		while (tempClass!="Top"){
+			tempClass=Helper.cClassSuper.get(tempClass);
+			fun.append(String.format("init_%s(%s);\n",name,tempName));
+		}
 		fun.append(tempName+"->"+name+"_Tbl=x3malloc(sizeof("+name+"Table)); \n");
 		String[] lines = vtable.toString().split("\n");
 		for (String s: lines){
