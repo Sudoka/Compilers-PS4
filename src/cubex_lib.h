@@ -211,7 +211,7 @@ Iterable* strToIter (char* input, int length){
 
 void* checkIter (void* test) {
 	Iterable* temp = (Iterable*) test;
-	it (temp == NULL)
+	if (temp == NULL)
 		return NULL;
 	if ( ((Integer*)temp->value)->value > ((Integer*)temp->additional)->value )
 			return checkIter((Integer*)temp->concat); 
