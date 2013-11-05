@@ -37,8 +37,6 @@ class AssignStat extends CuStat{
 		String exp_toC = ee.toC(localVars);
 		Helper.cVarType.put(var.toString(), ee.getCastType());
 		Helper.iterType.put(var.toString(), ee.getIterType());
-		if(ee.getCastType().equals("String"))
-			Helper.cStr.put(var.toString(), ee.getHelperHead());
 		super.ctext ="\n\n\n";
 		super.ctext += ee.construct();
 		//the below sentence can be removed by higher level blocks
