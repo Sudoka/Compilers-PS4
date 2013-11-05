@@ -13,6 +13,7 @@ public class Helper {
 	protected static HashMap<String, String> cVarType = new HashMap<String, String>();
 	protected static HashMap<String, String> iterType = new HashMap<String, String>();
 	protected static HashMap<String, String> cFunType = new HashMap<String, String>();
+	protected static HashMap<String, List<String>> funGenType = new HashMap<String, List<String>>();
 	protected static ArrayList<String>		 funArgList=new ArrayList<String>();
 	protected static HashMap<String, String> cClassSuper=new HashMap<String, String>();
 	protected static HashMap<String, String> cStr = new HashMap<String, String>();
