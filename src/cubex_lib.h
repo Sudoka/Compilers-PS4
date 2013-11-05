@@ -66,15 +66,16 @@ Iterable* iterGetNext(Iterable* last){
 	return (this);
 }
 
-void concatenate(Iterable* fst, Iterable* snd){
+Iterable* concatenate(Iterable* fst, Iterable* snd){
 	if (fst == NULL) {
-		fst = snd;
-		return;
+		return snd;
 	}
+	Iterable* head = fst;
 	while(fst->concat!=NULL) {
 		fst=fst->concat;
 	}
 	fst->concat=snd;
+	return head;
 }
 
 Iterable* Integer_onwards(void* head){
@@ -151,6 +152,8 @@ int mystrcmp(const char *s1, const char *s2)
 }
 
 void mystrcpy(char *dst, const char *src) {
+  if(src == NULL)
+  	return;
    while (*src != '\0') {
       *dst++ = *src++; 
    }
@@ -182,4 +185,25 @@ String* concatChars(Iterable *charIter){
 	x3free(combined);
 	new->len = count;
 	return new;
+}
+
+Iterable* strToIter (char* input, int length){
+  if(length==0)
+  	return NULL;
+  Iterable *curr=(Iterable*) x3malloc(sizeof(Iterable));
+  Iterable *result=curr;
+  int i=0;
+  for (i=0;i<length;i++){
+    Iterable* temp = (Iterable*) x3malloc(sizeof(Iterable));
+    Character* v = (Character*) x3malloc(sizeof(Character));
+    v->value = input[i];
+    temp->value=v;
+    temp->nrefs=1;
+    temp->next=NULL;
+    temp->concat=NULL;
+    curr->additional=temp;
+    curr=curr->additional;
+  }
+  curr->additional = NULL;
+  return result->additional;
 }
