@@ -1,0 +1,21 @@
+fun id<T> (t : T) : T = t;
+
+fun singleton<T> (t : T) : Iterable<T> = [t];
+
+fun test<T> (t : T) : Iterable<T> = id<Iterable<T>>(singleton<T>(t));
+
+fun output<T> (t : T) : Iterable<String>
+{
+	ret := "";
+	if (false == false)
+	{
+		return singleton<String>("Yes.");
+	}
+	else
+	{
+		ret := "FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU...";
+	}
+	return [ret];
+}
+
+return output<Character>(character(66)); 

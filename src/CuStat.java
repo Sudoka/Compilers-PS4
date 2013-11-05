@@ -449,7 +449,11 @@ class WhileStat extends CuStat{
 
 		super.ctext +="\n\n\n";
 		super.ctext += e.construct();
-		super.ctext += "while (" + exp_toC + ") {\n";
+    	if (e instanceof VvExp)
+    		super.ctext += "while (((Boolean *)" + exp_toC + ")->value) {\n";
+    	else
+    		super.ctext += "while (" + exp_toC + ") {\n";
+		
 		ArrayList<String> while_localVars = new ArrayList<String>(localVars);
 		super.ctext += s1.toC(while_localVars);
 		//some variables in localVarsIn are not newly created, so remove them before decrement ref count/deallocate
