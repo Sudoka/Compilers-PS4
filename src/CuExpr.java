@@ -1546,7 +1546,7 @@ class ThroughExpr extends CuExpr{
 						+ iter + "->next = &" + left.getCastType() + "_through;\n"
 						+ iter + "->concat = NULL;\n";
 				
-				cText = iter;
+				cText = "checkIter(" + iter + ")";
 			}
 		}
 		else if (bUp){
@@ -1597,7 +1597,7 @@ class ThroughExpr extends CuExpr{
 						+ iter + "->next = &" + left.getCastType() + "_through;\n"
 						+ iter + "->concat = NULL;\n";
 				
-				cText = iter;
+				cText = "checkIter(" + iter + ")";
 			}
 		}
 		else if (bLow) {
@@ -1682,7 +1682,7 @@ class ThroughExpr extends CuExpr{
 						+ iter + "->next = &" + left.getCastType() + "_through;\n"
 						+ iter + "->concat = NULL;\n";
 				
-				cText = iter;
+				cText = "checkIter(" + iter + ")";
 			}
 		}
 		return super.toC(localVars);

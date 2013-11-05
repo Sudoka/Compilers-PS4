@@ -34,6 +34,7 @@ typedef struct iter{
 	struct iter* concat;
 }Iterable;
 
+
 Iterable* iterGetNext(Iterable* last){
 	Iterable* this;
 	this = x3malloc(sizeof(Iterable));
@@ -206,4 +207,14 @@ Iterable* strToIter (char* input, int length){
   }
   curr->additional = NULL;
   return result->additional;
+}
+
+void* checkIter (void* test) {
+	Iterable* temp = (Iterable*) test;
+	it (temp == NULL)
+		return NULL;
+	if ( ((Integer*)temp->value)->value > ((Integer*)temp->additional)->value )
+			return checkIter((Integer*)temp->concat); 
+	else 
+		return test;
 }
