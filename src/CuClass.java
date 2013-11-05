@@ -70,6 +70,51 @@ class Cls extends CuClass {
 		fun.append(tempSB);
 		fun.append(") {\n");
 		Helper.cFunType.put(name+"_"+v, ts.data_t.id);
+		
+		//initializor super field
+		Helper.cFunType.put("init_"+name, "void");
+		fun.append("void* "+"init_"+name+"(void* subclass){");
+		String delim="";
+		StringBuilder temp2=new StringBuilder();
+		int idx=0;
+		if (!superArg.isEmpty()){
+			for (Entry<String, CuType> e : fieldTypes.entrySet()){
+				temp2.append(String.format("subclass->"+e.getKey()+"="+superArg.get(idx)+";\n"));
+				Helper.cVarType.put(e.getKey(), e.getValue().id);
+				idx++;
+			}
+		}
+		fun.append("}\n");
+		
+		//constructor
+		Helper.cFunType.put("new_"+name, name);
+		fun.append("void* "+"new_"+name+"(");
+		delim="";
+		StringBuilder temp3=new StringBuilder();
+		for (Entry<String, CuType> e : fieldTypes.entrySet()){
+			temp3.append(delim).append("void* "+e.getKey());
+			delim=", ";
+			Helper.cVarType.put(e.getKey(), e.getValue().id);
+		}
+		fun.append(temp3);
+		fun.append(") {\n");
+		String tempName=Helper.getVarName();
+		fun.append(String.format("%s* %s=x3malloc(sizeof(%s));\n",name,tempName,name));
+		fun.append(String.format("init_%s(%s);\n",name,tempName));
+		String tempClass=Helper.cClassSuper.get(name);
+		while (tempClass!=null&&!tempClass.equals("Thing")){
+			tempClass=Helper.cClassSuper.get(tempClass);
+			fun.append(String.format("init_%s(%s);\n",name,tempName));
+		}
+		fun.append(tempName+"->"+name+"_Tbl=x3malloc(sizeof("+name+"Table)); \n");
+		String[] lines = vtable.toString().split("\n");
+		for (String s1: lines){
+			fun.append(tempName+"->"+s1+"\n");
+		}
+
+		fun.append("\t\treturn "+tempName+"; \n");
+		fun.append("}\n");
+		
 	}
 	
 	@Override public void add(List<CuExpr> s) {
@@ -291,49 +336,8 @@ class Cls extends CuClass {
 		}
 		def.append("\t\t} "+name+";\n");
 		
-		//initializor super field
-		Helper.cFunType.put("init_"+name, "void");
-		fun.append("void* "+"init_"+name+"(void* subclass){");
-		String delim="";
-		StringBuilder temp2=new StringBuilder();
-		int idx=0;
-		if (!superArg.isEmpty()){
-			for (Entry<String, CuType> e : fieldTypes.entrySet()){
-				temp2.append(String.format("subclass->"+e.getKey()+"="+superArg.get(idx)+";\n"));
-				Helper.cVarType.put(e.getKey(), e.getValue().id);
-				idx++;
-			}
-		}
-		fun.append("}\n");
 		
-		//constructor
-		Helper.cFunType.put("new_"+name, name);
-		fun.append("void* "+"new_"+name+"(");
-		delim="";
-		StringBuilder temp=new StringBuilder();
-		for (Entry<String, CuType> e : fieldTypes.entrySet()){
-			temp.append(delim).append("void* "+e.getKey());
-			delim=", ";
-			Helper.cVarType.put(e.getKey(), e.getValue().id);
-		}
-		fun.append(temp);
-		fun.append(") {\n");
-		String tempName=Helper.getVarName();
-		fun.append(String.format("%s* %s=x3malloc(sizeof(%s));\n",name,tempName,name));
-		fun.append(String.format("init_%s(%s);\n",name,tempName));
-		String tempClass=Helper.cClassSuper.get(name);
-		while (tempClass!=null&&!tempClass.equals("Top")){
-			tempClass=Helper.cClassSuper.get(tempClass);
-			fun.append(String.format("init_%s(%s);\n",name,tempName));
-		}
-		fun.append(tempName+"->"+name+"_Tbl=x3malloc(sizeof("+name+"Table)); \n");
-		String[] lines = vtable.toString().split("\n");
-		for (String s: lines){
-			fun.append(tempName+"->"+s+"\n");
-		}
-
-		fun.append("\t\treturn "+tempName+"; \n");
-		fun.append("}\n");
+		
 		return def.toString()+fun.toString();
 	}
 	
