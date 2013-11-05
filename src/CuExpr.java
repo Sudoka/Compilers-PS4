@@ -244,7 +244,6 @@ Helper.P("common parent of types is " + type.toString());
 
 		name += left.construct();
 		name += right.construct();
-		
 		if(left.getCastType().equals("String")) {
 			name += "Iterable* " + tempLeft + ";\n"
 					+ tempLeft + " = strToIter (((String*) " + leftToC + ")->value, "
