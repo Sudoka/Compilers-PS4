@@ -312,6 +312,9 @@ class BrkExpr extends CuExpr {
 			else if (!iterType.equals(e.getCastType()))
 				iterType = "Top";
 			
+			if(iterType == null)
+				iterType = "";
+			
 			tempNameArr.add(Helper.getVarName());
 			tempDataArr.add(eToC);
 			typeCast = e.getCastType();
@@ -2040,6 +2043,9 @@ Helper.P(" 1mapping is " + mapping.toString());
 			super.cText = val;
 			super.castType = Helper.cVarType.get(val);
 			super.iterType = Helper.iterType.get(val);
+			
+			if(castType == null)
+				castType = "";
 			
 			if(val.equals("input"))
 			{
