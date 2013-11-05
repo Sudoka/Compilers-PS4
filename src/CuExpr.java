@@ -433,8 +433,8 @@ class DivideExpr extends CuExpr{
 		if (!localVars.contains(temp))
 			localVars.add(temp);
 		Helper.cVarType.put(temp, "Iterable");
-		if (!localVars.contains(intName))
-			localVars.add(intName);
+		//if (!localVars.contains(intName))
+		//	localVars.add(intName);
 		Helper.cVarType.put(intName, "Integer");
 		
 		/*if (leftC.equals("") && rightC.equals("")){
@@ -925,8 +925,8 @@ class ModuloExpr extends CuExpr{
 		if (!localVars.contains(temp))
 			localVars.add(temp);
 		Helper.cVarType.put(temp, "Iterable");
-		if (!localVars.contains(intName))
-			localVars.add(intName);
+		//if (!localVars.contains(intName))
+		//	localVars.add(intName);
 		Helper.cVarType.put(intName, "Integer");
 		/*if (leftC.equals("") && rightC.equals("")){
 			//both are variables
