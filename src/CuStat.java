@@ -119,13 +119,14 @@ class ForStat extends CuStat{
 		}*/
 		
 		String iter_name1 = Helper.getVarName();
-		super.ctext += "Iterable *" + iter_name1 + ";\n";
-		super.ctext += iter_name1 + " = (Iterable *)" + exp_toC + ";\n";
+		super.ctext += "void *" + iter_name1 + ";\n";
+		super.ctext += iter_name1 + " = " + exp_toC + ";\n";
+		super.ctext += "if ("+ iter_name1 +"!=NULL) {\n";
 		super.ctext += "(*(int *)" + iter_name1 + ")++;\n";
 		super.ctext += "if (" + "(*(int *)(" + exp_toC +"+1)) == 0) {\n";
 		super.ctext += "(*(int *)" + iter_name1 + ")--;\n";
 		super.ctext += iter_name1+ " = strToIter( ((String *)" + exp_toC + ")->value, ((String *)" + exp_toC + ")->len);\n";
-		super.ctext += "}\n";
+		super.ctext += "}\n}\n";
 		
 		//exp_toC = iter_name1;
 		Helper.cVarType.put(iter_name1, "Iterable");

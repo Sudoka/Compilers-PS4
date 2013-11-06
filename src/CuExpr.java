@@ -1880,7 +1880,10 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 			for (CuExpr exp : es) {
 				expToC = exp.toC(localVars);
 				super.name += exp.construct();
-				temp +=  expToC + ", ";
+				/*tempCastType = exp.getCastType();
+				if (tempCastType.equals(""))
+					tempCastType = Helper.cVarType.get(expToC);*/
+				temp += /*"(" + tempCastType + "*)" +*/ expToC + ", ";
 				//fptrArg += tempCastType + "*, ";
 			}
 			int j = temp.lastIndexOf(", ");
