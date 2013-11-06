@@ -1902,11 +1902,14 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		
 		//B=a->TypeTable->fun(e1,e2);
 		
-		//name += String.format("void* (*%s) %s = (((%s) &%s)0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
+		//name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
 		//						/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
-		super.cText = String.format("(((%s*)%s)->%s)->%s%s",classType, valToC, classType+"_Tbl", method.toString(), temp);
+		String returnName = Helper.getVarName();
+		super.name = "void* " + returnName + ";\n";
+		super.name += String.format("%s = (((%s*)%s)->%s)->%s%s", returnName, classType, valToC, classType+"_Tbl", method.toString(), temp);
 		
-			return super.toC(localVars);
+		super.cText = returnName;
+		return super.toC(localVars);
 		}
 
 }
