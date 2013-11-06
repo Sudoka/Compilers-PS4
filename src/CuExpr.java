@@ -1861,9 +1861,8 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		String newTemp = Helper.cVarType.get(val.toString())+"_"+method;
 		castType = Helper.cFunType.get(newTemp);
 		iterType = Helper.iterType.get(newTemp);
-		int offset = 0;									//to be modified when class definition becomes clearer
 		String tempName = Helper.getVarName();
-		String fptr = Helper.getVarName(), fptrArg = "", tempCastType = "";
+		String tempCastType = "";
 		String classType = Helper.cVarType.get(val.toString()) + "*";
 		String valToC = val.toC(localVars);
 		name += val.construct();
@@ -1881,10 +1880,7 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 			for (CuExpr exp : es) {
 				expToC = exp.toC(localVars);
 				super.name += exp.construct();
-				tempCastType = exp.getCastType();
-				if (tempCastType.equals(""))
-					tempCastType = Helper.cVarType.get(expToC);
-				temp += "(" + tempCastType + "*)" + expToC + ", ";
+				temp +=  expToC + ", ";
 				//fptrArg += tempCastType + "*, ";
 			}
 			int j = temp.lastIndexOf(", ");
