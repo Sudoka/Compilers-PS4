@@ -2003,7 +2003,7 @@ Helper.P("VcExp= "+text);
 		
 		//j = 2;
 		
-		super.name += String.format("%s = %s %s;\n", objectName, val, temp);
+		super.name += String.format("%s = new_%s %s;\n", objectName, val, temp);
 		
 		/*for (CuExpr exp : es) {
 			expToC = exp.toC(localVars);
