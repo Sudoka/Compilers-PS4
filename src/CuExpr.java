@@ -1871,11 +1871,11 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		String temp = "", expToC = "";
 		if (es == null)
 		{
-			temp = String.format("(this%s)", classType, tempName);
+			temp = String.format("(this%s)", tempName);
 			//fptrArg = "(" + classType + ")";
 		}
 		else {
-			temp += String.format("(this%s, ", classType, tempName);
+			temp += String.format("(this%s, ", tempName);
 			//fptrArg = "(" + classType + ", ";
 			for (CuExpr exp : es) {
 				expToC = exp.toC(localVars);
