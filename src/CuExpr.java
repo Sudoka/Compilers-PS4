@@ -1905,7 +1905,7 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		//name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
 		//						/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
 		String returnName = Helper.getVarName();
-		super.name = "void* " + returnName + ";\n";
+		super.name += "void* " + returnName + ";\n";
 		super.name += String.format("%s = (((%s*)%s)->%s)->%s%s;\n", returnName, classType, valToC, classType+"_Tbl", method.toString(), temp);
 		
 		super.cText = returnName;
