@@ -249,9 +249,9 @@ Helper.P("common parent of types is " + type.toString());
 		super.name += "void *" + iter_name1 + ";\n";
 		super.name += iter_name1 + " = " + leftToC + ";\n";
 		super.name += "if ("+ iter_name1 +"!=NULL) {\n";
-		super.name += "(*(int *)" + iter_name1 + ")++;\n";
+		super.name += "(*((int *)" + iter_name1 + "))++;\n";
 		super.name += "if (" + "(*((int *)" + leftToC +"+1)) == 0) {\n";
-		super.name += "(*(int *)" + iter_name1 + ")--;\n";
+		super.name += "(*((int *)" + iter_name1 + "))--;\n";
 		super.name += iter_name1+ " = strToIter( ((String *)" + leftToC + ")->value, ((String *)" + leftToC + ")->len);\n";
 		super.name += "}\n}\n";
 		
@@ -259,9 +259,9 @@ Helper.P("common parent of types is " + type.toString());
 		super.name += "void *" + iter_name2 + ";\n";
 		super.name += iter_name2 + " = " + rightToC + ";\n";
 		super.name += "if ("+ iter_name2 +"!=NULL) {\n";
-		super.name += "(*(int *)" + iter_name2 + ")++;\n";
+		super.name += "(*((int *)" + iter_name2 + "))++;\n";
 		super.name += "if (" + "(*((int *)" + rightToC +"+1)) == 0) {\n";
-		super.name += "if ("+ iter_name2 +"!=NULL)";
+		super.name += "(*((int *)" + iter_name1 + "))--;\n";
 		super.name += iter_name2+ " = strToIter( ((String *)" + rightToC + ")->value, ((String *)" + rightToC + ")->len);\n";
 		super.name += "}\n}\n";
 
