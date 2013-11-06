@@ -206,7 +206,6 @@ Helper.P("common parent of types is " + type.toString());
 	public String toC(ArrayList<String> localVars) {
 		String leftToC = left.toC(localVars), rightToC = right.toC(localVars);
 		castType = "Iterable";
-		String tempLeft = Helper.getVarName(), tempRight = Helper.getVarName();
 		String iter = Helper.getVarName();
 		
 		
@@ -244,39 +243,47 @@ Helper.P("common parent of types is " + type.toString());
 
 		name += left.construct();
 		name += right.construct();
-		String leftCast = left.getCastType();
-		String rightCast = right.getCastType();
 		
-		if (leftCast == null)
-			leftCast = Helper.cVarType.get(left.toString());
-		if (rightCast == null)
-			rightCast = Helper.cVarType.get(right.toString());
 		
-		if(leftCast.equals("String")) {
-			name += "Iterable* " + tempLeft + ";\n"
-					+ tempLeft + " = strToIter (((String*) " + leftToC + ")->value, "
-					+ "((String*) " + leftToC + ")->len);\n";		
-			leftToC = tempLeft;
-		}
+		String iter_name1 = Helper.getVarName();
+		super.name += "void *" + iter_name1 + ";\n";
+		super.name += iter_name1 + " = " + leftToC + ";\n";
+		super.name += "if ("+ iter_name1 +"!=NULL) {\n";
+		super.name += "(*(int *)" + iter_name1 + ")++;\n";
+		super.name += "if (" + "(*(int *)(" + leftToC +"+1)) == 0) {\n";
+		super.name += "(*(int *)" + iter_name1 + ")--;\n";
+		super.name += iter_name1+ " = strToIter( ((String *)" + leftToC + ")->value, ((String *)" + leftToC + ")->len);\n";
+		super.name += "}\n}\n";
 		
-		if(rightCast.equals("String")) {
-			name += "Iterable* " + tempRight + ";\n"
-					+ tempRight + " = strToIter (((String*) " + leftToC + ")->value, "
-					+ "((String*) " + leftToC + ")->len);\n";		
-			rightToC = tempRight;
-		}			
+		String iter_name2 = Helper.getVarName();
+		super.name += "void *" + iter_name2 + ";\n";
+		super.name += iter_name2 + " = " + rightToC + ";\n";
+		super.name += "if ("+ iter_name2 +"!=NULL) {\n";
+		super.name += "(*(int *)" + iter_name2 + ")++;\n";
+		super.name += "if (" + "(*(int *)(" + rightToC +"+1)) == 0) {\n";
+		super.name += "if ("+ iter_name2 +"!=NULL)";
+		super.name += iter_name2+ " = strToIter( ((String *)" + rightToC + ")->value, ((String *)" + rightToC + ")->len);\n";
+		super.name += "}\n}\n";
+
+		String leftIterType = Helper.iterType.get(left.toString());
+		String rightIterType = Helper.iterType.get(right.toString());
 		
-		if(left.getIterType().equals(right.getIterType()))
-			iterType = left.getIterType();
-		else if (left.getIterType().equals("Empty"))
-			iterType = right.getIterType();
-		else if (right.getIterType().equals("Empty"))
-			iterType = left.getIterType();
+		if (leftIterType == null)
+			leftIterType = left.getIterType();
+		if (rightIterType == null)
+			rightIterType = right.getIterType();
+		
+		if(leftIterType.equals(rightIterType))
+			iterType = leftIterType;
+		else if (leftIterType.equals("Empty"))
+			iterType = rightIterType;
+		else if (rightIterType.equals("Empty"))
+			iterType = leftIterType;
 		else
 			iterType = "Top";
 		
 		
-		name +=  "Iterable* " + iter + ";\n" + iter + " = concatenate((Iterable*)" + leftToC + ", (Iterable*) " + rightToC + ");\n";
+		name +=  "Iterable* " + iter + ";\n" + iter + " = concatenate((Iterable*)" + iter_name1 + ", (Iterable*) " + iter_name2 + ");\n";
 		
 		cText = iter;
 		return super.toC(localVars);
@@ -1857,18 +1864,20 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		int offset = 0;									//to be modified when class definition becomes clearer
 		String tempName = Helper.getVarName();
 		String fptr = Helper.getVarName(), fptrArg = "", tempCastType = "";
-		String classType = Helper.cVarType.get(val.toC(localVars)) + "*";
+		String classType = Helper.cVarType.get(val.toString()) + "*";
+		String valToC = val.toC(localVars);
+		name += val.construct();
 		name += "\n";
-		name += String.format("%s this%s = (%s) %s;\n", classType, tempName, classType, val);
+		name += String.format("void* this%s = %s;\n", tempName, valToC);
 		String temp = "", expToC = "";
 		if (es == null)
 		{
-			temp = String.format("((%s) this%s)", classType, tempName);
-			fptrArg = "(" + classType + ")";
+			temp = String.format("(this%s)", classType, tempName);
+			//fptrArg = "(" + classType + ")";
 		}
 		else {
-			temp += String.format("((%s) this%s, ", classType, tempName);
-			fptrArg = "(" + classType + ", ";
+			temp += String.format("(this%s, ", classType, tempName);
+			//fptrArg = "(" + classType + ", ";
 			for (CuExpr exp : es) {
 				expToC = exp.toC(localVars);
 				super.name += exp.construct();
@@ -1876,22 +1885,20 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 				if (tempCastType.equals(""))
 					tempCastType = Helper.cVarType.get(expToC);
 				temp += "(" + tempCastType + "*)" + expToC + ", ";
-				fptrArg += tempCastType + "*, ";
+				//fptrArg += tempCastType + "*, ";
 			}
 			int j = temp.lastIndexOf(", ");
 			if (j > 1)
-				temp = temp.substring(0, j);
-			j = 0;
-			j = fptrArg.lastIndexOf(", ");
-			if (j > 1)
-				fptrArg = fptrArg.substring(0, j);
+				temp = temp.substring(0, j);			
 			temp += ")";
-			fptrArg += ")";
+			//fptrArg += ")";
 		}
 		
-		name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
-								/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
-		super.cText = String.format("(*%s) %s", fptr, temp);
+		//B=a->TypeTable->fun(e1,e2);
+		
+		//name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
+		//						/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
+		super.cText = String.format("(%s->%s->%s %s", valToC, classType+"Table", temp);
 		
 			return super.toC(localVars);
 		}
@@ -2105,7 +2112,7 @@ Helper.P(" 1mapping is " + mapping.toString());
 						+ "read_line(" + temp + "->value);\n\t";
 		
 					name += iter + " = (Iterable*) x3malloc(sizeof(Iterable));\n\t"
-						+ iter + "->isIter = 1;\n"
+						+ iter + "->isIter = 1;\n\t"
 						+ iter + "->nrefs = 1;\n\t"
 						+ iter + "->value = " + temp + ";\n\t"
 						+ iter + "->additional = NULL;\n\t"
