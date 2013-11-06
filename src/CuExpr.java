@@ -1968,40 +1968,46 @@ Helper.P("VcExp= "+text);
 	
 	@Override
 	public String toC(ArrayList<String> localVars) {
-		castType = Helper.cFunType.get("new_" + val);
+		castType = Helper.cFunType.get("new_"+val);
 		String temp = "", tempCastType = "", expToC = "", expConstruct = "";
 		if (es == null)
 			temp = "()";
-		temp += "(";
-		for (CuExpr exp : es) {
-			expToC = exp.toC(localVars);
-			 expConstruct = exp.construct();
-			 super.name += expConstruct;
-			tempCastType = exp.getCastType();
-			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
-			temp += "(" + tempCastType + "*)" + expToC + ", ";
-			if (!expConstruct.equals("")) {
-				Helper.cVarType.put(expToC, tempCastType);
+		else {
+			temp += "(";
+			for (CuExpr exp : es) {
+				expToC = exp.toC(localVars);
+				expConstruct = exp.construct();
+				super.name += expConstruct;
+				tempCastType = exp.getCastType();
+				if (tempCastType.equals(""))
+					tempCastType = Helper.cVarType.get(expToC);
+				temp += expToC + ", ";
+				if (!expConstruct.equals("")) {
+					Helper.cVarType.put(expToC, tempCastType);
+				}
+
 			}
-			
+			int j = temp.lastIndexOf(", ");
+			if (j > 1)
+				temp = temp.substring(0, j);
+			temp += ")";
 		}
-		int j = temp.lastIndexOf(", ");
-		if (j > 1) temp = temp.substring(0, j);
-		temp += ")";
 		
 		String objectName = Helper.getVarName();
 		super.name += String.format("%s* %s;\n%s = (%s*) x3malloc(sizeof(%s));\n"
-				+ "*(int *)%s = 0; \n",
-				val, objectName, objectName, val, val, objectName, objectName);
+				+ "%s->nrefs = 1; \n",
+				val, objectName, objectName, val, val, objectName);
 		
-		j = 2;
+		//j = 2;
 		
-		for (CuExpr exp : es) {
+		super.name += String.format("%s = %s %s", objectName, val, temp);
+		
+		/*for (CuExpr exp : es) {
 			expToC = exp.toC(localVars);
 			tempCastType = exp.getCastType();
 			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
 			super.name += String.format("((" + tempCastType + "*) &%s)[%d] = " + expToC + ";\n", objectName, j++);
-		}
+		}*/
 		
 		//super.name += "\n"+Helper.cClassStats.get(val) + "\n";
 		super.cText= objectName;
