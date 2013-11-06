@@ -12,6 +12,7 @@ typedef struct integer {
 
 typedef struct string {
 	int nrefs;
+	int isIter;
 	char* value;
 	int len;
 } String;
@@ -28,6 +29,7 @@ typedef struct character {
 
 typedef struct iter{
 	int nrefs;
+	int isIter;
 	void* value;
 	void* additional;
 	struct iter* (*next)(void*);
@@ -38,6 +40,7 @@ typedef struct iter{
 Iterable* iterGetNext(Iterable* last){
 	Iterable* this;
 	this = x3malloc(sizeof(Iterable));
+	this->isIter = 1;
 	if (last->next!= NULL){	
 		this = (last->next)(last);
 	}
@@ -84,6 +87,7 @@ Iterable* Integer_onwards(void* head){
 	Iterable* last;
 	last = (Iterable*) head;
 	this = x3malloc(sizeof(Iterable));
+	this->isIter = 1;
 	this->nrefs=1; 
 	(((Integer*)(last->value))->value)++;
 	this->value = last->value;
@@ -103,6 +107,7 @@ Iterable* Integer_through(void* head){
 	}
 	else {
 		Iterable* this=x3malloc(sizeof(Iterable));
+		this->isIter = 1;
 		this->nrefs=1;
 		(((Integer*)(last->value))->value)++; 
 		this->value = last->value; 
@@ -123,8 +128,10 @@ Iterable* input_onwards(void* head){
 	last = (Iterable*) head;
 	if (len != 0) {
 		this = x3malloc(sizeof(Iterable));
+		this->isIter=1;
 		this->nrefs=1; 
 		this->value = x3malloc(sizeof(String));
+		((String*) this->value)->isIter = 0;
 		((String*) this->value)->value = (char*) x3malloc(len* sizeof(char));
 		read_line(((String*) this->value)->value);
 		((String*) this->value)->nrefs = 1;
@@ -181,6 +188,7 @@ String* concatChars(Iterable *charIter){
 	x3free((char*)prev);
 	combined[count]='\0';
 	String* new = (String*) x3malloc(sizeof(String));
+	new->isIter = 0;
 	new->value = (char*) x3malloc(sizeof(char)*count);
 	mystrcpy(new->value, combined);
 	x3free(combined);
@@ -192,10 +200,12 @@ Iterable* strToIter (char* input, int length){
   if(length==0)
   	return NULL;
   Iterable *curr=(Iterable*) x3malloc(sizeof(Iterable));
+  curr->isIter = 1;
   Iterable *result=curr;
   int i=0;
   for (i=0;i<length;i++){
     Iterable* temp = (Iterable*) x3malloc(sizeof(Iterable));
+    temp->isIter = 1;
     Character* v = (Character*) x3malloc(sizeof(Character));
     v->value = input[i];
     temp->value=v;
