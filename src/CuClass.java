@@ -349,7 +349,7 @@ class Cls extends CuClass {
 				signature.append(delim).append("void* "+e1.getKey());
 				delim=",";
 			}
-			def.append("		void* (*"+e.getKey()+")("+signature.toString()+");\n");
+			def.append("		void* (*"+e.getKey()+")(void* this,"+signature.toString()+");\n");
 		}
 		def.append("			} "+name+"Table;\n");
 		
