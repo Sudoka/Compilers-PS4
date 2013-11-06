@@ -28,8 +28,3 @@ for(d in ds)
 	out := out ++ d.print();
 }
 return out;
-
-Mul a;
-b := a.fun(e1,e2)
-
-b=a->MulTable->fun(e1,e2)

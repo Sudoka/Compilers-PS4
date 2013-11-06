@@ -1899,9 +1899,9 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		
 		//B=a->TypeTable->fun(e1,e2);
 		
-		//name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
+		//name += String.format("void* (*%s) %s = (((%s) &%s)0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
 		//						/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
-		super.cText = String.format("(%s->%s->%s %s", valToC, classType+"Table", method.toString(), temp);
+		super.cText = String.format("(((%s*)%s)->%s)->%s%s",classType, valToC, classType+"_Tbl", method.toString(), temp);
 		
 			return super.toC(localVars);
 		}
@@ -1988,7 +1988,7 @@ Helper.P("VcExp= "+text);
 		
 		String objectName = Helper.getVarName();
 		super.name += String.format("%s* %s;\n%s = (%s*) x3malloc(sizeof(%s));\n"
-				+ "*(int *)%s = 0; //pointer to nrefs\n",
+				+ "*(int *)%s = 0; \n",
 				val, objectName, objectName, val, val, objectName, objectName);
 		
 		j = 2;

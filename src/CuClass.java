@@ -116,15 +116,21 @@ class Cls extends CuClass {
 		super.mFunctions.put(v, ts);
 		
 		//code Gen
-		fun.append(temp.toC(name));
-		vtable.append(String.format("%s_Tbl->%s=&%s; \n", name, v, name+"_"+v));
-		StringBuilder tempSB=new StringBuilder().append("void* this");
+		StringBuilder localprint=new StringBuilder();
 		for (Entry<String, CuType> e : fieldTypes.entrySet()){
-			tempSB.append(", ").append("void* "+e.getKey());
-			Helper.cVarType.put(e.getKey(), e.getValue().id);
+			localprint.append("void* "+e.getKey()+"=(("+name+"*)this)->"+e.getKey()+";\n");
 		}
-		fun.append(tempSB);
-		fun.append(") {\n");
+		
+		fun.append(temp.toC(name,localprint.toString()));
+		vtable.append(String.format("%s_Tbl->%s=&%s; \n", name, v, name+"_"+v));
+//		StringBuilder tempSB=new StringBuilder().append("void* this");
+//		for (Entry<String, CuType> e : fieldTypes.entrySet()){
+//			tempSB.append(", ").append("void* "+e.getKey());
+//			Helper.cVarType.put(e.getKey(), e.getValue().id);
+//		}
+//		fun.append(tempSB);
+//		fun.append(") {\n");
+		
 		Helper.cFunType.put(name+"_"+v, ts.data_t.id);
 		Helper.funGenType.put(name+"_"+v, ts);
 		if (ts.data_t.id.equals("Iterable")){
@@ -341,15 +347,17 @@ class Cls extends CuClass {
 	}
 
 	public String toC(){
+		
+		
 		def.append("typedef struct {\n");
 		for (Entry<String, CuFun> e: funList.entrySet()){
 			StringBuilder signature=new StringBuilder();
-			String delim="";
+			String delim=",";
 			for (Entry<String, CuType> e1 : e.getValue().ts.data_tc.entrySet()){
 				signature.append(delim).append("void* "+e1.getKey());
 				delim=",";
 			}
-			def.append("		void* (*"+e.getKey()+")(void* this,"+signature.toString()+");\n");
+			def.append("		void* (*"+e.getKey()+")(void* this"+signature.toString()+");\n");
 		}
 		def.append("			} "+name+"Table;\n");
 		
