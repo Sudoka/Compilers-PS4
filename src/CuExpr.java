@@ -1902,11 +1902,14 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		
 		//B=a->TypeTable->fun(e1,e2);
 		
-		//name += String.format("void* (*%s) %s = (((%s) &%s)0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
+		//name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
 		//						/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
-		super.cText = String.format("(((%s*)%s)->%s)->%s%s",classType, valToC, classType+"_Tbl", method.toString(), temp);
+		String returnName = Helper.getVarName();
+		super.name = "void* " + returnName + ";\n";
+		super.name += String.format("%s = (((%s*)%s)->%s)->%s%s", returnName, classType, valToC, classType+"_Tbl", method.toString(), temp);
 		
-			return super.toC(localVars);
+		super.cText = returnName;
+		return super.toC(localVars);
 		}
 
 }
@@ -1968,40 +1971,46 @@ Helper.P("VcExp= "+text);
 	
 	@Override
 	public String toC(ArrayList<String> localVars) {
-		castType = Helper.cFunType.get("new_" + val);
+		castType = Helper.cFunType.get("new_"+val);
 		String temp = "", tempCastType = "", expToC = "", expConstruct = "";
 		if (es == null)
 			temp = "()";
-		temp += "(";
-		for (CuExpr exp : es) {
-			expToC = exp.toC(localVars);
-			 expConstruct = exp.construct();
-			 super.name += expConstruct;
-			tempCastType = exp.getCastType();
-			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
-			temp += "(" + tempCastType + "*)" + expToC + ", ";
-			if (!expConstruct.equals("")) {
-				Helper.cVarType.put(expToC, tempCastType);
+		else {
+			temp += "(";
+			for (CuExpr exp : es) {
+				expToC = exp.toC(localVars);
+				expConstruct = exp.construct();
+				super.name += expConstruct;
+				tempCastType = exp.getCastType();
+				if (tempCastType.equals(""))
+					tempCastType = Helper.cVarType.get(expToC);
+				temp += expToC + ", ";
+				if (!expConstruct.equals("")) {
+					Helper.cVarType.put(expToC, tempCastType);
+				}
+
 			}
-			
+			int j = temp.lastIndexOf(", ");
+			if (j > 1)
+				temp = temp.substring(0, j);
+			temp += ")";
 		}
-		int j = temp.lastIndexOf(", ");
-		if (j > 1) temp = temp.substring(0, j);
-		temp += ")";
 		
 		String objectName = Helper.getVarName();
 		super.name += String.format("%s* %s;\n%s = (%s*) x3malloc(sizeof(%s));\n"
-				+ "*(int *)%s = 0; \n",
-				val, objectName, objectName, val, val, objectName, objectName);
+				+ "%s->nrefs = 1; \n",
+				val, objectName, objectName, val, val, objectName);
 		
-		j = 2;
+		//j = 2;
 		
-		for (CuExpr exp : es) {
+		super.name += String.format("%s = %s %s", objectName, val, temp);
+		
+		/*for (CuExpr exp : es) {
 			expToC = exp.toC(localVars);
 			tempCastType = exp.getCastType();
 			if(tempCastType.equals("")) tempCastType = Helper.cVarType.get(expToC);
 			super.name += String.format("((" + tempCastType + "*) &%s)[%d] = " + expToC + ";\n", objectName, j++);
-		}
+		}*/
 		
 		//super.name += "\n"+Helper.cClassStats.get(val) + "\n";
 		super.cText= objectName;

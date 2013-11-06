@@ -3,7 +3,7 @@
 
 typedef struct top {
 	int value;
-} Top;
+} Thing;
 
 typedef struct integer {
 	int nrefs;
