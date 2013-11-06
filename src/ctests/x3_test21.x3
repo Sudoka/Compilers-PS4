@@ -1,0 +1,16 @@
+lst := [1,2,3,4];
+lst2 := 1..4;
+sum := 0;
+restr := [];
+for(v in lst)
+{
+	sum := sum + v;
+    restr := restr ++ ["hi "];
+}
+for(v in lst) {
+	sum := sum + v;
+    restr := restr ++ ["hello "];
+}
+
+# should be 20
+return ["20"]++restr;

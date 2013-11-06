@@ -122,9 +122,10 @@ class ForStat extends CuStat{
 		super.ctext += "void *" + iter_name1 + ";\n";
 		super.ctext += iter_name1 + " = " + exp_toC + ";\n";
 		super.ctext += "if ("+ iter_name1 +"!=NULL) {\n";
-		super.ctext += "(*(int *)" + iter_name1 + ")++;\n";
+		//no need for reference counting here
+		//super.ctext += "(*(int *)" + iter_name1 + ")++;\n";
 		super.ctext += "if (" + "(*(int *)(" + exp_toC +"+1)) == 0) {\n";
-		super.ctext += "(*(int *)" + iter_name1 + ")--;\n";
+		//super.ctext += "(*(int *)" + iter_name1 + ")--;\n";
 		super.ctext += iter_name1+ " = strToIter( ((String *)" + exp_toC + ")->value, ((String *)" + exp_toC + ")->len);\n";
 		super.ctext += "}\n}\n";
 		
