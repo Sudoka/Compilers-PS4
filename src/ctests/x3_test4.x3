@@ -1,20 +1,5 @@
 # Cubex Compiler Test 4 - Stage 4
 
-class Name<A,B>
-
-method:Name<String, Int>
-method: Name
-String 
-
-<String, CuType>
-
-class Iterable<T>()
-
-method name Iterable<String>
-method nme iter
-		string
-
-
 class Multiplier(s : String, n : Integer)
 {
 	fun print() : Iterable<String>

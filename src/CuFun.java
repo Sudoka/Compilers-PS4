@@ -17,7 +17,7 @@ public abstract class CuFun {
 	//public void add(CuVvc v, CuTypeScheme ts, CuStat s) {}
 	//public void add(CuStat s){}
 	public abstract CuType calculateType(String v, CuTypeScheme ts, CuStat s);
-	public abstract String toC(String str);
+	public abstract String toC(String str,String localprint);
 }
 
 class Function extends CuFun {
@@ -28,7 +28,7 @@ class Function extends CuFun {
 		
 	}
 
-	public String toC(String className){
+	public String toC(String className, String localprint){
 		String prepend="";
 		if (!className.equals(""))
 			prepend=className+"_";
@@ -43,6 +43,7 @@ class Function extends CuFun {
 		}
 		sb.append(inputs);
 		sb.append(") {\n");
+		sb.append(localprint);
 		sb.append(funBody.toC(local));
 		sb.append("}\n");
 		return sb.toString();
@@ -52,6 +53,6 @@ class Function extends CuFun {
 	@Override public CuType calculateType(String v, CuTypeScheme ts, CuStat s){
 		return null;
 	}
-	
+
 	
 }

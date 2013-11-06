@@ -280,7 +280,7 @@ Helper.P("common parent of types is " + type.toString());
 		else if (rightIterType.equals("Empty"))
 			iterType = leftIterType;
 		else
-			iterType = "Top";
+			iterType = "Thing";
 		
 		
 		name +=  "Iterable* " + iter + ";\n" + iter + " = concatenate((Iterable*)" + iter_name1 + ", (Iterable*) " + iter_name2 + ");\n";
@@ -325,13 +325,14 @@ class BrkExpr extends CuExpr {
 			if (eCastType.equals(""))
 				eCastType = Helper.cVarType.get(e.toString());
 			
+			if(iterType == null)
+				iterType = "";
+			
 			if(iterType.equals("")) 
 				iterType = eCastType;
 			else if (!iterType.equals(eCastType))
-				iterType = "Top";
+				iterType = "Thing";
 			
-			if(iterType == null)
-				iterType = "";
 			
 			tempNameArr.add(Helper.getVarName());
 			tempDataArr.add(eToC);
@@ -1861,6 +1862,12 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		String newTemp = Helper.cVarType.get(val.toString())+"_"+method;
 		castType = Helper.cFunType.get(newTemp);
 		iterType = Helper.iterType.get(newTemp);
+
+		if(castType == null)
+			castType = "";
+		if(iterType == null)
+			iterType = "";
+		
 		String tempName = Helper.getVarName();
 		//String tempCastType = "";
 		String classType = Helper.cVarType.get(val.toString());
@@ -1895,9 +1902,9 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		
 		//B=a->TypeTable->fun(e1,e2);
 		
-		//name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
+		//name += String.format("void* (*%s) %s = (((%s) &%s)0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
 		//						/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
-		super.cText = String.format("(%s->%s->%s %s", valToC, classType+"Table", method.toString(), temp);
+		super.cText = String.format("(((%s*)%s)->%s)->%s%s",classType, valToC, classType+"_Tbl", method.toString(), temp);
 		
 			return super.toC(localVars);
 		}
@@ -1984,7 +1991,7 @@ Helper.P("VcExp= "+text);
 		
 		String objectName = Helper.getVarName();
 		super.name += String.format("%s* %s;\n%s = (%s*) x3malloc(sizeof(%s));\n"
-				+ "*(int *)%s = 0; //pointer to nrefs\n",
+				+ "*(int *)%s = 0; \n",
 				val, objectName, objectName, val, val, objectName, objectName);
 		
 		j = 2;
@@ -2085,6 +2092,8 @@ Helper.P(" 1mapping is " + mapping.toString());
 			
 			if(castType == null)
 				castType = "";
+			if(super.iterType == null)
+				super.iterType = "";
 			
 			if(val.equals("input"))
 			{
