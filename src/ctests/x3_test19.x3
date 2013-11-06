@@ -43,4 +43,4 @@ fun flatten<T> (l : Iterable<Iterable<T>>) : Iterable<T>
 	return ret;
 }
 
-return [string(flatten<Character>(matrixize<Character>(1..9, 10)))]; 
+return [string(flatten<Character>(matrixize<Character>("The X3 Language Specification. Ross Tate. October 11, 2013.", 10)))]; 
