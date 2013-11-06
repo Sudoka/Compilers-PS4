@@ -273,7 +273,7 @@ Helper.P("common parent of types is " + type.toString());
 		else if (right.getIterType().equals("Empty"))
 			iterType = left.getIterType();
 		else
-			iterType = "Top";
+			iterType = "Thing";
 		
 		
 		name +=  "Iterable* " + iter + ";\n" + iter + " = concatenate((Iterable*)" + leftToC + ", (Iterable*) " + rightToC + ");\n";
@@ -318,13 +318,14 @@ class BrkExpr extends CuExpr {
 			if (eCastType.equals(""))
 				eCastType = Helper.cVarType.get(e.toString());
 			
+			if(iterType == null)
+				iterType = "";
+			
 			if(iterType.equals("")) 
 				iterType = eCastType;
 			else if (!iterType.equals(eCastType))
-				iterType = "Top";
+				iterType = "Thing";
 			
-			if(iterType == null)
-				iterType = "";
 			
 			tempNameArr.add(Helper.getVarName());
 			tempDataArr.add(eToC);
@@ -1833,6 +1834,12 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 		String newTemp = Helper.cVarType.get(val.toString())+"_"+method;
 		castType = Helper.cFunType.get(newTemp);
 		iterType = Helper.iterType.get(newTemp);
+
+		if(castType == null)
+			castType = "";
+		if(iterType == null)
+			iterType = "";
+		
 		int offset = 0;									//to be modified when class definition becomes clearer
 		String tempName = Helper.getVarName();
 		String fptr = Helper.getVarName(), fptrArg = "", tempCastType = "";
@@ -1868,8 +1875,8 @@ class VarExpr extends CuExpr{// e.vv<tao1...>(e1,...)
 			fptrArg += ")";
 		}
 		
-		name += String.format("void* (*%s) %s = (((%s) &%s)[0])[%d];	//unsure of this! needs testing\n", 	//unsure of this! needs testing				
-								/*Helper.cVarType.get(var),*/ fptr, fptrArg, classType, val.toString(), offset);
+		name += String.format("void* %s = %s->%sTable->%s(%s);\n", 	//unsure of this! needs testing				
+				tempName, val.toString(), classType, fptr,fptrArg);
 		super.cText = String.format("(*%s) %s", fptr, temp);
 		
 			return super.toC(localVars);
@@ -2058,6 +2065,8 @@ Helper.P(" 1mapping is " + mapping.toString());
 			
 			if(castType == null)
 				castType = "";
+			if(super.iterType == null)
+				super.iterType = "";
 			
 			if(val.equals("input"))
 			{
