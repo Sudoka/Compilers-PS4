@@ -124,7 +124,7 @@ class ForStat extends CuStat{
 		super.ctext += "if ("+ iter_name1 +"!=NULL) {\n";
 		//no need for reference counting here
 		//super.ctext += "(*(int *)" + iter_name1 + ")++;\n";
-		super.ctext += "if (" + "(*(int *)(" + exp_toC +"+1)) == 0) {\n";
+		super.ctext += "if (" + "(*((int *)(" + exp_toC +"+1))) == 0) {\n";
 		//super.ctext += "(*(int *)" + iter_name1 + ")--;\n";
 		super.ctext += iter_name1+ " = strToIter( ((String *)" + exp_toC + ")->value, ((String *)" + exp_toC + ")->len);\n";
 		super.ctext += "}\n}\n";
@@ -142,7 +142,7 @@ class ForStat extends CuStat{
 		super.ctext += "\twhile (" + var.toString() + "!=NULL) {\n";
 		super.ctext += "\t\t" + iter_name + " = (Iterable *)" + var.toString() + ";\n";
 		super.ctext += "\t\t" + var.toString() + " = " + iter_name + "->value;\n";
-		super.ctext += "\t\t" + "(*(int *)" + var.toString() + ")++;\n";
+		super.ctext += "\t\t" + "(*((int *)" + var.toString() + "))++;\n";
 		ArrayList<String> localVarsInFor = new ArrayList<String>(localVars);
 		String s1ToC = s1.toC(localVarsInFor);
 		String temp_str = s1ToC.replaceAll("void \\* " + var.toString() + " = NULL;\n", "");

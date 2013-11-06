@@ -26,17 +26,17 @@ public class Cubex {
 		parser.addErrorListener(new ParserErrorListener(false)); //prevent printing debugging messages
 		
 		CuProgr ourProgram = null;
-		//try {
+		try {
 			ourProgram = parser.program().p;
 			Helper.P("parser succeeded");
 			ourProgram.calculateType(context);
-			Helper.ToDo("comment out accept when we submit");
+			//Helper.ToDo("comment out accept when we submit");
 			System.out.println("accept");
-		//} catch (Exception e) {
-		//	System.out.println("reject");
+		} catch (Exception e) {
+			System.out.println("reject");
 			//even if rejected, we still generate a 
 			//System.exit(-2);
-		//}
+		}
 
 		ArrayList<String> localVars = new ArrayList<String>();
 		PrintWriter writer = new PrintWriter("out.c", "UTF-8");
